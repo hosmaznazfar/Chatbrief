@@ -11,11 +11,11 @@ import signal
 import sys
 from contextlib import suppress
 
-from src.config_loader import load_config
-from src.utils import setup_logging
-from src.scheduler import DigestScheduler
 from src.bot_commands import BotCommandHandler
+from src.config_loader import load_config
 from src.mcp_server import build_server
+from src.scheduler import DigestScheduler
+from src.utils import setup_logging
 
 
 class TelebriefApp:

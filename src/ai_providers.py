@@ -368,6 +368,5 @@ def create_provider(
         return AnthropicProvider(api_key=anthropic_api_key, logger=logger, timeout=api_timeout)
 
     raise ValueError(
-        f"Unknown AI provider: '{provider_name}'. "
-        f"Supported providers: openai, ollama, anthropic"
+        f"Unknown AI provider: '{provider_name}'. Supported providers: openai, ollama, anthropic"
     )

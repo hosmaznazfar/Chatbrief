@@ -53,7 +53,8 @@ class DigestScheduler:
         self.scheduler.start()
         self.is_running = True
 
-        next_run = self.scheduler.get_job("daily_digest").next_run_time
+        job = self.scheduler.get_job("daily_digest")
+        next_run = job.next_run_time if job else None
         self.logger.info("✅ Scheduler started")
         self.logger.info(
             f"⏰ Next digest scheduled for: {next_run} {self.config.settings.timezone}"

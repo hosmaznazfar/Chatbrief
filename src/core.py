@@ -255,7 +255,7 @@ def read_last_digest() -> Optional[dict]:
     """Return the cached digest payload, or None if absent or unreadable."""
     try:
         data = json.loads(_DIGEST_CACHE_PATH.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return None
     return data if isinstance(data, dict) and isinstance(data.get("text"), str) else None
 

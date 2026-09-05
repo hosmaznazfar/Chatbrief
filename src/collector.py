@@ -7,11 +7,20 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List
+from typing import Dict, List, cast
 
 from telethon import TelegramClient
 from telethon.errors import ChannelPrivateError, FloodWaitError
-from telethon.tl.types import Message as TelegramMessage
+from telethon.tl.patched import (
+    Message as TelegramMessage,
+)
+from telethon.tl.types import (
+    Channel,
+    Chat,
+    Document,
+    MessageMediaDocument,
+    User,
+)
 
 from src.config_loader import ChannelConfig, Config
 from src.ui_strings import get_ui_strings
@@ -77,7 +86,7 @@ class MessageCollector:
 
     async def disconnect(self):
         """Disconnect from Telegram."""
-        await self.client.disconnect()
+        self.client.disconnect()
         self.logger.info("Disconnected from Telegram")
 
     async def fetch_messages(self, hours: int = 24) -> Dict[str, List[Message]]:
@@ -162,7 +171,7 @@ class MessageCollector:
 
         try:
             # Get channel entity
-            entity = await self.client.get_entity(channel_config.id)
+            entity = cast(User | Chat | Channel, await self.client.get_entity(channel_config.id))
 
             # Fetch messages
             async for message in self.client.iter_messages(
@@ -185,7 +194,7 @@ class MessageCollector:
                     media_type = self._get_media_type(message) if message.media else ""
 
                 # Get sender name
-                sender = await self._get_sender_name(message)
+                sender = str(await cast(TelegramMessage, message).get_sender())
 
                 # Generate message link
                 link = await self._generate_message_link(entity, message.id)
@@ -227,15 +236,10 @@ class MessageCollector:
         if "Photo" in media_type:
             return self._ui["media_photo"]
         elif "Video" in media_type or "Document" in media_type:
-            if hasattr(message.media, "document"):
-                mime = getattr(message.media.document, "mime_type", "")
-                if "video" in mime:
-                    return self._ui["media_video"]
-                elif "audio" in mime:
-                    return self._ui["media_audio"]
-                else:
-                    return self._ui["media_document"]
+            if isinstance(message.media, MessageMediaDocument):
+                return self._get_document_media_type(message.media)
             return self._ui["media_video"]
+
         elif "Voice" in media_type or "Audio" in media_type:
             return self._ui["media_voice"]
         elif "Poll" in media_type:
@@ -244,6 +248,18 @@ class MessageCollector:
             return self._ui["media_geo"]
         else:
             return self._ui["media_other"]
+
+    def _get_document_media_type(self, media: MessageMediaDocument) -> str:
+        """Determine media type for a document."""
+        if isinstance(media.document, Document):
+            mime = media.document.mime_type or ""
+            if "video" in mime:
+                return self._ui["media_video"]
+            elif "audio" in mime:
+                return self._ui["media_audio"]
+            else:
+                return self._ui["media_document"]
+        return self._ui["media_video"]
 
     async def _get_sender_name(self, message: TelegramMessage) -> str:
         """
@@ -256,8 +272,8 @@ class MessageCollector:
             Sender name or "Unknown"
         """
         try:
-            if message.sender:
-                sender = await message.get_sender()
+            sender = await cast(TelegramMessage, message).get_sender()
+            if sender:
                 if hasattr(sender, "first_name"):
                     name = str(sender.first_name)
                     if hasattr(sender, "last_name") and sender.last_name:
@@ -267,7 +283,9 @@ class MessageCollector:
                     return str(sender.title)
                 elif hasattr(sender, "username"):
                     return f"@{sender.username}"
-            return "Unknown"
+                return "Unknown"
+            else:
+                return "Unknown"
         except Exception:
             return "Unknown"
 
@@ -314,7 +332,7 @@ async def main():
     client = TelegramClient("sessions/user", config.telegram_api_id, config.telegram_api_hash)
     print("Authenticating with Telegram User API...")
     print("You will be prompted for your phone number and a login code.")
-    await client.start()
+    client.start()
     print("Authenticated! Session saved to sessions/user.session")
 
     # Quick test: fetch 1 hour of messages
@@ -329,7 +347,7 @@ async def main():
                 print(f"  - {msg.sender}: {msg.text[:50]}...")
     finally:
         await collector.disconnect()
-        await client.disconnect()
+        client.disconnect()
 
 
 if __name__ == "__main__":
