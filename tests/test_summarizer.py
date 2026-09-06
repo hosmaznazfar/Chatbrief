@@ -6,14 +6,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.summarizer import (  # isort: skip
-    ERROR_SUMMARY_PREFIX,
-    Summarizer,
-    SYSTEM_PROMPT_TEMPLATE,
+from src.ai_providers import TokenBudgetExhaustedError
+from src.summarizer import (
     _DEFAULT_TEMPLATE_PATH,
+    ERROR_SUMMARY_PREFIX,
+    SYSTEM_PROMPT_TEMPLATE,
+    Summarizer,
     _load_base_template,
 )
-from src.ai_providers import TokenBudgetExhaustedError  # isort: skip
 
 
 @pytest.mark.unit

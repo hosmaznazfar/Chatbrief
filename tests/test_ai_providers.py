@@ -4,13 +4,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.ai_providers import (  # isort: skip
-    _redact_url,
+from src.ai_providers import (
     AnthropicProvider,
-    create_provider,
     OllamaProvider,
     OpenAIProvider,
     TokenBudgetExhaustedError,
+    _redact_url,
+    create_provider,
 )
 
 # --- Factory tests ---
