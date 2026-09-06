@@ -21,7 +21,7 @@ cd Telebrief
 
 # Create a virtual environment and install dependencies
 uv venv
-uv pip install -r requirements.txt -r requirements-dev.txt
+uv sync
 
 # Install pre-commit hooks
 uv run pre-commit install
@@ -31,53 +31,47 @@ cp config.yaml.example config.yaml
 cp .env.example .env
 ```
 
-> **Note for macOS users:** the `markdownlint` pre-commit hook requires Ruby ≥ 3.1, while macOS ships 2.6. Skip it locally and rely on CI:
->
-> ```bash
-> SKIP=markdownlint uv run pre-commit run --all-files
-> ```
 
 ## Running Tests and Checks
 
-Run the full verification suite before pushing — CI runs the same checks:
+Run the full verification suite before pushing:
 
 ```bash
 # Tests (coverage threshold must stay above the configured minimum)
 uv run pytest tests/ -v
 
 # Type checking
-uv run mypy src/
+uv run pyright
 
 # Linting
-uv tool run ruff check src/ tests/
-uv run flake8 src/ tests/
+uv run ruff check src/ tests/
+uv run pylint src/ tests/
 
-# Formatting (CI pins black 24.10.0 — always run before pushing)
-uv run black src/ tests/
+# Formatting
+uv run ruff format src/ tests/
+
+# Security checks
+uv run bandit -c pyproject.toml -r src/
+
+# Run all pre-commit hooks
+pre-commit run --all-files
 ```
 
 Or use the Makefile shortcuts: `make test`, `make lint`, `make format`, `make check`.
 
 ### Testing conventions
 
-- Fixtures live in `tests/conftest.py` (`sample_config`, `mock_logger`)
-- All async tests use `@pytest.mark.asyncio`
-- New code should come with tests; bug fixes should include a regression test
+* Fixtures live in `tests/conftest.py` (`sample_config`, `mock_logger`)
+* All async tests use `@pytest.mark.asyncio`
+* New code should come with tests; bug fixes should include a regression test
 
 ## Code Style
 
-- **black** (24.10.0, as pinned in `.pre-commit-config.yaml`) for formatting
-- **isort** for import ordering
-- **flake8** with `max-complexity=10`
-- **mypy** for type checking — new code should be fully typed
-- Protocol method stubs forced to one-liners by black need per-line flake8 suppression:
-
-  ```python
-  class MyProtocol(Protocol):
-      async def save(self, items: list) -> int: ...  # noqa: E704
-  ```
-
-- Markdown files in `docs/` must have a blank line before and after every fenced code block (markdownlint MD031)
+* **Ruff** for formatting, linting, and import ordering
+* **Pyright** for type checking — new code should be fully typed
+* **Pylint** for additional static analysis
+* **Bandit** for security checks
+* **pre-commit** runs repository-wide formatting, linting, and security checks
 
 ## Commit Messages
 
@@ -95,9 +89,10 @@ Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
 
 1. **Fork** the repository and create a branch from `main`
 2. **Make your changes** — keep PRs focused on a single concern
-3. **Run the full check suite** (tests + mypy + ruff + black + flake8) locally
-4. **Open a PR** against `main` with a clear description of what and why
-5. CI must pass before review; a maintainer will review and merge
+3. **Run the full check suite** (tests + Pyright + Ruff + Pylint + Bandit) locally
+4. **Run `pre-commit run --all-files`** and make sure all hooks pass
+5. **Open a PR** against `main` with a clear description of what and why
+6. CI must pass before review; a maintainer will review and merge
 
 For larger changes (new modules, architectural shifts), please open an issue first to discuss the approach — it saves everyone time.
 
