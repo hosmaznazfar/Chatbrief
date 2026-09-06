@@ -499,16 +499,16 @@ This project uses [uv](https://docs.astral.sh/uv/) for package management.
 
 ```bash
 # Install development dependencies
-uv sync --extra dev
+uv sync
 
 # Run all tests
 uv run pytest tests/ -v
 
 # Type checking
-uv run mypy src/
+uv run pyright
 
 # Linting
-uv tool run ruff check src/ tests/
+uv run ruff check src/ tests/
 
 # Auto-format code
 make format
