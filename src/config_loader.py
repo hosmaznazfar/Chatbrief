@@ -503,9 +503,9 @@ def _load_and_validate_env_vars(ai_provider: str) -> dict:
             f"Please set them in .env file (see .env.example)"
         )
 
-    assert telegram_api_id is not None
-    assert telegram_api_hash is not None
-    assert telegram_bot_token is not None
+    telegram_api_id = os.environ["TELEGRAM_API_ID"]
+    telegram_api_hash = os.environ["TELEGRAM_API_HASH"]
+    telegram_bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
 
     return {
         "telegram_api_id": int(telegram_api_id),
