@@ -11,9 +11,9 @@
 ## Checklist
 
 - [ ] Tests pass: `uv run pytest tests/ -v`
-- [ ] Types check: `uv run mypy src/`
-- [ ] Lint clean: `uv tool run ruff check src/ tests/` and `uv run flake8 src/ tests/`
-- [ ] Formatted with black 24.10.0: `uv run black src/ tests/`
+- [ ] Types check: `uv run pyright`
+- [ ] Lint clean: `uv run ruff check src/ tests/` and `uv run pylint src/ tests/`
+- [ ] Formatted with Ruff: `uv run ruff format src/ tests/`
 - [ ] New code has tests / bug fix has a regression test
 - [ ] Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
 - [ ] No secrets, session files, or personal data included
