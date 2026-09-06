@@ -56,7 +56,6 @@ exclude: |
       sessions/.*|
       logs/.*|
       \.pytest_cache/.*|
-      \.mypy_cache/.*|
       \.venv/.*|
       venv/.*|
       dist/.*|
