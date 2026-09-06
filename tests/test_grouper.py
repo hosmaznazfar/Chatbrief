@@ -110,6 +110,31 @@ class TestParseGroupedResponse:
         assert "News" in result
         assert len(result["News"]) == 1
 
+    def test_malformed_grouped_item_is_skipped(self, grouper, mock_logger):
+        """Malformed items without a point are skipped and logged."""
+        response = json.dumps(
+            {
+                "Events": [
+                    {"source": "Ch1"},
+                    {"point": "Valid event", "source": "Ch2"},
+                ]
+            }
+        )
+
+        groups = grouper._build_group_definitions()
+        valid_names = {g.name for g in groups}
+
+        result = grouper._parse_grouped_response(
+            response,
+            valid_names,
+        )
+
+        assert len(result["Events"]) == 1
+        assert result["Events"][0].point == "Valid event"
+
+        warning_calls = [str(call) for call in mock_logger.warning.call_args_list]
+        assert any("malformed" in warning.lower() for warning in warning_calls)
+
     def test_json_with_markdown_fences_parses_correctly(self, grouper):
         """JSON wrapped in markdown code fences is parsed correctly."""
         inner = json.dumps(
@@ -174,6 +199,45 @@ class TestParseGroupedResponse:
         assert "Events" in result
         assert "News" not in result
 
+    def test_non_object_json_returns_empty(self, grouper, mock_logger):
+        """A valid JSON value that is not an object is rejected."""
+        groups = grouper._build_group_definitions()
+        valid_names = {g.name for g in groups}
+
+        result = grouper._parse_grouped_response(
+            json.dumps(["not", "an", "object"]),
+            valid_names,
+        )
+
+        assert result == {}
+
+        warning_calls = [str(call) for call in mock_logger.warning.call_args_list]
+        assert any("Failed to parse grouper AI response" in warning for warning in warning_calls)
+
+    def test_non_list_group_value_is_skipped(self, grouper, mock_logger):
+        """A group whose value is not a list is skipped."""
+        groups = grouper._build_group_definitions()
+        valid_names = {g.name for g in groups}
+
+        response = json.dumps(
+            {
+                "Events": {"point": "Invalid structure"},
+                "News": [{"point": "Valid news", "source": "Ch"}],
+            }
+        )
+
+        result = grouper._parse_grouped_response(
+            response,
+            valid_names,
+        )
+
+        assert "Events" not in result
+        assert "News" in result
+        assert result["News"][0].point == "Valid news"
+
+        warning_calls = [str(call) for call in mock_logger.warning.call_args_list]
+        assert any("not a list" in str(call) for call in warning_calls)
+
 
 @pytest.mark.asyncio
 class TestGroupSummaries:
@@ -224,6 +288,32 @@ class TestGroupSummaries:
 
         with pytest.raises(RuntimeError, match="API down"):
             await grouper.group_summaries({"ch": "summary"})
+
+    async def test_cross_channel_dedup_runs_when_enabled(self, grouper):
+        """Cross-channel deterministic dedup runs when dedup_topics is enabled."""
+        grouper.config.settings.dedup_topics = True
+
+        grouper.provider.chat_completion.side_effect = [
+            json.dumps([{"point": "AI Summit 2026"}]),
+            json.dumps([{"point": "AI Summit 2026"}]),
+            json.dumps(
+                {
+                    "Events": [
+                        {"point": "AI Summit 2026", "source": "Ch1, Ch2"},
+                    ]
+                }
+            ),
+        ]
+
+        result = await grouper.group_summaries(
+            {
+                "Ch1": "AI Summit 2026",
+                "Ch2": "AI Summit 2026",
+            }
+        )
+
+        assert len(result["Events"]) == 1
+        assert result["Events"][0].point == "AI Summit 2026"
 
 
 # --- Task 1: Prompt injection mitigation tests ---
@@ -410,6 +500,18 @@ class TestQualityGateFilter:
         out = _quality_gate_filter(bullets)
         assert out == bullets
 
+    def test_drops_empty_bullet(self):
+        """Empty/whitespace-only bullets are dropped."""
+        bullets = [
+            ExtractedBullet(point="   ", source="Ch"),
+            ExtractedBullet(point="🤖 Real news about AI", source="Ch"),
+        ]
+
+        out = _quality_gate_filter(bullets)
+
+        assert len(out) == 1
+        assert out[0].point == "🤖 Real news about AI"
+
 
 class TestStripSectionTwo:
     """Tests for stripping Section 2 (📎 Also/Также) from channel summaries before extraction."""
@@ -525,6 +627,21 @@ class TestExtractBulletsFromChannel:
         assert result[0].source_url == "https://t.me/technews"
 
     @pytest.mark.asyncio
+    async def test_invalid_extractor_json_returns_empty(self, grouper, mock_logger):
+        """Invalid extractor JSON is rejected and logged."""
+        grouper.provider.chat_completion.return_value = "not valid JSON"
+
+        result = await grouper._extract_bullets_from_channel(
+            channel_name="Broken",
+            summary="- 📰 Some summary",
+            source_url="https://t.me/broken",
+        )
+
+        assert result == []
+        mock_logger.warning.assert_called_once()
+        assert "JSON parse failed" in str(mock_logger.warning.call_args)
+
+    @pytest.mark.asyncio
     async def test_empty_summary_skips_ai_call(self, grouper):
         """Empty/whitespace-only summary returns [] without calling AI."""
         result = await grouper._extract_bullets_from_channel(
@@ -614,6 +731,30 @@ class TestDedupExtracted:
         result = _dedup_extracted(bullets)
         assert len(result) == 2
 
+        def test_drops_bullet_with_empty_normalized_text(self):
+            """Bullets whose normalized point is empty are ignored."""
+            bullets = [
+                ExtractedBullet(point="   ", source="Ch1"),
+                ExtractedBullet(point="AI Summit 2026", source="Ch2"),
+            ]
+
+            result = _dedup_extracted(bullets)
+
+            assert len(result) == 1
+            assert result[0].point == "AI Summit 2026"
+
+    def test_ignores_bullet_with_empty_normalized_text(self):
+        """Bullets with an empty normalized point are ignored."""
+        bullets = [
+            ExtractedBullet(point="   ", source="Ch1"),
+            ExtractedBullet(point="AI Summit 2026", source="Ch2"),
+        ]
+
+        result = _dedup_extracted(bullets)
+
+        assert len(result) == 1
+        assert result[0].point == "AI Summit 2026"
+
 
 class TestClassifyBullets:
     """Tests for Pass 2b — classification of pre-extracted, dedup'd bullets."""
@@ -654,14 +795,19 @@ class TestGrouperMissingChannelWarning:
 
     @pytest.mark.asyncio
     async def test_logs_warning_when_input_channels_missing_from_output(self, grouper, mock_logger):
-        """Warning logged when some input channels have no points in the grouped output."""
-        # Only Events has a point from Ch1; Ch2 is missing entirely
-        ai_response = json.dumps(
-            {
-                "Events": [{"point": "Test event", "source": "Ch1"}],
-            }
-        )
-        grouper.provider.chat_completion.return_value = ai_response
+        """Warning logged when some input channels have no points in grouped output."""
+        grouper.provider.chat_completion.side_effect = [
+            # Pass 2a: Ch1 extractor
+            json.dumps([{"point": "Test event from Ch1"}]),
+            # Pass 2a: Ch2 extractor
+            json.dumps([{"point": "Test news from Ch2"}]),
+            # Pass 2b: classifier only returns Ch1
+            json.dumps(
+                {
+                    "Events": [{"point": "Test event from Ch1", "source": "Ch1"}],
+                }
+            ),
+        ]
 
         await grouper.group_summaries(
             {
@@ -670,9 +816,9 @@ class TestGrouperMissingChannelWarning:
             }
         )
 
-        # Should log a warning about Ch2 being missing
         warning_calls = [str(call) for call in mock_logger.warning.call_args_list]
-        assert any("Ch2" in w for w in warning_calls)
+
+        assert any("Ch2" in warning for warning in warning_calls)
 
     @pytest.mark.asyncio
     async def test_no_warning_when_all_channels_represented(self, grouper, mock_logger):
@@ -698,3 +844,18 @@ class TestGrouperMissingChannelWarning:
         # No warning about missing channels
         warning_calls = [str(call) for call in mock_logger.warning.call_args_list]
         assert not any("missing" in w.lower() for w in warning_calls)
+
+
+class TestFallbackGroup:
+    """Tests for fallback grouping."""
+
+    def test_empty_summaries_return_empty(self, grouper):
+        """Fallback returns an empty dict when no summaries contain usable lines."""
+        result = grouper._build_fallback_group(
+            {
+                "Ch1": "   ",
+                "Ch2": "\n  ",
+            }
+        )
+
+        assert result == {}
