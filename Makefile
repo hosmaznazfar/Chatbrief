@@ -15,10 +15,10 @@ help:
 	@echo "  make pre-commit   - Install pre-commit hooks"
 
 install:
-	pip install -r requirements.txt
+	uv sync --no-dev
 
 install-dev:
-	pip install -r requirements-dev.txt
+	uv sync
 	pre-commit install
 
 test:
@@ -34,27 +34,23 @@ test-integration:
 	pytest -v -m integration
 
 lint:
-	@echo "Running Black..."
-	black --check src tests
-	@echo "\nRunning isort..."
-	isort --check-only src tests
-	@echo "\nRunning Flake8..."
-	flake8 src tests
-	@echo "\nRunning MyPy..."
-	mypy src
+	@echo "Running Ruff..."
+	uv run ruff check src tests
+	@echo "\nRunning Pyright..."
+	uv run pyright
 	@echo "\nRunning Pylint..."
-	pylint src tests --fail-under=8.0
+	uv run pylint src tests --fail-under=8.0
+	@echo "\nRunning Bandit..."
+	uv run bandit -c pyproject.toml -r src
 	@echo "\nRunning Vulture (unused code detection)..."
-	vulture src vulture_whitelist.py --min-confidence 80
+	uv run vulture src vulture_whitelist.py --min-confidence 80
 
 format:
-	black src tests
-	isort src tests
+	uv run ruff format src tests
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name .mypy_cache -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name htmlcov -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name '*.pyc' -delete
 	find . -type f -name '*.pyo' -delete
