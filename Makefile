@@ -9,7 +9,7 @@ help:
 	@echo "  make test         - Run tests with coverage"
 	@echo "  make test-fast    - Run tests without coverage"
 	@echo "  make lint         - Run all linters"
-	@echo "  make format       - Format code with black and isort"
+	@echo "  make format       - Format code with ruff"
 	@echo "  make clean        - Remove build artifacts"
 	@echo "  make run          - Run the application"
 	@echo "  make pre-commit   - Install pre-commit hooks"
