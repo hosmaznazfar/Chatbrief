@@ -259,8 +259,14 @@ async def test_summarize_channel_prompt_instructs_two_tier_format(
         summarizer = Summarizer(sample_config, mock_logger)
         captured: list = []
 
-        async def capture(**kwargs):
-            captured.append(kwargs.get("messages", []))
+        async def capture(
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,
+        ) -> str:
+            captured.append(messages)
             return "summary"
 
         summarizer.provider.chat_completion = capture
@@ -427,8 +433,14 @@ async def test_summarize_channel_wraps_messages_in_xml_delimiters(
         summarizer = Summarizer(sample_config, mock_logger)
         captured: list = []
 
-        async def capture(**kwargs):
-            captured.append(kwargs.get("messages", []))
+        async def capture(
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,
+        ) -> str:
+            captured.append(messages)
             return "summary"
 
         summarizer.provider.chat_completion = capture
@@ -475,8 +487,14 @@ async def test_language_instruction_only_in_system_prompt(
         summarizer = Summarizer(sample_config, mock_logger)
         captured: list = []
 
-        async def capture(**kwargs):
-            captured.append(kwargs.get("messages", []))
+        async def capture(
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,
+        ) -> str:
+            captured.append(messages)
             return "summary"
 
         summarizer.provider.chat_completion = capture
@@ -501,8 +519,14 @@ async def test_verify_instruction_removed_from_user_prompt(
         summarizer = Summarizer(sample_config, mock_logger)
         captured: list = []
 
-        async def capture(**kwargs):
-            captured.append(kwargs.get("messages", []))
+        async def capture(
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,
+        ) -> str:
+            captured.append(messages)
             return "summary"
 
         summarizer.provider.chat_completion = capture
@@ -560,8 +584,22 @@ async def test_summarize_channel_retry_includes_shorten_instruction(
         summarizer = Summarizer(sample_config, mock_logger)
         captured_calls: list = []
 
-        async def capture(**kwargs):
-            captured_calls.append(kwargs)
+        async def capture(
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,
+        ) -> str:
+            captured_calls.append(
+                {
+                    "messages": messages,
+                    "model": model,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                    "reasoning_effort": reasoning_effort,
+                }
+            )
             if len(captured_calls) == 1:
                 return long_output
             return short_output
@@ -650,7 +688,13 @@ async def test_summarize_channel_applies_prompt_extra(sample_config, mock_logger
 
     captured: list[list[dict]] = []
 
-    async def capture(messages, **_kwargs):
+    async def capture(
+        messages: list[dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        reasoning_effort: str | None = None,
+    ) -> str:
         captured.append(messages)
         return "ok"
 
@@ -737,8 +781,14 @@ async def test_summarizer_uses_composer_output(sample_config, mock_logger, sampl
 
         captured: list = []
 
-        async def capture(**kwargs):
-            captured.append(kwargs.get("messages", []))
+        async def capture(
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,
+        ) -> str:
+            captured.append(messages)
             return "ok"
 
         summarizer.provider.chat_completion = capture
@@ -760,8 +810,14 @@ async def test_channel_without_group_uses_base_and_channel_prompt_extra(
 
     captured: list = []
 
-    async def capture(**kwargs):
-        captured.append(kwargs.get("messages", []))
+    async def capture(
+        messages: list[dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        reasoning_effort: str | None = None,
+    ) -> str:
+        captured.append(messages)
         return "ok"
 
     with patch("src.ai_providers.AsyncOpenAI"):
@@ -790,8 +846,14 @@ async def test_channel_with_group_uses_base_group_and_channel_prompt_extra(
 
     captured: list = []
 
-    async def capture(**kwargs):
-        captured.append(kwargs.get("messages", []))
+    async def capture(
+        messages: list[dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        reasoning_effort: str | None = None,
+    ) -> str:
+        captured.append(messages)
         return "ok"
 
     with patch("src.ai_providers.AsyncOpenAI"):
@@ -804,3 +866,232 @@ async def test_channel_with_group_uses_base_group_and_channel_prompt_extra(
     assert "Channel hint." in system_prompt
     # group before channel in composition order
     assert system_prompt.index("Group hint.") < system_prompt.index("Channel hint.")
+
+
+@pytest.mark.unit
+def test_summarizer_custom_composer_constructor_type_error(sample_config, mock_logger, monkeypatch):
+    """Custom composer with an incompatible constructor raises a helpful TypeError."""
+    sample_config.prompts.composer = "tests.test_summarizer.BadComposer"
+
+    class BadComposer:
+        def __init__(self, _base_template):
+            pass
+
+    monkeypatch.setattr("src.summarizer.load_class", lambda _path: BadComposer)
+
+    with patch("src.ai_providers.AsyncOpenAI"):
+        with pytest.raises(TypeError, match="must accept"):
+            Summarizer(sample_config, mock_logger)
+
+
+@pytest.mark.unit
+def test_summarizer_custom_composer_invalid_interface(sample_config, mock_logger, monkeypatch):
+    """Custom composer that does not implement PromptComposer is rejected."""
+    sample_config.prompts.composer = "tests.test_summarizer.BadComposer"
+
+    class BadComposer:
+        def __init__(self, _base_template, _language):
+            pass
+
+    monkeypatch.setattr("src.summarizer.load_class", lambda _path: BadComposer)
+
+    with patch("src.ai_providers.AsyncOpenAI"):
+        with pytest.raises(TypeError, match="does not implement"):
+            Summarizer(sample_config, mock_logger)
+
+
+@pytest.mark.unit
+async def test_summarize_channel_includes_truncation_note(
+    sample_config, mock_logger, sample_messages, monkeypatch
+):
+    """A truncated input includes a note telling the AI older messages were excluded."""
+    summarizer = Summarizer(sample_config, mock_logger)
+
+    captured = []
+
+    async def capture(
+        messages: list[dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        reasoning_effort: str | None = None,
+    ) -> str:
+        captured.append(messages)
+        return "summary"
+
+    monkeypatch.setattr(summarizer.provider, "chat_completion", capture)
+
+    summarizer.config.settings.max_prompt_chars = 100
+
+    result = await summarizer._summarize_channel("Test Channel", sample_messages)
+
+    assert result == "summary"
+    assert len(captured) == 1
+
+    user_prompt = captured[0][1]["content"]
+
+    assert "older message(s) were excluded" in user_prompt
+    assert "are NOT part of this digest" in user_prompt
+
+
+@pytest.mark.unit
+async def test_enforce_length_limit_minor_overage_truncates_at_sentence_boundary(
+    sample_config, mock_logger
+):
+    """A small overage is truncated locally without an AI retry."""
+    summarizer = Summarizer(sample_config, mock_logger)
+
+    summary = "A" * 3400 + ". " + "B" * 150
+
+    result = await summarizer._enforce_length_limit(
+        "Test Channel",
+        summary,
+        [{"role": "user", "content": "prompt"}],
+    )
+
+    assert len(result) <= MAX_SUMMARY_CHARS
+    assert result.endswith(".")
+
+
+@pytest.mark.unit
+def test_truncate_at_sentence_boundary_returns_short_text(sample_config, mock_logger):
+    """Text already within the limit is returned unchanged."""
+    summarizer = Summarizer(sample_config, mock_logger)
+
+    text = "Short summary."
+
+    result = summarizer._truncate_at_sentence_boundary(text, 100)
+
+    assert result == text
+
+
+@pytest.mark.unit
+def test_truncate_at_sentence_boundary_hard_truncates_without_punctuation(
+    sample_config, mock_logger
+):
+    """Text without sentence-ending punctuation is hard-truncated."""
+    summarizer = Summarizer(sample_config, mock_logger)
+
+    text = "A" * 100
+
+    result = summarizer._truncate_at_sentence_boundary(text, 50)
+
+    assert result == "A" * 50
+    assert len(result) == 50
+
+
+@pytest.mark.unit
+def test_truncate_at_sentence_boundary_uses_last_sentence(sample_config, mock_logger):
+    """Text is truncated at the last sentence boundary within the limit."""
+    summarizer = Summarizer(sample_config, mock_logger)
+
+    text = "First sentence. Second sentence. " + ("A" * 100)
+
+    result = summarizer._truncate_at_sentence_boundary(text, 40)
+
+    assert result == "First sentence. Second sentence."
+
+
+@pytest.mark.unit
+async def test_summarize_channel_unknown_channel_uses_default_prompt(
+    sample_config, mock_logger, sample_messages, monkeypatch
+):
+    """An unknown channel uses a default ChannelConfig for prompt composition."""
+    summarizer = Summarizer(sample_config, mock_logger)
+
+    captured = []
+
+    async def capture(
+        messages: list[dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        reasoning_effort: str | None = None,
+    ) -> str:
+        captured.append(messages)
+        return "summary"
+
+    monkeypatch.setattr(summarizer.provider, "chat_completion", capture)
+
+    result = await summarizer._summarize_channel(
+        "Unknown Channel",
+        sample_messages,
+    )
+
+    assert result == "summary"
+    assert len(captured) == 1
+    mock_logger.warning.assert_called_once_with(
+        "Channel 'Unknown Channel' not in config; using default prompt"
+    )
+
+
+@pytest.mark.unit
+async def test_enforce_length_limit_retry_failure_keeps_original_summary(
+    sample_config, mock_logger, monkeypatch
+):
+    """If the shortening retry fails, the original over-limit summary is truncated."""
+    summarizer = Summarizer(sample_config, mock_logger)
+
+    summary = "A" * (MAX_SUMMARY_CHARS + 201)
+
+    async def fail_retry(
+        messages: list[dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        reasoning_effort: str | None = None,
+    ) -> str:
+        raise RuntimeError("retry failed")
+
+    monkeypatch.setattr(summarizer.provider, "chat_completion", fail_retry)
+
+    result = await summarizer._enforce_length_limit(
+        "Test Channel",
+        summary,
+        [{"role": "user", "content": "prompt"}],
+    )
+
+    assert len(result) <= MAX_SUMMARY_CHARS
+    assert result == "A" * MAX_SUMMARY_CHARS
+
+
+@pytest.mark.unit
+async def test_enforce_length_limit_retry_returns_short_summary(
+    sample_config, mock_logger, monkeypatch
+):
+    """A successful shortening retry returns the shorter result."""
+    summarizer = Summarizer(sample_config, mock_logger)
+
+    summary = "A" * (MAX_SUMMARY_CHARS + 201)
+    shortened = "Shortened summary."
+
+    captured = []
+
+    async def capture(
+        messages: list[dict[str, str]],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        reasoning_effort: str | None = None,
+    ) -> str:
+        captured.append(messages)
+        return shortened
+
+    monkeypatch.setattr(summarizer.provider, "chat_completion", capture)
+
+    result = await summarizer._enforce_length_limit(
+        "Test Channel",
+        summary,
+        [{"role": "user", "content": "prompt"}],
+    )
+
+    assert result == shortened
+    assert len(captured) == 1
+
+    retry_messages = captured[0]
+
+    assert retry_messages[-2] == {
+        "role": "assistant",
+        "content": summary,
+    }
+    assert "Shorten to under 3500 characters" in retry_messages[-1]["content"]

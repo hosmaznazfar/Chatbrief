@@ -380,23 +380,6 @@ async def test_fetch_messages_flood_wait_retry(sample_config, mock_logger):
     mock_sleep.assert_awaited_once_with(2)
     assert collector.fetch_channel_messages.await_count == 3
 
-    @pytest.mark.asyncio
-    async def test_fetch_messages_flood_wait_retry_failure(sample_config, mock_logger):
-        collector = make_collector(sample_config, mock_logger)
-
-        collector.fetch_channel_messages = AsyncMock(
-            side_effect=FloodWaitError(request=MagicMock(), capture=2)
-        )
-
-        with patch("src.collector.asyncio.sleep", new_callable=AsyncMock):
-            result = await collector.fetch_messages(hours=24)
-
-        assert result == {
-            "Test Channel": [],
-            "Private Group": [],
-        }
-        assert mock_logger.error.call_count == 2
-
 
 @pytest.mark.asyncio
 async def test_fetch_messages_flood_wait_retry_failure(sample_config, mock_logger):

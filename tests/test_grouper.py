@@ -731,17 +731,6 @@ class TestDedupExtracted:
         result = _dedup_extracted(bullets)
         assert len(result) == 2
 
-        def test_drops_bullet_with_empty_normalized_text(self):
-            """Bullets whose normalized point is empty are ignored."""
-            bullets = [
-                ExtractedBullet(point="   ", source="Ch1"),
-                ExtractedBullet(point="AI Summit 2026", source="Ch2"),
-            ]
-
-            result = _dedup_extracted(bullets)
-
-            assert len(result) == 1
-            assert result[0].point == "AI Summit 2026"
 
     def test_ignores_bullet_with_empty_normalized_text(self):
         """Bullets with an empty normalized point are ignored."""
