@@ -56,16 +56,6 @@ ignore = [
 [tool.ruff.format]
 quote-style = "double"
 
-[[tool.mypy.overrides]]
-module = [
-    "telethon.*",
-    "telegram.*",
-    "apscheduler.*",
-    "asyncpg",
-    "asyncpg.*",
-]
-ignore_missing_imports = true
-
 [tool.pylint.messages_control]
 disable = [
     "C0111",  # missing-docstring
