@@ -4,17 +4,20 @@ FROM mirror.gcr.io/library/python:3.14.3-slim
 # Set working directory
 WORKDIR /app
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /bin/
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy dependency files first for better caching
+COPY pyproject.toml uv.lock ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install production dependencies
+RUN uv sync --locked --no-dev
 
 # Copy application code
 COPY . .
@@ -29,6 +32,7 @@ RUN mkdir -p logs sessions data && chown -R telebrief:telebrief logs sessions da
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV LOG_LEVEL=INFO
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
