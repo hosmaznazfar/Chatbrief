@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.config_loader import ChannelConfig, FilterSpec, StorageConfig
+from src.config.models import ChannelConfig, FilterSpec, StorageConfig
 from src.core import (
     _apply_filters,
     _collect_messages,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from src.config_loader import ChannelConfig
+from src.config.models import ChannelConfig
 from src.extensions.prompts import DefaultComposer, PromptComposer
 
 BASE = "You are an assistant. Write in {language}."

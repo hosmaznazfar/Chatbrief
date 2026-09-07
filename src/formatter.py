@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
 from src.collector import Message
-from src.config_loader import Config
+from src.config.models import Config
 from src.grouper import GroupedPoint
 from src.summarizer import ERROR_SUMMARY_PREFIX
 from src.ui_strings import get_month_names, get_ui_strings
@@ -417,7 +417,7 @@ class DigestFormatter:
 
 def main():
     """Test formatter."""
-    from src.config_loader import load_config
+    from src.config.loader import load_config
     from src.utils import setup_logging
 
     config = load_config()

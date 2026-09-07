@@ -837,7 +837,7 @@ async def test_channel_with_group_uses_base_group_and_channel_prompt_extra(
     sample_config, mock_logger, sample_messages
 ):
     """Channel with group: composer returns base + group.prompt_extra + channel.prompt_extra."""
-    from src.config_loader import DigestGroupConfig
+    from src.config.models import DigestGroupConfig
 
     group = DigestGroupConfig(name="Jobs", description="Job listings", prompt_extra="Group hint.")
     sample_config.settings.digest_groups = [group]

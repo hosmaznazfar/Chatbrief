@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 from src.collector import Message, MessageCollector
-from src.config_loader import ChannelConfig, Config
+from src.config.models import ChannelConfig, Config
 from src.extensions.loader import load_class
 from src.formatter import DigestFormatter
 from src.grouper import DigestGrouper

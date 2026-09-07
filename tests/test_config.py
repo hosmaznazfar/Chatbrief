@@ -5,14 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from src.config_loader import (
-    DigestGroupConfig,
-    FilterSpec,
-    McpConfig,
-    PromptsConfig,
-    StorageConfig,
-    load_config,
-)
+from src.config.loader import load_config
+from src.config.models import DigestGroupConfig, FilterSpec, McpConfig, PromptsConfig, StorageConfig
 
 
 @pytest.mark.unit
@@ -82,7 +76,9 @@ settings:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     # Mock load_dotenv to prevent loading from .env file
-    with patch("src.config_loader.load_dotenv"):
+    import src.config.loader
+
+    with patch.object(src.config.loader, "load_dotenv"):
         with pytest.raises(ValueError, match="Missing required environment variables"):
             load_config(str(config_file))
 
@@ -142,7 +138,9 @@ settings:
     config_file = tmp_path / "config.yaml"
     config_file.write_text(config_content)
 
-    with patch("src.config_loader.load_dotenv"):
+    import src.config.loader
+
+    with patch.object(src.config.loader, "load_dotenv"):
         config = load_config(str(config_file))
 
     assert config.settings.ai_provider == "ollama"
@@ -170,7 +168,9 @@ settings:
     config_file = tmp_path / "config.yaml"
     config_file.write_text(config_content)
 
-    with patch("src.config_loader.load_dotenv"):
+    import src.config.loader
+
+    with patch.object(src.config.loader, "load_dotenv"):
         with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
             load_config(str(config_file))
 
@@ -814,8 +814,10 @@ def test_filter_spec_channel_override(tmp_path, mock_env_vars):
         "      config:\n        min_chars: 10\n"
     )
     config = load_config(str(p))
+    assert config.settings.filters is not None
     assert len(config.settings.filters) == 1
     assert config.settings.filters[0].class_path == "src.extensions.filters.MinLengthFilter"
+    assert config.channels[0].filters is not None
     assert len(config.channels[0].filters) == 1
     assert config.channels[0].filters[0].class_path == "src.extensions.filters.KeywordFilter"
 

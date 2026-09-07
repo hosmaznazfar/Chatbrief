@@ -7,7 +7,7 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, cast
+from typing import Awaitable, Dict, List, cast
 
 from telethon import TelegramClient
 from telethon.errors import ChannelPrivateError, FloodWaitError
@@ -22,7 +22,7 @@ from telethon.tl.types import (
     User,
 )
 
-from src.config_loader import ChannelConfig, Config
+from src.config.models import ChannelConfig, Config
 from src.ui_strings import get_ui_strings
 
 
@@ -322,32 +322,29 @@ async def main():
     Run interactively to create sessions/user.session:
         python -m src.collector
     """
-    from src.config_loader import load_config
+    from src.config.loader import load_config
     from src.utils import setup_logging
 
     config = load_config()
     logger = setup_logging(config.log_level)
 
-    # Interactive auth: call start() which prompts for phone + code
-    client = TelegramClient("sessions/user", config.telegram_api_id, config.telegram_api_hash)
+    collector = MessageCollector(config, logger)
+
     print("Authenticating with Telegram User API...")
     print("You will be prompted for your phone number and a login code.")
-    client.start()
-    print("Authenticated! Session saved to sessions/user.session")
 
-    # Quick test: fetch 1 hour of messages
-    collector = MessageCollector(config, logger)
     try:
-        await collector.connect()
+        await cast(Awaitable[TelegramClient], collector.client.start())
+        print("Authenticated! Session saved to sessions/user.session")
+
         messages = await collector.fetch_messages(hours=1)
 
         for channel_name, msgs in messages.items():
             print(f"\n{channel_name}: {len(msgs)} messages")
-            for msg in msgs[:3]:  # Show first 3
+            for msg in msgs[:3]:
                 print(f"  - {msg.sender}: {msg.text[:50]}...")
     finally:
         await collector.disconnect()
-        client.disconnect()
 
 
 if __name__ == "__main__":

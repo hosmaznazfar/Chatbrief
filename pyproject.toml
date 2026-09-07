@@ -1,5 +1,5 @@
 [project]
-name = "telebrief"
+name = "chatbief"
 version = "0.1.0"
 description = "Automated Telegram Digest Generator powered by AI"
 readme = "README.md"

@@ -10,7 +10,7 @@ from typing import Optional
 from telegram import BotCommand, Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-from src.config_loader import Config
+from src.config.models import Config
 from src.core import generate_and_send_digest
 from src.scheduler import DigestScheduler
 from src.sender import DigestSender
@@ -308,7 +308,7 @@ class BotCommandHandler:
 
 async def main():
     """Test bot commands."""
-    from src.config_loader import load_config
+    from src.config.loader import load_config
     from src.utils import setup_logging
 
     config = load_config()

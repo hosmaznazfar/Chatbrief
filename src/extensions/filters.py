@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from src.collector import Message
-    from src.config_loader import ChannelConfig
+    from src.config.models import ChannelConfig
 
 
 @runtime_checkable

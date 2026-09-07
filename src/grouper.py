@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional
 
 from src.ai_providers import AIProvider, create_provider
-from src.config_loader import Config, DigestGroupConfig
+from src.config.models import Config, DigestGroupConfig
 from src.ui_strings import get_ui_strings
 from src.xml_escape import escape_xml_delimiters
 

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     import aiosqlite as _aiosqlite
 
     from src.collector import Message
-    from src.config_loader import StorageConfig
+    from src.config.models import StorageConfig
 
 _CREATE_SQLITE_TABLE = """
 CREATE TABLE IF NOT EXISTS messages (

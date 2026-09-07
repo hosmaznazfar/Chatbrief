@@ -12,7 +12,7 @@ import logging
 from mcp.server import MCPServer
 
 from src.collector import Message
-from src.config_loader import Config
+from src.config.models import Config
 from src.core import (
     MAX_CHANNEL_MESSAGES,
     MAX_DIGEST_HOURS,

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import pytest
 
 from src.collector import Message
-from src.config_loader import ChannelConfig
+from src.config.models import ChannelConfig
 from src.extensions.filters import KeywordFilter, MessageFilter, MinLengthFilter, RegexFilter
 
 

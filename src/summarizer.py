@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 
 from src.ai_providers import AIProvider, TokenBudgetExhaustedError, create_provider
 from src.collector import Message
-from src.config_loader import ChannelConfig, Config, DigestGroupConfig
+from src.config.models import ChannelConfig, Config, DigestGroupConfig
 from src.extensions.loader import load_class
 from src.extensions.prompts import DefaultComposer, PromptComposer
 from src.xml_escape import escape_xml_delimiters
@@ -399,7 +399,7 @@ Messages (total: {actual_count}):
 async def main():
     """Test summarizer."""
     from src.collector import MessageCollector
-    from src.config_loader import load_config
+    from src.config.loader import load_config
     from src.utils import setup_logging
 
     config = load_config()

@@ -10,7 +10,7 @@ from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
 
-from src.config_loader import Config
+from src.config.models import Config
 from src.formatter import DigestFormatter
 from src.utils import (
     clear_digest_message_ids,
@@ -460,7 +460,7 @@ class DigestSender:
 
 async def main():
     """Test sender."""
-    from src.config_loader import load_config
+    from src.config.loader import load_config
     from src.utils import setup_logging
 
     config = load_config()

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.config_loader import DigestGroupConfig
+from src.config.models import DigestGroupConfig
 from src.grouper import (
     DigestGrouper,
     ExtractedBullet,
@@ -730,7 +730,6 @@ class TestDedupExtracted:
         ]
         result = _dedup_extracted(bullets)
         assert len(result) == 2
-
 
     def test_ignores_bullet_with_empty_normalized_text(self):
         """Bullets with an empty normalized point are ignored."""

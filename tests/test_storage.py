@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import pytest
 
 from src.collector import Message
-from src.config_loader import StorageConfig
+from src.config.models import StorageConfig
 from src.storage import PostgresBackend, SQLiteBackend, create_storage
 
 
@@ -71,6 +71,7 @@ class TestSQLiteBackend:
             async with aiosqlite.connect(str(db)) as conn:
                 async with conn.execute("SELECT count(*) FROM messages") as cur:
                     row = await cur.fetchone()
+            assert row is not None
             assert row[0] == 2
         finally:
             await backend.close()
@@ -315,7 +316,7 @@ class TestCreateStorage:
             await create_storage(cfg)
 
     def test_postgres_empty_url_raises_via_config_loader(self, tmp_path, monkeypatch):
-        from src.config_loader import load_config
+        from src.config.loader import load_config
 
         monkeypatch.setenv("TELEGRAM_API_ID", "12345678")
         monkeypatch.setenv("TELEGRAM_API_HASH", "test_hash")

@@ -8,7 +8,7 @@ import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from src.config_loader import Config
+from src.config.models import Config
 from src.core import generate_and_send_digest
 
 
@@ -119,7 +119,7 @@ class DigestScheduler:
 
 async def main():
     """Test scheduler."""
-    from src.config_loader import load_config
+    from src.config.loader import load_config
     from src.utils import setup_logging
 
     config = load_config()

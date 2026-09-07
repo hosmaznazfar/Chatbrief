@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.config_loader import ChannelConfig, Config, Settings
+from src.config.models import ChannelConfig, Config, Settings
 
 
 @pytest.fixture

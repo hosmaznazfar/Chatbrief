@@ -1,134 +1,18 @@
-"""
-Configuration loader for Telebrief.
-Loads settings from config.yaml and environment variables.
-"""
-
 import logging
-import os
-from dataclasses import dataclass, field
-from typing import Any, List
+from typing import List
 
-import yaml
-from dotenv import load_dotenv
-
-
-@dataclass
-class FilterSpec:
-    """Specification for a single message filter in a filter chain."""
-
-    class_path: str
-    config: dict[str, Any] = field(default_factory=dict)
+from .constants import PROVIDER_DEFAULT_MODELS, SUPPORTED_LANGUAGES, SUPPORTED_PROVIDERS
+from .models import (
+    ChannelConfig,
+    DigestGroupConfig,
+    FilterSpec,
+    McpConfig,
+    PromptsConfig,
+    StorageConfig,
+)
 
 
-@dataclass
-class ChannelConfig:
-    """Configuration for a single Telegram channel/chat."""
-
-    id: str | int  # str for @username, int for numeric Telegram channel ID
-    name: str
-    lookback_hours: int | None = None  # None = use global settings.lookback_hours
-    prompt_extra: str = ""  # appended to system prompt when summarizing this channel
-    filters: list[FilterSpec] | None = None  # None=use global, []=explicit no-op
-    group: str | None = None  # must reference digest_groups[*].name, "Other", or None
-
-
-@dataclass
-class DigestGroupConfig:
-    """Configuration for a single digest topic group."""
-
-    name: str
-    description: str
-    prompt_extra: str = ""  # appended to system prompt for channels in this group
-
-
-@dataclass
-class PromptsConfig:
-    """Configuration for prompt template and composer."""
-
-    base_template: str = "src/prompts/base_summary.txt"
-    composer: str = ""  # empty = DefaultComposer; otherwise dotted class path
-
-
-@dataclass
-class StorageConfig:
-    """Configuration for the persistent message storage backend."""
-
-    enabled: bool = False
-    backend: str = "sqlite"  # "sqlite" | "postgres"
-    path: str = "data/messages.db"
-    url: str = field(
-        default="", repr=False
-    )  # postgres only; repr=False prevents credential exposure in logs
-
-
-@dataclass
-class McpConfig:
-    """Configuration for the built-in MCP server."""
-
-    enabled: bool = False
-    host: str = "127.0.0.1"
-    port: int = 8765
-    path: str = "/mcp"
-
-
-@dataclass
-class Settings:
-    """Application settings."""
-
-    schedule_time: str
-    timezone: str
-    lookback_hours: int
-    openai_model: str
-    openai_temperature: float
-    temperature: float = 0.7
-    max_tokens_per_summary: int = 1500
-    use_emojis: bool = True
-    include_statistics: bool = True
-    target_user_id: int = 0
-    auto_cleanup_old_digests: bool = True
-    max_messages_per_channel: int = 500
-    max_prompt_chars: int = 8000
-    api_timeout: int = 30
-    ai_provider: str = "openai"
-    ai_model: str = ""
-    ollama_base_url: str = "http://localhost:11434"
-    output_language: str = "Russian"
-    digest_mode: str = "channel"
-    digest_groups: List[DigestGroupConfig] = field(default_factory=list)
-    filters: list[FilterSpec] = field(default_factory=list)
-    dedup_topics: bool = False
-
-
-@dataclass
-class Config:
-    """Complete application configuration."""
-
-    channels: List[ChannelConfig]
-    settings: Settings
-
-    # Environment variables
-    telegram_api_id: int
-    telegram_api_hash: str
-    telegram_bot_token: str
-    openai_api_key: str
-    log_level: str
-    anthropic_api_key: str = ""
-    storage: StorageConfig = field(default_factory=StorageConfig)
-    prompts: PromptsConfig = field(default_factory=PromptsConfig)
-    mcp: McpConfig = field(default_factory=McpConfig)
-
-
-SUPPORTED_LANGUAGES = ("English", "Russian", "Spanish", "German", "French")
-
-_SUPPORTED_PROVIDERS = {"openai", "ollama", "anthropic"}
-_PROVIDER_DEFAULT_MODELS = {
-    "openai": "gpt-5-nano",
-    "anthropic": "claude-sonnet-4-5-20250929",
-    "ollama": "llama3",
-}
-
-
-def _resolve_ai_settings(settings_dict: dict) -> tuple:
+def resolve_ai_settings(settings_dict: dict) -> tuple:
     """Resolve ai_provider and ai_model from settings dict.
 
     Returns:
@@ -142,13 +26,13 @@ def _resolve_ai_settings(settings_dict: dict) -> tuple:
         raise ValueError(f"ai_provider must be a string, got {type(raw_provider).__name__}")
     ai_provider = raw_provider.lower()
 
-    if ai_provider not in _SUPPORTED_PROVIDERS:
+    if ai_provider not in SUPPORTED_PROVIDERS:
         raise ValueError(
             f"Unsupported ai_provider: '{ai_provider}'. "
-            f"Supported providers: {', '.join(sorted(_SUPPORTED_PROVIDERS))}"
+            f"Supported providers: {', '.join(sorted(SUPPORTED_PROVIDERS))}"
         )
 
-    default_model = _PROVIDER_DEFAULT_MODELS[ai_provider]
+    default_model = PROVIDER_DEFAULT_MODELS[ai_provider]
 
     # ai_model takes priority; openai_model is only a fallback for the openai provider
     ai_model = settings_dict.get("ai_model") or (
@@ -160,7 +44,7 @@ def _resolve_ai_settings(settings_dict: dict) -> tuple:
     return ai_provider, ai_model
 
 
-def _parse_digest_settings(
+def parse_digest_settings(
     settings_dict: dict,
 ) -> tuple[str, list[DigestGroupConfig], str]:
     """Parse digest_mode, digest_groups, and output_language from settings.
@@ -211,7 +95,7 @@ def _parse_digest_settings(
     return digest_mode, digest_groups, output_language
 
 
-def _validate_dotted_path(value: str, label: str) -> str:
+def validate_dotted_path(value: str, label: str) -> str:
     """Validate a YAML-string dotted path (e.g. 'pkg.module.ClassName').
 
     Returns the stripped value. Raises ValueError if the value is not a non-empty
@@ -228,7 +112,7 @@ def _validate_dotted_path(value: str, label: str) -> str:
     return stripped
 
 
-def _parse_filter_specs(raw_list: object, path_label: str) -> list[FilterSpec]:
+def parse_filter_specs(raw_list: object, path_label: str) -> list[FilterSpec]:
     """Parse and validate a list of filter specs from YAML.
 
     Raises:
@@ -242,7 +126,7 @@ def _parse_filter_specs(raw_list: object, path_label: str) -> list[FilterSpec]:
             raise ValueError(f"{path_label}[{i}] must be a mapping, got {type(item).__name__}")
         if "class_path" not in item:
             raise ValueError(f"{path_label}[{i}] missing required field 'class_path'")
-        class_path = _validate_dotted_path(item["class_path"], f"{path_label}[{i}].class_path")
+        class_path = validate_dotted_path(item["class_path"], f"{path_label}[{i}].class_path")
         config = item.get("config", {})
         if not isinstance(config, dict):
             raise ValueError(
@@ -252,7 +136,7 @@ def _parse_filter_specs(raw_list: object, path_label: str) -> list[FilterSpec]:
     return specs
 
 
-def _validate_channel_lookback(i: int, ch: dict) -> int | None:
+def validate_channel_lookback(i: int, ch: dict) -> int | None:
     lookback_hours = ch.get("lookback_hours")
     if lookback_hours is None:
         return None
@@ -265,7 +149,7 @@ def _validate_channel_lookback(i: int, ch: dict) -> int | None:
     return lookback_hours
 
 
-def _validate_channel_group(i: int, ch: dict) -> str | None:
+def validate_channel_group(i: int, ch: dict) -> str | None:
     group = ch.get("group")
     if group is None:
         return None
@@ -274,7 +158,7 @@ def _validate_channel_group(i: int, ch: dict) -> str | None:
     return group.strip()
 
 
-def _validate_channel_id_name(i: int, ch: dict) -> None:
+def validate_channel_id_name(i: int, ch: dict) -> None:
     for required in ("id", "name"):
         if required not in ch:
             raise ValueError(f"channels[{i}] missing required field '{required}'")
@@ -284,7 +168,7 @@ def _validate_channel_id_name(i: int, ch: dict) -> None:
         raise ValueError(f"channels[{i}].id must be a string or int, got {type(ch['id']).__name__}")
 
 
-def _parse_channel_entry(i: int, ch: object) -> ChannelConfig:
+def parse_channel_entry(i: int, ch: object) -> ChannelConfig:
     """Parse and validate a single channel entry from YAML.
 
     Raises:
@@ -292,8 +176,8 @@ def _parse_channel_entry(i: int, ch: object) -> ChannelConfig:
     """
     if not isinstance(ch, dict):
         raise ValueError(f"channels[{i}] must be a mapping, got {type(ch).__name__}")
-    _validate_channel_id_name(i, ch)
-    lookback_hours = _validate_channel_lookback(i, ch)
+    validate_channel_id_name(i, ch)
+    lookback_hours = validate_channel_lookback(i, ch)
     prompt_extra = ch.get("prompt_extra", "")
     if not isinstance(prompt_extra, str):
         raise ValueError(
@@ -302,18 +186,18 @@ def _parse_channel_entry(i: int, ch: object) -> ChannelConfig:
     raw_filters = ch.get("filters")
     channel_filters: list[FilterSpec] | None = None
     if raw_filters is not None:
-        channel_filters = _parse_filter_specs(raw_filters, f"channels[{i}].filters")
+        channel_filters = parse_filter_specs(raw_filters, f"channels[{i}].filters")
     return ChannelConfig(
         id=ch["id"],
         name=ch["name"],
         lookback_hours=lookback_hours,
         prompt_extra=prompt_extra,
         filters=channel_filters,
-        group=_validate_channel_group(i, ch),
+        group=validate_channel_group(i, ch),
     )
 
 
-def _parse_storage_config(yaml_config: dict) -> StorageConfig:
+def parse_storage_config(yaml_config: dict) -> StorageConfig:
     """Parse and validate the optional top-level storage: block.
 
     Raises:
@@ -348,7 +232,7 @@ def _parse_storage_config(yaml_config: dict) -> StorageConfig:
     return StorageConfig(enabled=enabled, backend=backend, path=path, url=url)
 
 
-def _parse_mcp_config(yaml_config: dict) -> McpConfig:
+def parse_mcp_config(yaml_config: dict) -> McpConfig:
     """Parse and validate the optional top-level mcp: block.
 
     Raises:
@@ -379,7 +263,7 @@ def _parse_mcp_config(yaml_config: dict) -> McpConfig:
     return McpConfig(enabled=enabled, host=host.strip(), port=port, path=path)
 
 
-def _parse_prompts_config(yaml_config: dict) -> PromptsConfig:
+def parse_prompts_config(yaml_config: dict) -> PromptsConfig:
     """Parse and validate the optional top-level prompts: block.
 
     Raises:
@@ -400,14 +284,14 @@ def _parse_prompts_config(yaml_config: dict) -> PromptsConfig:
     if not isinstance(composer, str):
         raise ValueError(f"prompts.composer must be a string, got {type(composer).__name__}")
     if composer.strip():
-        composer = _validate_dotted_path(composer, "prompts.composer")
+        composer = validate_dotted_path(composer, "prompts.composer")
     else:
         composer = ""
 
     return PromptsConfig(base_template=base_template, composer=composer)
 
 
-def _validate_channel_groups(
+def validate_channel_groups(
     channels: List[ChannelConfig],
     digest_groups: list[DigestGroupConfig],
     output_language: str,
@@ -439,7 +323,7 @@ def _validate_channel_groups(
         )
 
 
-def _parse_channels(yaml_config: dict) -> List[ChannelConfig]:
+def parse_channels(yaml_config: dict) -> List[ChannelConfig]:
     """Parse and validate channel configs from YAML.
 
     Raises:
@@ -454,7 +338,7 @@ def _parse_channels(yaml_config: dict) -> List[ChannelConfig]:
         raise ValueError(
             f"config.yaml field 'channels' must be a list, got {type(channels_value).__name__}"
         )
-    channels = [_parse_channel_entry(i, ch) for i, ch in enumerate(channels_value)]
+    channels = [parse_channel_entry(i, ch) for i, ch in enumerate(channels_value)]
 
     if not channels:
         raise ValueError("No channels configured in config.yaml")
@@ -469,153 +353,3 @@ def _parse_channels(yaml_config: dict) -> List[ChannelConfig]:
         raise ValueError(f"Duplicate channel names in config.yaml: {', '.join(sorted(duplicates))}")
 
     return channels
-
-
-def _load_and_validate_env_vars(ai_provider: str) -> dict:
-    """Load and validate required environment variables.
-
-    Returns:
-        Dict with keys matching Config env var fields.
-    """
-    telegram_api_id = os.getenv("TELEGRAM_API_ID")
-    telegram_api_hash = os.getenv("TELEGRAM_API_HASH")
-    telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    openai_api_key = os.getenv("OPENAI_API_KEY", "")
-    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
-    log_level = os.getenv("LOG_LEVEL", "INFO")
-
-    missing_vars = []
-    if not telegram_api_id:
-        missing_vars.append("TELEGRAM_API_ID")
-    if not telegram_api_hash:
-        missing_vars.append("TELEGRAM_API_HASH")
-    if not telegram_bot_token:
-        missing_vars.append("TELEGRAM_BOT_TOKEN")
-
-    if ai_provider == "openai" and not openai_api_key:
-        missing_vars.append("OPENAI_API_KEY")
-    elif ai_provider == "anthropic" and not anthropic_api_key:
-        missing_vars.append("ANTHROPIC_API_KEY")
-
-    if missing_vars:
-        raise ValueError(
-            f"Missing required environment variables: {', '.join(missing_vars)}\n"
-            f"Please set them in .env file (see .env.example)"
-        )
-
-    telegram_api_id = os.environ["TELEGRAM_API_ID"]
-    telegram_api_hash = os.environ["TELEGRAM_API_HASH"]
-    telegram_bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
-
-    return {
-        "telegram_api_id": int(telegram_api_id),
-        "telegram_api_hash": telegram_api_hash,
-        "telegram_bot_token": telegram_bot_token,
-        "openai_api_key": openai_api_key,
-        "anthropic_api_key": anthropic_api_key,
-        "log_level": log_level,
-    }
-
-
-def load_config(config_path: str = "config.yaml") -> Config:
-    """
-    Load configuration from YAML file and environment variables.
-
-    Args:
-        config_path: Path to config.yaml file
-
-    Returns:
-        Config object with all settings
-
-    Raises:
-        FileNotFoundError: If config.yaml not found
-        ValueError: If required environment variables missing
-    """
-    # Load environment variables from .env file
-    load_dotenv()
-
-    # Load YAML configuration
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Configuration file not found: {config_path}")
-
-    with open(config_path, "r", encoding="utf-8") as f:
-        yaml_config = yaml.safe_load(f)
-
-    # Parse channels
-    channels = _parse_channels(yaml_config)
-
-    # Parse storage config
-    storage_config = _parse_storage_config(yaml_config)
-
-    # Parse prompts config
-    prompts_config = _parse_prompts_config(yaml_config)
-
-    # Parse MCP server config
-    mcp_config = _parse_mcp_config(yaml_config)
-
-    # Parse settings
-    settings_dict = yaml_config.get("settings", {})
-    ai_provider, ai_model = _resolve_ai_settings(settings_dict)
-    digest_mode, digest_groups, output_language = _parse_digest_settings(settings_dict)
-    raw_global_filters = settings_dict.get("filters")
-    global_filters = _parse_filter_specs(
-        raw_global_filters if raw_global_filters is not None else [],
-        "settings.filters",
-    )
-
-    settings = Settings(
-        schedule_time=settings_dict.get("schedule_time", "08:00"),
-        timezone=settings_dict.get("timezone", "UTC"),
-        lookback_hours=settings_dict.get("lookback_hours", 24),
-        openai_model=settings_dict.get("openai_model", "gpt-5-nano"),
-        openai_temperature=settings_dict.get("openai_temperature", 0.7),
-        temperature=settings_dict.get("temperature", settings_dict.get("openai_temperature", 0.7)),
-        max_tokens_per_summary=settings_dict.get("max_tokens_per_summary", 1500),
-        use_emojis=settings_dict.get("use_emojis", True),
-        include_statistics=settings_dict.get("include_statistics", True),
-        target_user_id=settings_dict.get("target_user_id", 0),
-        auto_cleanup_old_digests=settings_dict.get("auto_cleanup_old_digests", True),
-        max_messages_per_channel=settings_dict.get("max_messages_per_channel", 500),
-        max_prompt_chars=settings_dict.get("max_prompt_chars", 8000),
-        api_timeout=int(settings_dict.get("api_timeout", 30)),
-        ai_provider=ai_provider,
-        ai_model=ai_model,
-        ollama_base_url=settings_dict.get("ollama_base_url", "http://localhost:11434"),
-        output_language=output_language,
-        digest_mode=digest_mode,
-        digest_groups=digest_groups,
-        filters=global_filters,
-        dedup_topics=bool(settings_dict.get("dedup_topics", False)),
-    )
-
-    if settings.target_user_id == 0:
-        raise ValueError(
-            "target_user_id not configured in config.yaml. "
-            "Get your Telegram user ID from @userinfobot"
-        )
-
-    # Cross-validate channel group references against known digest_groups
-    _validate_channel_groups(channels, digest_groups, output_language)
-
-    env_vars = _load_and_validate_env_vars(ai_provider)
-
-    return Config(
-        channels=channels,
-        settings=settings,
-        storage=storage_config,
-        prompts=prompts_config,
-        mcp=mcp_config,
-        **env_vars,
-    )
-
-
-if __name__ == "__main__":
-    # Test configuration loading
-    try:
-        config = load_config()
-        print("✅ Configuration loaded successfully!")
-        print(f"Channels: {len(config.channels)}")
-        print(f"Target user: {config.settings.target_user_id}")
-        print(f"AI provider: {config.settings.ai_provider}, model: {config.settings.ai_model}")
-    except Exception as e:
-        print(f"❌ Configuration error: {e}")
