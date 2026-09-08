@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """
-Telebrief - Automated Telegram Digest Generator
+Chatbref - Automated Multi Platform Digest Generator
 
 Main entry point for the application.
 Starts the scheduler and bot command handler.
 """
 
 import asyncio
+import logging
 import signal
 import sys
 from contextlib import suppress
 
+from mcp.server import MCPServer
+
 from src.bot_commands import BotCommandHandler
-from src.config_loader import load_config
+from src.config.loader import load_config
+from src.config.models import Config
 from src.mcp_server import build_server
 from src.scheduler import DigestScheduler
 from src.utils import setup_logging
@@ -23,13 +27,37 @@ class TelebriefApp:
 
     def __init__(self):
         """Initialize the application."""
-        self.config = None
-        self.logger = None
-        self.scheduler = None
-        self.bot_handler = None
-        self.mcp = None
-        self.mcp_task = None
+        self.config: Config | None = None
+        self.logger: logging.Logger | None = None
+        self.scheduler: DigestScheduler | None = None
+        self.bot_handler: BotCommandHandler | None = None
+        self.mcp: MCPServer | None = None
+        self.mcp_task: asyncio.Task[None] | None = None
         self.shutdown_event = asyncio.Event()
+
+    def _require_initialized(
+        self,
+    ) -> tuple[
+        Config,
+        logging.Logger,
+        DigestScheduler,
+        BotCommandHandler,
+    ]:
+        """Return initialized application components."""
+        if (
+            self.config is None
+            or self.logger is None
+            or self.scheduler is None
+            or self.bot_handler is None
+        ):
+            raise RuntimeError("Application has not been initialized")
+
+        return (
+            self.config,
+            self.logger,
+            self.scheduler,
+            self.bot_handler,
+        )
 
     async def initialize(self):
         """Load configuration and set up components."""
@@ -95,18 +123,18 @@ class TelebriefApp:
 
     async def run(self):
         """Run the application."""
+        config, logger, scheduler, bot_handler = self._require_initialized()
+
         # Start scheduler
-        self.logger.info("Starting scheduler...")
-        self.scheduler.start()
+        logger.info("Starting scheduler...")
+        scheduler.start()
 
-        # Start bot
-        self.logger.info("Starting bot command handler...")
-        await self.bot_handler.run()
+        logger.info("Starting bot command handler...")
+        await bot_handler.run()
 
-        # Start MCP server in the same event loop, so it shares the Telegram session
         if self.mcp:
-            mcp_cfg = self.config.mcp
-            self.logger.info(
+            mcp_cfg = config.mcp
+            logger.info(
                 f"Starting MCP server on http://{mcp_cfg.host}:{mcp_cfg.port}{mcp_cfg.path}"
             )
             self.mcp_task = asyncio.create_task(
@@ -117,55 +145,56 @@ class TelebriefApp:
                 )
             )
 
-        self.logger.info("=" * 70)
-        self.logger.info("✅ TELEBRIEF IS RUNNING")
-        self.logger.info("=" * 70)
-        self.logger.info("Scheduler: Active")
-        self.logger.info(f"Next digest: {self.scheduler.get_next_run_time()}")
-        self.logger.info("Bot commands: Active")
+        logger.info("=" * 70)
+        logger.info("✅ TELEBRIEF IS RUNNING")
+        logger.info("=" * 70)
+        logger.info("Scheduler: Active")
+        logger.info(f"Next digest: {scheduler.get_next_run_time()}")
+        logger.info("Bot commands: Active")
         if self.mcp_task:
-            mcp_cfg = self.config.mcp
-            self.logger.info(f"MCP server: http://{mcp_cfg.host}:{mcp_cfg.port}{mcp_cfg.path}")
-        self.logger.info("")
-        self.logger.info("Available commands in Telegram:")
-        self.logger.info("  /digest - Generate digest instantly")
-        self.logger.info("  /status - Show status")
-        self.logger.info("  /help - Show help")
-        self.logger.info("")
-        self.logger.info("Press Ctrl+C to stop")
-        self.logger.info("=" * 70)
+            mcp_cfg = config.mcp
+            logger.info(f"MCP server: http://{mcp_cfg.host}:{mcp_cfg.port}{mcp_cfg.path}")
+        logger.info("")
+        logger.info("Available commands in Telegram:")
+        logger.info("  /digest - Generate digest instantly")
+        logger.info("  /status - Show status")
+        logger.info("  /help - Show help")
+        logger.info("")
+        logger.info("Press Ctrl+C to stop")
+        logger.info("=" * 70)
 
-        # Wait for shutdown signal
         await self.shutdown_event.wait()
 
     async def shutdown(self):
         """Graceful shutdown."""
-        self.logger.info("=" * 70)
-        self.logger.info("🛑 SHUTTING DOWN TELEBRIEF")
-        self.logger.info("=" * 70)
+        config, logger, scheduler, bot_handler = self._require_initialized()
+
+        logger.info("=" * 70)
+        logger.info("🛑 SHUTTING DOWN TELEBRIEF")
+        logger.info("=" * 70)
 
         # Stop scheduler
-        if self.scheduler:
-            self.logger.info("Stopping scheduler...")
-            self.scheduler.stop()
+        if scheduler:
+            logger.info("Stopping scheduler...")
+            scheduler.stop()
 
         # Stop bot
-        if self.bot_handler:
-            self.logger.info("Stopping bot...")
-            await self.bot_handler.stop()
+        if bot_handler:
+            logger.info("Stopping bot...")
+            await bot_handler.stop()
 
         # Stop MCP server
         # ponytail: cancelling the task makes uvicorn log a CancelledError traceback on
         # the way out — cosmetic, right after the line below. Build uvicorn.Server here
         # and flip should_exit instead if that log noise ever matters.
         if self.mcp_task:
-            self.logger.info("Stopping MCP server...")
+            logger.info("Stopping MCP server...")
             self.mcp_task.cancel()
             with suppress(asyncio.CancelledError):
                 await self.mcp_task
 
-        self.logger.info("✅ Shutdown complete")
-        self.logger.info("=" * 70)
+        logger.info("✅ Shutdown complete")
+        logger.info("=" * 70)
 
         # Signal that shutdown is complete
         self.shutdown_event.set()
@@ -178,6 +207,9 @@ async def main():
     # Initialize
     if not await app.initialize():
         sys.exit(1)
+
+    assert app.logger is not None
+    logger = app.logger
 
     # Set up signal handlers for graceful shutdown
     loop = asyncio.get_running_loop()
@@ -192,7 +224,7 @@ async def main():
         pass
 
     except Exception as e:
-        app.logger.error(f"Fatal error: {e}", exc_info=True)
+        logger.error(f"Fatal error: {e}", exc_info=True)
         sys.exit(1)
 
     finally:

@@ -7,9 +7,9 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
-from src.collector import Message
 from src.config.models import Config
 from src.grouper import GroupedPoint
+from src.message import Message
 from src.summarizer import ERROR_SUMMARY_PREFIX
 from src.ui_strings import get_month_names, get_ui_strings
 

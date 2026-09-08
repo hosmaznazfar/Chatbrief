@@ -1,4 +1,4 @@
-"""Tests for config_loader module."""
+"""Tests for config module."""
 
 import logging
 from unittest.mock import patch

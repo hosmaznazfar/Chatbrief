@@ -4,9 +4,9 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.collector import Message
 from src.config.models import ChannelConfig
 from src.extensions.filters import KeywordFilter, MessageFilter, MinLengthFilter, RegexFilter
+from src.message import Message
 
 
 def _make_message(text: str) -> Message:

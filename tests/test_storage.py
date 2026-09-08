@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.collector import Message
 from src.config.models import StorageConfig
+from src.message import Message
 from src.storage import PostgresBackend, SQLiteBackend, create_storage
 
 

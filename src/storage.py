@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any, Protocol
 if TYPE_CHECKING:
     import aiosqlite as _aiosqlite
 
-    from src.collector import Message
     from src.config.models import StorageConfig
+    from src.message import Message
 
 _CREATE_SQLITE_TABLE = """
 CREATE TABLE IF NOT EXISTS messages (
@@ -138,7 +138,7 @@ class SQLiteBackend:
         until: datetime | None = None,
         limit: int = 1000,
     ) -> list[Message]:
-        from src.collector import Message as Msg
+        from src.message import Message as Msg
 
         if self._conn is None:
             raise RuntimeError("SQLiteBackend not initialized; call initialize() first")
@@ -236,7 +236,7 @@ class PostgresBackend:  # pragma: no cover
         until: datetime | None = None,
         limit: int = 1000,
     ) -> list[Message]:
-        from src.collector import Message as Msg
+        from src.message import Message as Msg
 
         if self._pool is None:
             raise RuntimeError("PostgresBackend not initialized; call initialize() first")

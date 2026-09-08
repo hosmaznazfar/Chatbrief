@@ -11,7 +11,6 @@ import logging
 
 from mcp.server import MCPServer
 
-from src.collector import Message
 from src.config.models import Config
 from src.core import (
     MAX_CHANNEL_MESSAGES,
@@ -21,6 +20,7 @@ from src.core import (
     read_last_digest,
     validate_hours,
 )
+from src.message import Message
 
 
 def _is_loopback(host: str) -> bool:

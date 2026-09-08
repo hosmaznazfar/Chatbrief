@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+import src.ai_providers
 from src.ai_providers import TokenBudgetExhaustedError
 from src.summarizer import (
     _DEFAULT_TEMPLATE_PATH,
@@ -20,7 +21,8 @@ from src.summarizer import (
 @pytest.mark.asyncio
 async def test_summarizer_initialization(sample_config, mock_logger):
     """Test summarizer initialization."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
 
         assert summarizer.config == sample_config
@@ -34,7 +36,8 @@ async def test_summarizer_initialization(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_summarize_all_empty(sample_config, mock_logger):
     """Test summarization with empty messages."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
 
         messages_by_channel = {}
@@ -48,7 +51,8 @@ async def test_summarize_all_empty(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_summarize_all_success(sample_config, mock_logger, sample_messages):
     """Test successful summarization."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
 
         messages_by_channel = {"Test Channel": sample_messages}
@@ -68,7 +72,8 @@ async def test_summarize_all_success(sample_config, mock_logger, sample_messages
 @pytest.mark.asyncio
 async def test_summarize_channel_error(sample_config, mock_logger, sample_messages):
     """Test error handling in channel summarization."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
 
         # Mock the provider to raise an exception
@@ -81,7 +86,8 @@ async def test_summarize_channel_error(sample_config, mock_logger, sample_messag
 @pytest.mark.unit
 def test_format_messages_for_prompt(sample_config, mock_logger, sample_messages):
     """Test message formatting for prompts."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
 
         formatted = summarizer._format_messages_for_prompt(sample_messages)
@@ -94,9 +100,9 @@ def test_format_messages_for_prompt(sample_config, mock_logger, sample_messages)
 @pytest.mark.unit
 def test_format_messages_truncate_long(sample_config, mock_logger):
     """Test message truncation in formatting."""
-    from src.collector import Message
+    from src.message import Message
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
 
         long_message = Message(
@@ -119,7 +125,7 @@ def test_format_messages_truncate_long(sample_config, mock_logger):
 @pytest.mark.unit
 def _make_messages(count: int, text_len: int = 20):
     """Helper: build `count` messages with fixed-length text, ordered oldest-first."""
-    from src.collector import Message
+    from src.message import Message
 
     return [
         Message(
@@ -143,7 +149,7 @@ def test_format_messages_prompt_truncation_keeps_recent(sample_config, mock_logg
     # 3 messages = 56*3 + 2 = 170 chars → exceeds 120
     messages = _make_messages(5, text_len=20)
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         result = summarizer._format_messages_for_prompt(messages, max_chars=120)
 
@@ -163,7 +169,7 @@ def test_format_messages_prompt_no_truncation_within_budget(sample_config, mock_
     # 5 messages × 56 chars + 4 newlines = 284 chars → max_chars=300 fits all
     messages = _make_messages(5, text_len=20)
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         result = summarizer._format_messages_for_prompt(messages, max_chars=300)
 
@@ -178,7 +184,7 @@ def test_format_messages_prompt_always_includes_at_least_one(sample_config, mock
     """Even with max_chars=1, the single most recent message is always included."""
     messages = _make_messages(5, text_len=20)
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         result = summarizer._format_messages_for_prompt(messages, max_chars=1)
 
@@ -192,7 +198,7 @@ def test_format_messages_prompt_warns_on_truncation(sample_config, mock_logger):
     """A WARNING is logged when messages are dropped due to the budget."""
     messages = _make_messages(5, text_len=20)
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer._format_messages_for_prompt(messages, max_chars=120)
 
@@ -209,7 +215,7 @@ async def test_summarize_channel_passes_max_prompt_chars_to_formatter(
     """_summarize_channel passes config.settings.max_prompt_chars to _format_messages_for_prompt."""
     sample_config.settings.max_prompt_chars = 1234
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(return_value="summary")
 
@@ -240,7 +246,8 @@ def test_system_prompt_template_language():
 @pytest.mark.unit
 def test_format_messages_includes_link(sample_config, mock_logger, sample_messages):
     """Formatted messages include each message's link so AI can embed them in one-liners."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         formatted = summarizer._format_messages_for_prompt(sample_messages)
 
@@ -255,7 +262,8 @@ async def test_summarize_channel_prompt_instructs_two_tier_format(
     sample_config, mock_logger, sample_messages
 ):
     """Channel prompt instructs AI to produce full summaries for top posts and one-liners for the rest."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         captured: list = []
 
@@ -283,7 +291,8 @@ async def test_summarize_channel_prompt_instructs_two_tier_format(
 @pytest.mark.asyncio
 async def test_summarize_all_partial_failure(sample_config, mock_logger, sample_messages):
     """Test that summarize_all catches per-channel errors and continues."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
 
         summarizer.provider.chat_completion = AsyncMock(side_effect=Exception("API timeout"))
@@ -300,7 +309,7 @@ async def test_summarizer_custom_output_language(sample_config, mock_logger, sam
     """Test summarizer uses configured output language in prompts."""
     sample_config.settings.output_language = "Spanish"
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         assert summarizer.output_language == "Spanish"
 
@@ -330,7 +339,8 @@ async def test_summarize_channel_retries_on_token_budget_exhausted(
     sample_config, mock_logger, sample_messages
 ):
     """_summarize_channel retries with max_tokens*3 when TokenBudgetExhaustedError is raised."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(
             side_effect=[TokenBudgetExhaustedError("budget exhausted"), "Retry summary"]
@@ -353,7 +363,8 @@ async def test_summarize_channel_retry_failure_propagates(
     sample_config, mock_logger, sample_messages
 ):
     """_summarize_channel lets the retry exception propagate when the second call also fails."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(
             side_effect=[
@@ -371,7 +382,8 @@ async def test_summarize_channel_retry_failure_propagates(
 @pytest.mark.asyncio
 async def test_summarize_channel_no_retry_on_success(sample_config, mock_logger, sample_messages):
     """_summarize_channel calls chat_completion exactly once when the first call succeeds."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(return_value="Success summary")
 
@@ -387,7 +399,8 @@ async def test_summarize_channel_double_budget_exhaustion_propagates(
     sample_config, mock_logger, sample_messages
 ):
     """If the retry also raises TokenBudgetExhaustedError it propagates without further retry."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(
             side_effect=[
@@ -407,7 +420,8 @@ async def test_summarize_channel_retry_passes_reasoning_effort_low(
     sample_config, mock_logger, sample_messages
 ):
     """On retry after TokenBudgetExhaustedError, reasoning_effort='low' is passed."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(
             side_effect=[TokenBudgetExhaustedError("budget"), "Retry summary"]
@@ -429,7 +443,8 @@ async def test_summarize_channel_wraps_messages_in_xml_delimiters(
     sample_config, mock_logger, sample_messages
 ):
     """User prompt wraps message content in <channel_messages> XML delimiters."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         captured: list = []
 
@@ -483,7 +498,7 @@ async def test_language_instruction_only_in_system_prompt(
     """Language instruction appears only in system prompt, not duplicated in user prompt."""
     sample_config.settings.output_language = "English"
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         captured: list = []
 
@@ -515,7 +530,8 @@ async def test_verify_instruction_removed_from_user_prompt(
     sample_config, mock_logger, sample_messages
 ):
     """User prompt must not contain 'VERIFY' character counting instruction."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         captured: list = []
 
@@ -560,7 +576,7 @@ async def test_summarize_channel_detects_output_over_3500_chars(
     long_output = "A" * 4000  # Over 3500
     short_output = "B" * 3000  # Under 3500
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(side_effect=[long_output, short_output])
 
@@ -580,7 +596,7 @@ async def test_summarize_channel_retry_includes_shorten_instruction(
     long_output = "A" * 4000
     short_output = "B" * 3000
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         captured_calls: list = []
 
@@ -625,7 +641,7 @@ async def test_summarize_channel_truncates_at_sentence_boundary_as_fallback(
     long_output = "A" * 4000
     still_long = "First sentence. Second sentence. " + "C" * 3500
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(side_effect=[long_output, still_long])
 
@@ -647,7 +663,7 @@ async def test_summarize_channel_length_retry_exception_falls_through_to_truncat
     """When length-reduction retry raises, fall through to sentence-boundary truncation."""
     long_output = "First sentence. Second sentence. " + "C" * 4000
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(
             side_effect=[long_output, RuntimeError("transient AI error")]
@@ -669,7 +685,7 @@ async def test_summarize_channel_no_retry_when_under_limit(
     """No retry or truncation when output is within 3500 chars."""
     short_output = "Short summary. Only 30 chars."
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = AsyncMock(return_value=short_output)
 
@@ -698,7 +714,7 @@ async def test_summarize_channel_applies_prompt_extra(sample_config, mock_logger
         captured.append(messages)
         return "ok"
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = capture
 
@@ -775,7 +791,7 @@ async def test_summarizer_uses_composer_output(sample_config, mock_logger, sampl
     mock_composer = MagicMock(spec=PromptComposer)
     mock_composer.compose.return_value = sentinel
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer._composer = mock_composer
 
@@ -820,7 +836,7 @@ async def test_channel_without_group_uses_base_and_channel_prompt_extra(
         captured.append(messages)
         return "ok"
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = capture
         await summarizer._summarize_channel("Test Channel", sample_messages)
@@ -856,7 +872,7 @@ async def test_channel_with_group_uses_base_group_and_channel_prompt_extra(
         captured.append(messages)
         return "ok"
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
         summarizer.provider.chat_completion = capture
         await summarizer._summarize_channel("Test Channel", sample_messages)
@@ -879,7 +895,7 @@ def test_summarizer_custom_composer_constructor_type_error(sample_config, mock_l
 
     monkeypatch.setattr("src.summarizer.load_class", lambda _path: BadComposer)
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         with pytest.raises(TypeError, match="must accept"):
             Summarizer(sample_config, mock_logger)
 
@@ -895,7 +911,7 @@ def test_summarizer_custom_composer_invalid_interface(sample_config, mock_logger
 
     monkeypatch.setattr("src.summarizer.load_class", lambda _path: BadComposer)
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch.object(src.ai_providers, "AsyncOpenAI"):
         with pytest.raises(TypeError, match="does not implement"):
             Summarizer(sample_config, mock_logger)
 

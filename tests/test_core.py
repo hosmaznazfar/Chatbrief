@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+import src.core
 from src.config.models import ChannelConfig, FilterSpec, StorageConfig
 from src.core import (
     _apply_filters,
@@ -31,16 +32,16 @@ async def test_build_digest_success(sample_config, mock_logger, sample_messages)
     sample_config.settings.digest_mode = "channel"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
     ):
         # Set up mocks
         mock_collector = MagicMock()
         mock_collector.connect = AsyncMock()
         mock_collector.fetch_messages = AsyncMock(return_value={"Test Channel": sample_messages})
         mock_collector.disconnect = AsyncMock()
-        mock_collector_class.return_value = mock_collector
+        mock_source_factory.return_value = mock_collector
 
         mock_summarizer = MagicMock()
         mock_summarizer.summarize_all = AsyncMock(
@@ -74,11 +75,11 @@ async def test_build_digest_caches_result(sample_config, mock_logger, sample_mes
     sample_config.settings.digest_mode = "channel"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
 
         mock_summarizer = MagicMock()
         mock_summarizer.summarize_all = AsyncMock(
@@ -130,12 +131,13 @@ def test_validate_hours_accepts_valid_input(hours):
 @pytest.mark.asyncio
 async def test_build_digest_collector_error(sample_config, mock_logger):
     """Test error handling in message collection."""
-    with patch("src.core.MessageCollector") as mock_collector_class:
+
+    with patch.object(src.core, "create_message_source") as mock_source_factory:
         mock_collector = MagicMock()
         mock_collector.connect = AsyncMock()
         mock_collector.fetch_messages = AsyncMock(side_effect=Exception("Collection failed"))
         mock_collector.disconnect = AsyncMock()
-        mock_collector_class.return_value = mock_collector
+        mock_source_factory.return_value = mock_collector
 
         with pytest.raises(Exception, match="Collection failed"):
             await build_digest(sample_config, mock_logger, hours=24)
@@ -151,13 +153,13 @@ async def test_generate_and_send_digest_success(sample_config, mock_logger, samp
     sample_config.settings.digest_mode = "channel"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "DigestSender") as mock_sender_class,
     ):
         # Set up mocks
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
 
         mock_summarizer = MagicMock()
         mock_summarizer.summarize_all = AsyncMock(
@@ -197,13 +199,13 @@ async def test_generate_and_send_digest_send_failure(sample_config, mock_logger,
     sample_config.settings.digest_mode = "channel"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "DigestSender") as mock_sender_class,
     ):
         # Set up mocks (same as success case)
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
 
         mock_summarizer = MagicMock()
         mock_summarizer.summarize_all = AsyncMock(
@@ -249,18 +251,18 @@ async def test_generate_and_send_digest_grouped_success(
     sample_config.settings.digest_mode = "digest"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestGrouper") as mock_grouper_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestGrouper") as mock_grouper_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "DigestSender") as mock_sender_class,
     ):
         # Collector
         mock_collector = MagicMock()
         mock_collector.connect = AsyncMock()
         mock_collector.fetch_messages = AsyncMock(return_value={"Test Channel": sample_messages})
         mock_collector.disconnect = AsyncMock()
-        mock_collector_class.return_value = mock_collector
+        mock_source_factory.return_value = mock_collector
 
         # Summarizer
         mock_summarizer = MagicMock()
@@ -319,17 +321,17 @@ async def test_generate_and_send_digest_grouped_skips_empty_groups(
     sample_config.settings.digest_mode = "digest"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestGrouper") as mock_grouper_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestGrouper") as mock_grouper_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "DigestSender") as mock_sender_class,
     ):
         mock_collector = MagicMock()
         mock_collector.connect = AsyncMock()
         mock_collector.fetch_messages = AsyncMock(return_value={"Test Channel": sample_messages})
         mock_collector.disconnect = AsyncMock()
-        mock_collector_class.return_value = mock_collector
+        mock_source_factory.return_value = mock_collector
 
         mock_summarizer = MagicMock()
         mock_summarizer.summarize_all = AsyncMock(
@@ -379,13 +381,13 @@ async def test_digest_mode_uses_grouper(sample_config, mock_logger, sample_messa
     sample_config.settings.digest_mode = "digest"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestGrouper") as mock_grouper_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestGrouper") as mock_grouper_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "DigestSender") as mock_sender_class,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
 
         mock_summarizer = MagicMock()
         mock_summarizer.summarize_all = AsyncMock(
@@ -426,13 +428,13 @@ async def test_channel_mode_skips_grouper(sample_config, mock_logger, sample_mes
     sample_config.settings.digest_mode = "channel"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.DigestSender") as mock_sender_class,
-        patch("src.core.DigestGrouper") as mock_grouper_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestGrouper") as mock_grouper_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "DigestSender") as mock_sender_class,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
 
         mock_summarizer = MagicMock()
         mock_summarizer.summarize_all = AsyncMock(
@@ -478,11 +480,12 @@ def _make_collector_mock(sample_messages):
 async def test_collect_messages_storage_disabled(sample_config, mock_logger, sample_messages):
     """storage.enabled=False: create_storage returns None, save_messages never called."""
     sample_config.storage = StorageConfig(enabled=False)
+
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
         mock_create.return_value = None
 
         result = await _collect_messages(sample_config, mock_logger, 24)
@@ -503,10 +506,10 @@ async def test_collect_messages_storage_enabled_saves_flat_list(
     mock_backend.close = AsyncMock()
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
         mock_create.return_value = mock_backend
 
         result = await _collect_messages(sample_config, mock_logger, 24)
@@ -529,10 +532,10 @@ async def test_collect_messages_storage_error_logged_digest_continues(
     mock_backend.close = AsyncMock()
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
         mock_create.return_value = mock_backend
 
         result = await _collect_messages(sample_config, mock_logger, 24)
@@ -554,10 +557,10 @@ async def test_collect_messages_close_called_even_on_save_error(
     mock_backend.close = AsyncMock()
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
         mock_create.return_value = mock_backend
 
         await _collect_messages(sample_config, mock_logger, 24)
@@ -572,11 +575,12 @@ async def test_collect_messages_storage_init_failure_is_non_fatal(
 ):
     """create_storage raises: error logged, _collect_messages still returns messages."""
     sample_config.storage = StorageConfig(enabled=True, backend="sqlite", path=":memory:")
+
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
         mock_create.side_effect = RuntimeError("cannot open db")
 
         result = await _collect_messages(sample_config, mock_logger, 24)
@@ -596,12 +600,12 @@ async def test_build_digest_calls_storage_when_enabled(sample_config, mock_logge
     mock_backend.close = AsyncMock()
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
         mock_create.return_value = mock_backend
 
         mock_summarizer = MagicMock()
@@ -650,13 +654,14 @@ async def test_build_digest_storage_disabled_does_not_save(
 ):
     """build_digest skips storage when disabled."""
     sample_config.storage = StorageConfig(enabled=False)
+
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
         mock_create.return_value = None
 
         mock_summarizer = MagicMock()
@@ -758,7 +763,7 @@ async def test_apply_filters_chain_ordering(sample_config, mock_logger):
     """Filters apply in order: output of first feeds second."""
     from datetime import datetime, timezone
 
-    from src.collector import Message
+    from src.message import Message
 
     msgs = [
         Message(
@@ -849,10 +854,10 @@ async def test_collect_messages_applies_filters_before_storage(
     mock_backend.close = AsyncMock()
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
-        mock_collector_class.return_value = _make_collector_mock(sample_messages)
+        mock_source_factory.return_value = _make_collector_mock(sample_messages)
         mock_create.return_value = mock_backend
 
         result = await _collect_messages(sample_config, mock_logger, 24)
@@ -895,17 +900,17 @@ async def test_summary_message_dedupes_split_group_names(
     sample_config.settings.digest_mode = "digest"
 
     with (
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core.Summarizer") as mock_summarizer_class,
-        patch("src.core.DigestGrouper") as mock_grouper_class,
-        patch("src.core.DigestFormatter") as mock_formatter_class,
-        patch("src.core.DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "Summarizer") as mock_summarizer_class,
+        patch.object(src.core, "DigestGrouper") as mock_grouper_class,
+        patch.object(src.core, "DigestFormatter") as mock_formatter_class,
+        patch.object(src.core, "DigestSender") as mock_sender_class,
     ):
         mock_collector = MagicMock()
         mock_collector.connect = AsyncMock()
         mock_collector.fetch_messages = AsyncMock(return_value={"Test Channel": sample_messages})
         mock_collector.disconnect = AsyncMock()
-        mock_collector_class.return_value = mock_collector
+        mock_source_factory.return_value = mock_collector
 
         mock_summarizer = MagicMock()
         mock_summarizer.summarize_all = AsyncMock(
@@ -974,8 +979,8 @@ async def test_collect_channel_messages_prefers_storage(
     mock_backend.close = AsyncMock()
 
     with (
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
-        patch("src.core.MessageCollector") as mock_collector_class,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
     ):
         mock_create.return_value = mock_backend
 
@@ -988,7 +993,7 @@ async def test_collect_channel_messages_prefers_storage(
         assert mock_backend.query_messages.call_args.kwargs["channel_name"] == "Test Channel"
         assert mock_backend.query_messages.call_args.kwargs["limit"] == 50
         mock_backend.close.assert_called_once()
-        mock_collector_class.assert_not_called()
+        mock_source_factory.assert_not_called()
 
 
 @pytest.mark.unit
@@ -1007,13 +1012,13 @@ async def test_collect_channel_messages_falls_back_to_telegram(
     mock_backend.close = AsyncMock()
 
     with (
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core._apply_filters", new_callable=AsyncMock) as mock_filters,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "_apply_filters", new_callable=AsyncMock) as mock_filters,
     ):
         mock_create.return_value = None if storage_result is None else mock_backend
         collector = _make_single_channel_collector(sample_messages)
-        mock_collector_class.return_value = collector
+        mock_source_factory.return_value = collector
         mock_filters.return_value = sample_messages
 
         messages, source = await collect_channel_messages(
@@ -1034,12 +1039,12 @@ async def test_collect_channel_messages_falls_back_when_storage_raises(
 ):
     """A broken store logs and degrades to Telegram instead of failing the call."""
     with (
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core._apply_filters", new_callable=AsyncMock) as mock_filters,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "_apply_filters", new_callable=AsyncMock) as mock_filters,
     ):
         mock_create.side_effect = RuntimeError("db down")
-        mock_collector_class.return_value = _make_single_channel_collector(sample_messages)
+        mock_source_factory.return_value = _make_single_channel_collector(sample_messages)
         mock_filters.return_value = sample_messages
 
         _, source = await collect_channel_messages(sample_config, mock_logger, "Test Channel")
@@ -1055,12 +1060,12 @@ async def test_collect_channel_messages_keeps_newest_within_limit(
 ):
     """The limit trims the oldest messages, since the newest ones matter most."""
     with (
-        patch("src.core.create_storage", new_callable=AsyncMock) as mock_create,
-        patch("src.core.MessageCollector") as mock_collector_class,
-        patch("src.core._apply_filters", new_callable=AsyncMock) as mock_filters,
+        patch.object(src.core, "create_storage", new_callable=AsyncMock) as mock_create,
+        patch.object(src.core, "create_message_source") as mock_source_factory,
+        patch.object(src.core, "_apply_filters", new_callable=AsyncMock) as mock_filters,
     ):
         mock_create.return_value = None
-        mock_collector_class.return_value = _make_single_channel_collector(sample_messages)
+        mock_source_factory.return_value = _make_single_channel_collector(sample_messages)
         mock_filters.return_value = sample_messages
 
         messages, _ = await collect_channel_messages(

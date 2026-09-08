@@ -64,7 +64,7 @@ def sample_config():
 @pytest.fixture
 def sample_messages():
     """Create sample messages for testing."""
-    from src.collector import Message
+    from src.message import Message
 
     return [
         Message(

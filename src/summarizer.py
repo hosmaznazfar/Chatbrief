@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from src.ai_providers import AIProvider, TokenBudgetExhaustedError, create_provider
-from src.collector import Message
 from src.config.models import ChannelConfig, Config, DigestGroupConfig
 from src.extensions.loader import load_class
 from src.extensions.prompts import DefaultComposer, PromptComposer
+from src.message import Message
 from src.xml_escape import escape_xml_delimiters
 
 ERROR_SUMMARY_PREFIX = "Error processing channel"
@@ -398,18 +398,18 @@ Messages (total: {actual_count}):
 
 async def main():
     """Test summarizer."""
-    from src.collector import MessageCollector
     from src.config.loader import load_config
+    from src.platforms.factory import create_message_source
     from src.utils import setup_logging
 
     config = load_config()
     logger = setup_logging(config.log_level)
 
     # Collect messages
-    collector = MessageCollector(config, logger)
-    await collector.connect()
-    messages = await collector.fetch_messages(hours=24)
-    await collector.disconnect()
+    source = create_message_source(config, logger)
+    await source.connect()
+    messages = await source.fetch_messages(hours=24)
+    await source.disconnect()
 
     # Summarize
     summarizer = Summarizer(config, logger)

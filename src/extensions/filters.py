@@ -4,8 +4,8 @@ import re
 from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from src.collector import Message
     from src.config.models import ChannelConfig
+    from src.message import Message
 
 
 @runtime_checkable

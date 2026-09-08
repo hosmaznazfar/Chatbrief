@@ -11,11 +11,12 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
-from src.collector import Message, MessageCollector
 from src.config.models import ChannelConfig, Config
 from src.extensions.loader import load_class
 from src.formatter import DigestFormatter
 from src.grouper import DigestGrouper
+from src.message import Message
+from src.platforms.factory import create_message_source
 from src.sender import DigestSender
 from src.storage import create_storage
 from src.summarizer import ERROR_SUMMARY_PREFIX, Summarizer
@@ -122,12 +123,12 @@ async def _apply_filters(
 async def _collect_messages(config: Config, logger: logging.Logger, hours: int) -> dict:
     """Collect messages from Telegram channels."""
     logger.info("Collecting messages from Telegram")
-    collector = MessageCollector(config, logger)
-    await collector.connect()
+    source = create_message_source(config, logger)
+    await source.connect()
     try:
-        messages_by_channel = await collector.fetch_messages(hours=hours)
+        messages_by_channel = await source.fetch_messages(hours=hours)
     finally:
-        await collector.disconnect()
+        await source.disconnect()
     total = sum(len(msgs) for msgs in messages_by_channel.values())
     logger.info(f"Collected {total} messages from {len(messages_by_channel)} channels")
 
@@ -451,12 +452,12 @@ async def collect_channel_messages(
 
     # ponytail: same process-wide lock as digest builds — one Telethon session file
     async with _digest_lock:
-        collector = MessageCollector(config, logger)
-        await collector.connect()
+        source = create_message_source(config, logger)
+        await source.connect()
         try:
-            messages = await collector.fetch_channel_messages(channel_cfg, since)
+            messages = await source.fetch_channel_messages(channel_cfg, since)
         finally:
-            await collector.disconnect()
+            await source.disconnect()
 
     # filters run outside the lock: they are user code and may block on the network
     messages = await _apply_filters(channel_cfg, messages, config, logger)

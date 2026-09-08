@@ -1,11 +1,10 @@
 """
-Message collector using Telethon to fetch messages from Telegram channels.
+Telegram message source using Telethon.
 """
 
 import asyncio
 import logging
 import os
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Awaitable, Dict, List, cast
 
@@ -23,23 +22,12 @@ from telethon.tl.types import (
 )
 
 from src.config.models import ChannelConfig, Config
+from src.message import Message
+from src.platforms.base import MessageSource
 from src.ui_strings import get_ui_strings
 
 
-@dataclass
-class Message:
-    """Represents a collected message."""
-
-    text: str
-    sender: str
-    timestamp: datetime
-    link: str
-    channel_name: str
-    has_media: bool
-    media_type: str
-
-
-class MessageCollector:
+class TelegramMessageSource(MessageSource):
     """Collects messages from Telegram channels using Telethon."""
 
     def __init__(self, config: Config, logger: logging.Logger):
@@ -61,19 +49,19 @@ class MessageCollector:
         """Connect to Telegram using an existing user session.
 
         Requires a pre-authenticated session file at sessions/user.session.
-        Create one by running: python -m src.collector
+        Create one by running: uv run src.platforms.telegram
         """
         session_path = "sessions/user.session"
         if not os.path.exists(session_path):
             raise RuntimeError(
                 f"Telegram user session not found at '{session_path}'. "
-                "Create one by running: python -m src.collector"
+                "Create one by running: uv run src.platforms.telegram"
             )
         await self.client.connect()
         if not await self.client.is_user_authorized():
             raise RuntimeError(
                 "Telegram user session exists but is not authorized. "
-                "Re-authenticate by running: python -m src.collector"
+                "Re-authenticate by running: uv run src.platforms.telegram"
             )
         self.logger.info("Connected to Telegram User API")
 
@@ -320,7 +308,7 @@ async def main():
     """Authenticate and test the message collector.
 
     Run interactively to create sessions/user.session:
-        python -m src.collector
+        uv run src.platforms.telegram
     """
     from src.config.loader import load_config
     from src.utils import setup_logging
@@ -328,7 +316,7 @@ async def main():
     config = load_config()
     logger = setup_logging(config.log_level)
 
-    collector = MessageCollector(config, logger)
+    collector = TelegramMessageSource(config, logger)
 
     print("Authenticating with Telegram User API...")
     print("You will be prompted for your phone number and a login code.")
