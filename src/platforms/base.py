@@ -49,3 +49,15 @@ class MessageSender(Protocol):
     ) -> bool:
         """Send channel messages and optionally a summary message."""
         ...
+
+
+class Bot(Protocol):
+    """Interface for running an interactive messaging bot."""
+
+    async def run(self) -> None:
+        """Start the bot and begin handling commands."""
+        ...
+
+    async def stop(self) -> None:
+        """Stop the bot gracefully."""
+        ...
