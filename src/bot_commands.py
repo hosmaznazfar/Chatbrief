@@ -12,8 +12,8 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 from src.config.models import Config
 from src.core import generate_and_send_digest
+from src.platforms.factory import create_message_sender
 from src.scheduler import DigestScheduler
-from src.sender import DigestSender
 from src.ui_strings import get_ui_strings
 
 
@@ -176,7 +176,7 @@ class BotCommandHandler:
         await update.message.reply_text(self._ui["cleaning_up"])
 
         try:
-            sender = DigestSender(self.config, self.logger)
+            sender = create_message_sender(self.config, self.logger)
             success = await sender.cleanup_old_digests(user_id)
 
             if success:

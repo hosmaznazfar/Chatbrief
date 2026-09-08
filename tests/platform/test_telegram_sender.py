@@ -3,14 +3,17 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from telegram.error import TelegramError
 
-from src.sender import DigestSender
+import src.platforms.telegram_sender as telegram_sender
+from src.platforms.telegram_sender import TelegramMessageSender
+from src.utils import save_digest_message_ids
 
 
 @pytest.mark.unit
 def test_sender_initialization(sample_config, mock_logger):
     """Test sender initialization."""
-    sender = DigestSender(sample_config, mock_logger)
+    sender = TelegramMessageSender(sample_config, mock_logger)
 
     assert sender.config == sample_config
     assert sender.logger == mock_logger
@@ -21,12 +24,12 @@ def test_sender_initialization(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_digest_success(sample_config, mock_logger):
     """Test successful digest sending."""
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_digest("Test digest", user_id=123456789)
 
     assert result is True
@@ -37,7 +40,7 @@ async def test_send_digest_success(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_digest_unauthorized(sample_config, mock_logger):
     """Test sending to unauthorized user."""
-    sender = DigestSender(sample_config, mock_logger)
+    sender = TelegramMessageSender(sample_config, mock_logger)
 
     result = await sender.send_digest("Test digest", user_id=999999999)
 
@@ -48,14 +51,13 @@ async def test_send_digest_unauthorized(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_digest_error(sample_config, mock_logger):
     """Test error handling in digest sending."""
-    from telegram.error import TelegramError
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock(side_effect=TelegramError("API Error"))
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_digest("Test digest", user_id=123456789)
 
     assert result is False
@@ -68,13 +70,13 @@ async def test_send_long_digest(sample_config, mock_logger):
     # Create a long digest
     long_digest = "A" * 5000
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         send_message_mock = AsyncMock()
         mock_bot.send_message = send_message_mock
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_digest(long_digest, user_id=123456789)
 
     assert result is True
@@ -86,12 +88,12 @@ async def test_send_long_digest(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_message_success(sample_config, mock_logger):
     """Test sending simple message."""
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_message("Test message", user_id=123456789)
 
     assert result is True
@@ -102,7 +104,7 @@ async def test_send_message_success(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_message_unauthorized(sample_config, mock_logger):
     """Test sending message to unauthorized user."""
-    sender = DigestSender(sample_config, mock_logger)
+    sender = TelegramMessageSender(sample_config, mock_logger)
 
     result = await sender.send_message("Test message", user_id=999999999)
 
@@ -113,9 +115,8 @@ async def test_send_message_unauthorized(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_digest_markdown_fallback(sample_config, mock_logger):
     """Test markdown parsing error fallback to plain text."""
-    from telegram.error import TelegramError
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
 
         # First call fails with markdown parsing error
@@ -129,7 +130,7 @@ async def test_send_digest_markdown_fallback(sample_config, mock_logger):
         mock_bot.send_message = send_message_mock
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_digest("Test *invalid markdown", user_id=123456789)
 
     assert result is True
@@ -145,7 +146,6 @@ async def test_send_digest_markdown_fallback(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_cleanup_old_digests_success(sample_config, mock_logger, tmp_path, monkeypatch):
     """Test cleaning up old digest messages."""
-    from src.utils import save_digest_message_ids
 
     # Setup storage
     storage_file = tmp_path / "digest_messages.json"
@@ -156,12 +156,12 @@ async def test_cleanup_old_digests_success(sample_config, mock_logger, tmp_path,
     message_ids = [101, 102, 103]
     save_digest_message_ids(message_ids, user_id)
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.delete_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.cleanup_old_digests(user_id)
 
     assert result is True
@@ -175,11 +175,11 @@ async def test_cleanup_old_digests_no_messages(sample_config, mock_logger, tmp_p
     storage_file = tmp_path / "nonexistent.json"
     monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.cleanup_old_digests(123456789)
 
     assert result is True
@@ -189,7 +189,7 @@ async def test_cleanup_old_digests_no_messages(sample_config, mock_logger, tmp_p
 @pytest.mark.asyncio
 async def test_cleanup_old_digests_unauthorized(sample_config, mock_logger):
     """Test cleanup with unauthorized user."""
-    sender = DigestSender(sample_config, mock_logger)
+    sender = TelegramMessageSender(sample_config, mock_logger)
     result = await sender.cleanup_old_digests(999999999)
 
     assert result is False
@@ -204,12 +204,12 @@ async def test_send_channel_messages_success(sample_config, mock_logger):
         ("Channel 2", "Message 2"),
     ]
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_channel_messages(channel_messages, user_id=123456789)
 
     assert result is True
@@ -220,20 +220,19 @@ async def test_send_channel_messages_success(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_channel_messages_with_failure(sample_config, mock_logger):
     """Test sending channel messages with one failure."""
-    from telegram.error import TelegramError
 
     channel_messages = [
         ("Channel 1", "Message 1"),
         ("Channel 2", "Message 2"),
     ]
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         # First call fails, second succeeds
         mock_bot.send_message = AsyncMock(side_effect=[TelegramError("API Error"), MagicMock()])
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_channel_messages(channel_messages, user_id=123456789)
 
     assert result is False  # Not all succeeded
@@ -255,7 +254,7 @@ async def test_send_channel_messages_with_tracking(
     ]
     summary_message = "Summary of digest"
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
 
         # Summary placeholder sent first (id=101), then channels (102, 103)
@@ -269,7 +268,7 @@ async def test_send_channel_messages_with_tracking(
         mock_bot.send_message = AsyncMock(side_effect=[mock_message1, mock_message2, mock_message3])
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_channel_messages_with_tracking(
             channel_messages, summary_message=summary_message, user_id=123456789
         )
@@ -299,14 +298,14 @@ async def test_send_channel_messages_with_tracking_no_summary(
 
     channel_messages = [("Channel 1", "Message 1")]
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_message = MagicMock()
         mock_message.message_id = 101
         mock_bot.send_message = AsyncMock(return_value=mock_message)
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_channel_messages_with_tracking(
             channel_messages, summary_message=None, user_id=123456789
         )
@@ -322,14 +321,13 @@ async def test_orphaned_summary_deleted_when_all_channels_fail(
     sample_config, mock_logger, tmp_path, monkeypatch
 ):
     """Test that orphaned summary placeholder is deleted when all channel sends fail."""
-    from telegram.error import TelegramError
 
     storage_file = tmp_path / "digest_messages.json"
     monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     channel_messages = [("Channel 1", "Message 1")]
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_summary = MagicMock()
         mock_summary.message_id = 100
@@ -338,7 +336,7 @@ async def test_orphaned_summary_deleted_when_all_channels_fail(
         mock_bot.delete_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         await sender.send_channel_messages_with_tracking(
             channel_messages, summary_message="Summary", user_id=123456789
         )
@@ -355,12 +353,12 @@ async def test_send_channel_messages_long_message(sample_config, mock_logger):
     long_message = "A" * 5000
     channel_messages = [("Channel 1", long_message)]
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_channel_messages(channel_messages, user_id=123456789)
 
     assert result is True
@@ -380,7 +378,7 @@ async def test_summary_sent_before_channel_messages(
     channel_messages = [("Channel 1", "Message 1"), ("Channel 2", "Message 2")]
     summary_message = "Summary text"
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_summary = MagicMock()
         mock_summary.message_id = 100
@@ -392,7 +390,7 @@ async def test_summary_sent_before_channel_messages(
         mock_bot.send_message = AsyncMock(side_effect=[mock_summary, mock_ch1, mock_ch2])
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         await sender.send_channel_messages_with_tracking(
             channel_messages, summary_message=summary_message, user_id=123456789
         )
@@ -414,12 +412,12 @@ async def test_summary_sent_before_channel_messages(
 @pytest.mark.asyncio
 async def test_send_digest_default_user_id(sample_config, mock_logger):
     """Test send_digest uses configured user ID by default."""
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_digest("Test digest")
 
     assert result is True
@@ -430,12 +428,12 @@ async def test_send_digest_default_user_id(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_channel_messages_default_user_id(sample_config, mock_logger):
     """Test send_channel_messages uses configured user ID by default."""
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_channel_messages([("Channel", "Message")])
 
     assert result is True
@@ -446,12 +444,12 @@ async def test_send_channel_messages_default_user_id(sample_config, mock_logger)
 @pytest.mark.asyncio
 async def test_send_message_default_user_id(sample_config, mock_logger):
     """Test send_message uses configured user ID by default."""
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_message("Test message")
 
     assert result is True
@@ -462,9 +460,8 @@ async def test_send_message_default_user_id(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_message_markdown_fallback(sample_config, mock_logger):
     """Test markdown parsing error fallback to plain text."""
-    from telegram.error import TelegramError
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock(
             side_effect=[
@@ -474,7 +471,7 @@ async def test_send_message_markdown_fallback(sample_config, mock_logger):
         )
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_message("Test *invalid markdown", user_id=123456789)
 
     assert result is True
@@ -488,9 +485,8 @@ async def test_send_message_markdown_fallback(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_message_markdown_fallback_fails(sample_config, mock_logger):
     """Test send_message when plain-text fallback also fails."""
-    from telegram.error import TelegramError
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock(
             side_effect=[
@@ -500,7 +496,7 @@ async def test_send_message_markdown_fallback_fails(sample_config, mock_logger):
         )
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_message("Test *invalid markdown", user_id=123456789)
 
     assert result is False
@@ -511,14 +507,13 @@ async def test_send_message_markdown_fallback_fails(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_message_telegram_error(sample_config, mock_logger):
     """Test send_message with a non-markdown Telegram error."""
-    from telegram.error import TelegramError
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock(side_effect=TelegramError("API Error"))
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_message("Test message", user_id=123456789)
 
     assert result is False
@@ -529,7 +524,7 @@ async def test_send_message_telegram_error(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_send_channel_messages_unauthorized(sample_config, mock_logger):
     """Test sending channel messages to an unauthorized user."""
-    sender = DigestSender(sample_config, mock_logger)
+    sender = TelegramMessageSender(sample_config, mock_logger)
 
     result = await sender.send_channel_messages(
         [("Channel 1", "Message 1")],
@@ -549,12 +544,12 @@ async def test_cleanup_old_digests_default_user_id(
     storage_file = tmp_path / "digest_messages.json"
     monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.delete_message = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.cleanup_old_digests()
 
     assert result is True
@@ -567,23 +562,20 @@ async def test_cleanup_old_digests_message_not_found(
     sample_config, mock_logger, tmp_path, monkeypatch
 ):
     """Test cleanup treats already-deleted messages as successfully cleaned."""
-    from telegram.error import TelegramError
-
-    from src.utils import save_digest_message_ids
 
     storage_file = tmp_path / "digest_messages.json"
     monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     save_digest_message_ids([101, 102], 123456789)
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.delete_message = AsyncMock(
             side_effect=TelegramError("message to delete not found")
         )
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.cleanup_old_digests(123456789)
 
     assert result is True
@@ -596,21 +588,18 @@ async def test_cleanup_old_digests_deletion_failure(
     sample_config, mock_logger, tmp_path, monkeypatch
 ):
     """Test cleanup handles a deletion failure."""
-    from telegram.error import TelegramError
-
-    from src.utils import save_digest_message_ids
 
     storage_file = tmp_path / "digest_messages.json"
     monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     save_digest_message_ids([101], 123456789)
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.delete_message = AsyncMock(side_effect=TelegramError("API Error"))
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.cleanup_old_digests(123456789)
 
     assert result is False
@@ -626,16 +615,13 @@ async def test_cleanup_old_digests_partial_failure(
     sample_config, mock_logger, tmp_path, monkeypatch
 ):
     """Test cleanup succeeds partially when some messages are deleted."""
-    from telegram.error import TelegramError
-
-    from src.utils import save_digest_message_ids
 
     storage_file = tmp_path / "digest_messages.json"
     monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     save_digest_message_ids([101, 102], 123456789)
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.delete_message = AsyncMock(
             side_effect=[
@@ -645,7 +631,7 @@ async def test_cleanup_old_digests_partial_failure(
         )
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.cleanup_old_digests(123456789)
 
     assert result is True
@@ -656,9 +642,8 @@ async def test_cleanup_old_digests_partial_failure(
 @pytest.mark.asyncio
 async def test_send_message_with_tracking_markdown_fallback(sample_config, mock_logger):
     """Test tracked message falls back to plain text on markdown error."""
-    from telegram.error import TelegramError
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
 
         message = MagicMock()
@@ -672,7 +657,7 @@ async def test_send_message_with_tracking_markdown_fallback(sample_config, mock_
         )
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender._send_message_with_tracking(
             123456789,
             "Test *invalid markdown",
@@ -691,9 +676,8 @@ async def test_send_message_with_tracking_markdown_fallback(sample_config, mock_
 @pytest.mark.asyncio
 async def test_send_summary_message_markdown_fallback(sample_config, mock_logger):
     """Test summary message falls back to plain text on markdown error."""
-    from telegram.error import TelegramError
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
 
         message = MagicMock()
@@ -707,7 +691,7 @@ async def test_send_summary_message_markdown_fallback(sample_config, mock_logger
         )
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender._send_summary_message(
             123456789,
             "Summary *invalid markdown",
@@ -724,14 +708,13 @@ async def test_send_summary_message_markdown_fallback(sample_config, mock_logger
 @pytest.mark.asyncio
 async def test_send_summary_message_error(sample_config, mock_logger):
     """Test summary message handles a non-markdown Telegram error."""
-    from telegram.error import TelegramError
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
         mock_bot.send_message = AsyncMock(side_effect=TelegramError("API Error"))
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender._send_summary_message(
             123456789,
             "Summary",
@@ -750,7 +733,7 @@ async def test_send_channel_messages_with_tracking_default_user_id(
     storage_file = tmp_path / "digest_messages.json"
     monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
 
         message = MagicMock()
@@ -759,7 +742,7 @@ async def test_send_channel_messages_with_tracking_default_user_id(
         mock_bot.send_message = AsyncMock(return_value=message)
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
         result = await sender.send_channel_messages_with_tracking(
             [("Channel 1", "Message 1")],
         )
@@ -772,7 +755,7 @@ async def test_send_channel_messages_with_tracking_default_user_id(
 @pytest.mark.asyncio
 async def test_send_channel_messages_with_tracking_unauthorized(sample_config, mock_logger):
     """Test tracked channel messages reject unauthorized users."""
-    sender = DigestSender(sample_config, mock_logger)
+    sender = TelegramMessageSender(sample_config, mock_logger)
 
     result = await sender.send_channel_messages_with_tracking(
         [("Channel 1", "Message 1")],
@@ -787,12 +770,11 @@ async def test_send_channel_messages_with_tracking_unauthorized(sample_config, m
 @pytest.mark.asyncio
 async def test_orphaned_summary_delete_failure(sample_config, mock_logger, tmp_path, monkeypatch):
     """Test failure to delete an orphaned summary placeholder."""
-    from telegram.error import TelegramError
 
     storage_file = tmp_path / "digest_messages.json"
     monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
-    with patch("src.sender.Bot") as mock_bot_class:
+    with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
 
         summary_message = MagicMock()
@@ -807,7 +789,7 @@ async def test_orphaned_summary_delete_failure(sample_config, mock_logger, tmp_p
         mock_bot.delete_message = AsyncMock(side_effect=TelegramError("Delete API Error"))
         mock_bot_class.return_value = mock_bot
 
-        sender = DigestSender(sample_config, mock_logger)
+        sender = TelegramMessageSender(sample_config, mock_logger)
 
         result = await sender.send_channel_messages_with_tracking(
             [("Channel 1", "Message 1")],

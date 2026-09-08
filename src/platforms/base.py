@@ -32,3 +32,20 @@ class MessageSource(Protocol):
     ) -> list[Message]:
         """Fetch messages from a single configured channel."""
         ...
+
+
+class MessageSender(Protocol):
+    """Interface for delivering generated digests."""
+
+    async def cleanup_old_digests(self, user_id: int | None = None) -> bool:
+        """Delete previously sent digest messages."""
+        ...
+
+    async def send_channel_messages_with_tracking(
+        self,
+        channel_messages: list[tuple[str, str]],
+        summary_message: str | None = None,
+        user_id: int | None = None,
+    ) -> bool:
+        """Send channel messages and optionally a summary message."""
+        ...

@@ -156,7 +156,7 @@ async def test_generate_and_send_digest_success(sample_config, mock_logger, samp
         patch.object(src.core, "create_message_source") as mock_source_factory,
         patch.object(src.core, "Summarizer") as mock_summarizer_class,
         patch.object(src.core, "DigestFormatter") as mock_formatter_class,
-        patch.object(src.core, "DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_sender") as mock_sender_factory,
     ):
         # Set up mocks
         mock_source_factory.return_value = _make_collector_mock(sample_messages)
@@ -178,7 +178,7 @@ async def test_generate_and_send_digest_success(sample_config, mock_logger, samp
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock()
         mock_sender.send_channel_messages_with_tracking = AsyncMock(return_value=True)
-        mock_sender_class.return_value = mock_sender
+        mock_sender_factory.return_value = mock_sender
 
         # Run function
         result = await generate_and_send_digest(
@@ -202,7 +202,7 @@ async def test_generate_and_send_digest_send_failure(sample_config, mock_logger,
         patch.object(src.core, "create_message_source") as mock_source_factory,
         patch.object(src.core, "Summarizer") as mock_summarizer_class,
         patch.object(src.core, "DigestFormatter") as mock_formatter_class,
-        patch.object(src.core, "DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_sender") as mock_sender_factory,
     ):
         # Set up mocks (same as success case)
         mock_source_factory.return_value = _make_collector_mock(sample_messages)
@@ -225,7 +225,7 @@ async def test_generate_and_send_digest_send_failure(sample_config, mock_logger,
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock()
         mock_sender.send_channel_messages_with_tracking = AsyncMock(return_value=False)
-        mock_sender_class.return_value = mock_sender
+        mock_sender_factory.return_value = mock_sender
 
         # Run function
         result = await generate_and_send_digest(sample_config, mock_logger, hours=24)
@@ -255,7 +255,7 @@ async def test_generate_and_send_digest_grouped_success(
         patch.object(src.core, "Summarizer") as mock_summarizer_class,
         patch.object(src.core, "DigestGrouper") as mock_grouper_class,
         patch.object(src.core, "DigestFormatter") as mock_formatter_class,
-        patch.object(src.core, "DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_sender") as mock_sender_factory,
     ):
         # Collector
         mock_collector = MagicMock()
@@ -293,7 +293,7 @@ async def test_generate_and_send_digest_grouped_success(
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock()
         mock_sender.send_channel_messages_with_tracking = AsyncMock(return_value=True)
-        mock_sender_class.return_value = mock_sender
+        mock_sender_factory.return_value = mock_sender
 
         result = await generate_and_send_digest(
             sample_config, mock_logger, hours=24, user_id=123456789
@@ -325,7 +325,7 @@ async def test_generate_and_send_digest_grouped_skips_empty_groups(
         patch.object(src.core, "Summarizer") as mock_summarizer_class,
         patch.object(src.core, "DigestGrouper") as mock_grouper_class,
         patch.object(src.core, "DigestFormatter") as mock_formatter_class,
-        patch.object(src.core, "DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_sender") as mock_sender_factory,
     ):
         mock_collector = MagicMock()
         mock_collector.connect = AsyncMock()
@@ -359,7 +359,7 @@ async def test_generate_and_send_digest_grouped_skips_empty_groups(
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock()
         mock_sender.send_channel_messages_with_tracking = AsyncMock(return_value=True)
-        mock_sender_class.return_value = mock_sender
+        mock_sender_factory.return_value = mock_sender
 
         result = await generate_and_send_digest(
             sample_config, mock_logger, hours=24, user_id=123456789
@@ -385,7 +385,7 @@ async def test_digest_mode_uses_grouper(sample_config, mock_logger, sample_messa
         patch.object(src.core, "Summarizer") as mock_summarizer_class,
         patch.object(src.core, "DigestGrouper") as mock_grouper_class,
         patch.object(src.core, "DigestFormatter") as mock_formatter_class,
-        patch.object(src.core, "DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_sender") as mock_sender_factory,
     ):
         mock_source_factory.return_value = _make_collector_mock(sample_messages)
 
@@ -412,7 +412,7 @@ async def test_digest_mode_uses_grouper(sample_config, mock_logger, sample_messa
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock()
         mock_sender.send_channel_messages_with_tracking = AsyncMock(return_value=True)
-        mock_sender_class.return_value = mock_sender
+        mock_sender_factory.return_value = mock_sender
 
         result = await generate_and_send_digest(sample_config, mock_logger, hours=12, user_id=999)
 
@@ -432,7 +432,7 @@ async def test_channel_mode_skips_grouper(sample_config, mock_logger, sample_mes
         patch.object(src.core, "Summarizer") as mock_summarizer_class,
         patch.object(src.core, "DigestGrouper") as mock_grouper_class,
         patch.object(src.core, "DigestFormatter") as mock_formatter_class,
-        patch.object(src.core, "DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_sender") as mock_sender_factory,
     ):
         mock_source_factory.return_value = _make_collector_mock(sample_messages)
 
@@ -453,7 +453,7 @@ async def test_channel_mode_skips_grouper(sample_config, mock_logger, sample_mes
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock()
         mock_sender.send_channel_messages_with_tracking = AsyncMock(return_value=True)
-        mock_sender_class.return_value = mock_sender
+        mock_sender_factory.return_value = mock_sender
 
         result = await generate_and_send_digest(
             sample_config, mock_logger, hours=24, user_id=123456789
@@ -904,7 +904,7 @@ async def test_summary_message_dedupes_split_group_names(
         patch.object(src.core, "Summarizer") as mock_summarizer_class,
         patch.object(src.core, "DigestGrouper") as mock_grouper_class,
         patch.object(src.core, "DigestFormatter") as mock_formatter_class,
-        patch.object(src.core, "DigestSender") as mock_sender_class,
+        patch.object(src.core, "create_message_sender") as mock_sender_factory,
     ):
         mock_collector = MagicMock()
         mock_collector.connect = AsyncMock()
@@ -935,7 +935,7 @@ async def test_summary_message_dedupes_split_group_names(
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock()
         mock_sender.send_channel_messages_with_tracking = AsyncMock(return_value=True)
-        mock_sender_class.return_value = mock_sender
+        mock_sender_factory.return_value = mock_sender
 
         await generate_and_send_digest(sample_config, mock_logger, hours=24, user_id=123456789)
 

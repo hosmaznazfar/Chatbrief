@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+import src.bot_commands
 from src.bot_commands import BotCommandHandler
 
 
@@ -62,7 +63,9 @@ async def test_handle_digest_processing_message_uses_output_language(english_con
     handler = BotCommandHandler(english_config, mock_logger)
     update = _make_update(123456789)
 
-    with patch("src.bot_commands.generate_and_send_digest", new=AsyncMock(return_value=True)):
+    with patch.object(
+        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
+    ):
         await handler.handle_digest(update, MagicMock())
 
     processing_text = update.message.reply_text.call_args_list[0][0][0]
@@ -77,7 +80,9 @@ async def test_handle_digest_success_message_uses_output_language(english_config
     handler = BotCommandHandler(english_config, mock_logger)
     update = _make_update(123456789)
 
-    with patch("src.bot_commands.generate_and_send_digest", new=AsyncMock(return_value=True)):
+    with patch.object(
+        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
+    ):
         await handler.handle_digest(update, MagicMock())
 
     success_text = update.message.reply_text.call_args_list[1][0][0]
@@ -92,7 +97,9 @@ async def test_handle_digest_error_message_uses_output_language(english_config, 
     handler = BotCommandHandler(english_config, mock_logger)
     update = _make_update(123456789)
 
-    with patch("src.bot_commands.generate_and_send_digest", new=AsyncMock(return_value=False)):
+    with patch.object(
+        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=False)
+    ):
         await handler.handle_digest(update, MagicMock())
 
     error_text = update.message.reply_text.call_args_list[1][0][0]
@@ -112,7 +119,7 @@ async def test_handle_cleanup_messages_use_output_language(english_config, mock_
     handler = BotCommandHandler(english_config, mock_logger)
     update = _make_update(123456789)
 
-    with patch("src.bot_commands.DigestSender") as mock_cls:
+    with patch.object(src.bot_commands, "create_message_sender") as mock_cls:
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock(return_value=True)
         mock_cls.return_value = mock_sender
@@ -186,7 +193,9 @@ async def test_digest_rate_limited_on_rapid_successive_calls(english_config, moc
     handler = BotCommandHandler(english_config, mock_logger)
     update = _make_update(123456789)
 
-    with patch("src.bot_commands.generate_and_send_digest", new=AsyncMock(return_value=True)):
+    with patch.object(
+        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
+    ):
         await handler.handle_digest(update, MagicMock())
         # Reset mock to track second call
         update.message.reply_text.reset_mock()
@@ -206,8 +215,10 @@ async def test_rate_limit_resets_after_cooldown(english_config, mock_logger):
     update = _make_update(123456789)
 
     with (
-        patch("src.bot_commands.generate_and_send_digest", new=AsyncMock(return_value=True)),
-        patch("src.bot_commands.time") as mock_time,
+        patch.object(
+            src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
+        ),
+        patch.object(src.bot_commands, "time") as mock_time,
     ):
         # First call at time 0 — must NOT be rate-limited
         mock_time.monotonic.return_value = 0.0
@@ -234,7 +245,9 @@ async def test_rate_limit_message_uses_configured_language(sample_config, mock_l
     handler = BotCommandHandler(sample_config, mock_logger)
     update = _make_update(123456789)
 
-    with patch("src.bot_commands.generate_and_send_digest", new=AsyncMock(return_value=True)):
+    with patch.object(
+        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
+    ):
         await handler.handle_digest(update, MagicMock())
         update.message.reply_text.reset_mock()
         await handler.handle_digest(update, MagicMock())
@@ -283,7 +296,7 @@ async def test_cleanup_rate_limited(english_config, mock_logger):
     handler = BotCommandHandler(english_config, mock_logger)
     update = _make_update(123456789)
 
-    with patch("src.bot_commands.DigestSender") as mock_cls:
+    with patch.object(src.bot_commands, "create_message_sender") as mock_cls:
         mock_sender = MagicMock()
         mock_sender.cleanup_old_digests = AsyncMock(return_value=True)
         mock_cls.return_value = mock_sender
@@ -308,7 +321,7 @@ def test_setup_application(sample_config, mock_logger):
 
     mock_app = MagicMock()
 
-    with patch("src.bot_commands.Application.builder") as mock_builder:
+    with patch.object(src.bot_commands.Application, "builder") as mock_builder:
         mock_builder.return_value.token.return_value.build.return_value = mock_app
 
         result = handler.setup_application()
@@ -397,8 +410,9 @@ async def test_handle_digest_exception(sample_config, mock_logger):
     handler = BotCommandHandler(sample_config, mock_logger)
     update = _make_update(123)
 
-    with patch(
-        "src.bot_commands.generate_and_send_digest",
+    with patch.object(
+        src.bot_commands,
+        "generate_and_send_digest",
         new=AsyncMock(side_effect=RuntimeError("digest failed")),
     ):
         await handler.handle_digest(update, MagicMock())
@@ -463,7 +477,7 @@ async def test_handle_cleanup_failure(sample_config, mock_logger):
     mock_sender = MagicMock()
     mock_sender.cleanup_old_digests = AsyncMock(return_value=False)
 
-    with patch("src.bot_commands.DigestSender", return_value=mock_sender):
+    with patch.object(src.bot_commands, "create_message_sender", return_value=mock_sender):
         await handler.handle_cleanup(update, MagicMock())
 
     update.message.reply_text.assert_any_await(handler._ui["cleanup_partial"])
@@ -481,7 +495,7 @@ async def test_handle_cleanup_exception(sample_config, mock_logger):
     mock_sender = MagicMock()
     mock_sender.cleanup_old_digests = AsyncMock(side_effect=RuntimeError("cleanup failed"))
 
-    with patch("src.bot_commands.DigestSender", return_value=mock_sender):
+    with patch.object(src.bot_commands, "create_message_sender", return_value=mock_sender):
         await handler.handle_cleanup(update, MagicMock())
 
     mock_logger.error.assert_called_once_with(

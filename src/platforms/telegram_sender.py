@@ -1,5 +1,5 @@
 """
-Telegram bot sender for delivering digests.
+Telegram implementation of the platform-neutral message sender."
 """
 
 import asyncio
@@ -12,6 +12,7 @@ from telegram.error import TelegramError
 
 from src.config.models import Config
 from src.formatter import DigestFormatter
+from src.platforms.base import MessageSender
 from src.utils import (
     clear_digest_message_ids,
     get_digest_message_ids,
@@ -20,7 +21,7 @@ from src.utils import (
 )
 
 
-class DigestSender:
+class TelegramMessageSender(MessageSender):
     """Sends digests via Telegram bot."""
 
     def __init__(self, config: Config, logger: logging.Logger):
@@ -466,20 +467,20 @@ async def main():
     config = load_config()
     logger = setup_logging(config.log_level)
 
-    sender = DigestSender(config, logger)
+    sender = TelegramMessageSender(config, logger)
 
     test_digest = """
-📰Тестовый дайджест
+    📰 Test Digest
 
-📌Краткий обзор
-Это тестовое сообщение для проверки отправки дайджеста.
+    📌 Brief Overview
+    This is a test message to check digest sending.
 
-💻 Test Channel
-- Тестовый пункт 1
-- Тестовый пункт 2
+    💻 Test Channel
+    - Test item 1
+    - Test item 2
 
----
-📈 **Статистика**: 1 канал, 10 сообщений
+    ---
+    📈 Statistics: 1 channel, 10 messages
     """
 
     success = await sender.send_digest(test_digest)

@@ -16,8 +16,7 @@ from src.extensions.loader import load_class
 from src.formatter import DigestFormatter
 from src.grouper import DigestGrouper
 from src.message import Message
-from src.platforms.factory import create_message_source
-from src.sender import DigestSender
+from src.platforms.factory import create_message_sender, create_message_source
 from src.storage import create_storage
 from src.summarizer import ERROR_SUMMARY_PREFIX, Summarizer
 from src.ui_strings import get_ui_strings
@@ -501,7 +500,7 @@ async def generate_and_send_digest(
             return False
         parts, summary_message = built
 
-        sender = DigestSender(config, logger)
+        sender = create_message_sender(config, logger)
         if config.settings.auto_cleanup_old_digests:
             await sender.cleanup_old_digests(user_id)
 
