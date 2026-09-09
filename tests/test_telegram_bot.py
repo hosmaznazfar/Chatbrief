@@ -6,6 +6,8 @@ import pytest
 
 import src.bot_commands
 from src.bot_commands import BotCommandHandler
+from src.commands.models import CommandResult, CommandStatus
+from src.commands.service import CommandService
 
 
 @pytest.fixture
@@ -21,6 +23,17 @@ def _make_update(user_id: int):
     update.effective_user.id = user_id
     update.message.reply_text = AsyncMock()
     return update
+
+
+def _make_command_service() -> MagicMock:
+    """Return a mocked command service for Telegram adapter tests."""
+    service = MagicMock(spec=CommandService)
+    service.check_access.return_value = None
+    service.digest = AsyncMock()
+    service.cleanup = AsyncMock()
+    service.status = MagicMock()
+    service.help = MagicMock()
+    return service
 
 
 # ---------------------------------------------------------------------------
@@ -58,53 +71,98 @@ async def test_setup_bot_menu_uses_output_language(english_config, mock_logger):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_digest_processing_message_uses_output_language(english_config, mock_logger):
-    """handle_digest sends an English processing message when output_language=English."""
-    handler = BotCommandHandler(english_config, mock_logger)
+async def test_handle_digest_processing_message_uses_output_language(
+    english_config,
+    mock_logger,
+):
+    """handle_digest sends an English processing message."""
+    service = _make_command_service()
+    service.digest.return_value = CommandResult(
+        status=CommandStatus.SUCCESS,
+        message="Digest generated successfully.",
+    )
+
+    handler = BotCommandHandler(
+        english_config,
+        mock_logger,
+        command_service=service,
+    )
     update = _make_update(123456789)
 
-    with patch.object(
-        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
-    ):
-        await handler.handle_digest(update, MagicMock())
+    await handler.handle_digest(update, MagicMock())
 
-    processing_text = update.message.reply_text.call_args_list[0][0][0]
-    assert "Generating digest" in processing_text
-    assert "Генерирую" not in processing_text
+    assert (
+        update.message.reply_text.await_args_list[0].args[0] == (handler._ui["generating_digest"])
+    )
+
+    service.check_access.assert_called_once_with(123456789)
+    service.digest.assert_awaited_once_with(
+        123456789,
+        access_checked=True,
+    )
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_digest_success_message_uses_output_language(english_config, mock_logger):
-    """handle_digest sends an English success message when digest generation succeeds."""
-    handler = BotCommandHandler(english_config, mock_logger)
-    update = _make_update(123456789)
+async def test_handle_digest_success_message_uses_output_language(english_config):
+    """Digest handler sends the service success message."""
+    service = _make_command_service()
+    service.digest.return_value = CommandResult(
+        status=CommandStatus.SUCCESS,
+        message="Digest generated successfully.",
+    )
 
-    with patch.object(
-        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
-    ):
-        await handler.handle_digest(update, MagicMock())
+    handler = BotCommandHandler(
+        english_config,
+        MagicMock(),
+        command_service=service,
+    )
 
-    success_text = update.message.reply_text.call_args_list[1][0][0]
-    assert "Digest ready" in success_text
-    assert "Дайджест готов" not in success_text
+    update = _make_update(123)
+
+    await handler.handle_digest(update, MagicMock())
+
+    assert (
+        update.message.reply_text.await_args_list[0].args[0] == (handler._ui["generating_digest"])
+    )
+    assert update.message.reply_text.await_args_list[1].args[0] == (
+        "Digest generated successfully."
+    )
+
+    service.check_access.assert_called_once_with(123)
+    service.digest.assert_awaited_once_with(
+        123,
+        access_checked=True,
+    )
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_digest_error_message_uses_output_language(english_config, mock_logger):
-    """handle_digest sends an English error message when generation returns False."""
-    handler = BotCommandHandler(english_config, mock_logger)
-    update = _make_update(123456789)
+async def test_handle_digest_error_message_uses_output_language(english_config):
+    """Digest handler sends the service error message."""
+    service = _make_command_service()
+    service.digest.return_value = CommandResult(
+        status=CommandStatus.ERROR,
+        message="Failed to generate digest.",
+    )
 
-    with patch.object(
-        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=False)
-    ):
-        await handler.handle_digest(update, MagicMock())
+    handler = BotCommandHandler(
+        english_config,
+        MagicMock(),
+        command_service=service,
+    )
 
-    error_text = update.message.reply_text.call_args_list[1][0][0]
-    assert "Error generating digest" in error_text
-    assert "Ошибка при генерации" not in error_text
+    update = _make_update(123)
+
+    await handler.handle_digest(update, MagicMock())
+
+    assert (
+        update.message.reply_text.await_args_list[0].args[0] == (handler._ui["generating_digest"])
+    )
+    assert update.message.reply_text.await_args_list[1].args[0] == ("Failed to generate digest.")
+
+    service.digest.assert_awaited_once_with(
+        123,
+        access_checked=True,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -112,24 +170,33 @@ async def test_handle_digest_error_message_uses_output_language(english_config, 
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_cleanup_messages_use_output_language(english_config, mock_logger):
-    """handle_cleanup processing and success messages respect output_language."""
-    handler = BotCommandHandler(english_config, mock_logger)
-    update = _make_update(123456789)
+async def test_handle_cleanup_messages_use_output_language(english_config):
+    """Cleanup handler sends processing and service result messages."""
+    service = _make_command_service()
+    service.cleanup.return_value = CommandResult(
+        status=CommandStatus.SUCCESS,
+        message="Cleanup completed.",
+    )
 
-    with patch.object(src.bot_commands, "create_message_sender") as mock_cls:
-        mock_sender = MagicMock()
-        mock_sender.cleanup_old_digests = AsyncMock(return_value=True)
-        mock_cls.return_value = mock_sender
-        await handler.handle_cleanup(update, MagicMock())
+    handler = BotCommandHandler(
+        english_config,
+        MagicMock(),
+        command_service=service,
+    )
 
-    texts = [call[0][0] for call in update.message.reply_text.call_args_list]
-    assert any("Deleting previous digests" in t for t in texts)
-    assert any("deleted" in t.lower() for t in texts)
-    assert not any("Удаляю" in t for t in texts)
-    assert not any("удалены" in t for t in texts)
+    update = _make_update(123)
+
+    await handler.handle_cleanup(update, MagicMock())
+
+    assert update.message.reply_text.await_args_list[0].args[0] == (handler._ui["cleaning_up"])
+    assert update.message.reply_text.await_args_list[1].args[0] == ("Cleanup completed.")
+
+    service.check_access.assert_called_once_with(123)
+    service.cleanup.assert_awaited_once_with(
+        123,
+        access_checked=True,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -186,75 +253,81 @@ async def test_handle_help_uses_output_language(english_config, mock_logger):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_digest_rate_limited_on_rapid_successive_calls(english_config, mock_logger):
-    """Rapid successive /digest commands from same user are throttled."""
-    handler = BotCommandHandler(english_config, mock_logger)
-    update = _make_update(123456789)
+async def test_handle_digest_rate_limited(english_config):
+    """Digest handler replies when the command service rate limits the user."""
+    service = _make_command_service()
+    service.check_access.return_value = CommandResult(
+        status=CommandStatus.RATE_LIMITED,
+        message="Please wait before trying again.",
+    )
 
-    with patch.object(
-        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
-    ):
-        await handler.handle_digest(update, MagicMock())
-        # Reset mock to track second call
-        update.message.reply_text.reset_mock()
-        await handler.handle_digest(update, MagicMock())
+    handler = BotCommandHandler(
+        english_config,
+        MagicMock(),
+        command_service=service,
+    )
 
-    # Second call should get rate limit message, not the "generating" message
-    texts = [call[0][0] for call in update.message.reply_text.call_args_list]
-    assert len(texts) == 1
-    assert "wait" in texts[0].lower() or "Please wait" in texts[0]
+    update = _make_update(123)
+
+    await handler.handle_digest(update, MagicMock())
+
+    update.message.reply_text.assert_awaited_once_with("Please wait before trying again.")
+
+    service.digest.assert_not_awaited()
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_rate_limit_resets_after_cooldown(english_config, mock_logger):
-    """Rate limit resets after the cooldown period elapses."""
-    handler = BotCommandHandler(english_config, mock_logger)
-    update = _make_update(123456789)
+async def test_handle_cleanup_rate_limited(english_config):
+    """Cleanup handler replies when the command service rate limits the user."""
+    service = _make_command_service()
+    service.check_access.return_value = CommandResult(
+        status=CommandStatus.RATE_LIMITED,
+        message="Please wait before trying again.",
+    )
 
-    with (
-        patch.object(
-            src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
-        ),
-        patch.object(src.bot_commands, "time") as mock_time,
-    ):
-        # First call at time 0 — must NOT be rate-limited
-        mock_time.monotonic.return_value = 0.0
-        await handler.handle_digest(update, MagicMock())
+    handler = BotCommandHandler(
+        english_config,
+        MagicMock(),
+        command_service=service,
+    )
 
-        first_texts = [call[0][0] for call in update.message.reply_text.call_args_list]
-        assert any("Generating" in t for t in first_texts), "First call should not be rate-limited"
+    update = _make_update(123)
 
-        update.message.reply_text.reset_mock()
+    await handler.handle_cleanup(update, MagicMock())
 
-        # Second call at time 31 (past the 30s cooldown)
-        mock_time.monotonic.return_value = 31.0
-        await handler.handle_digest(update, MagicMock())
+    update.message.reply_text.assert_awaited_once_with("Please wait before trying again.")
 
-    # Should get the normal "generating" message, not rate limited
-    texts = [call[0][0] for call in update.message.reply_text.call_args_list]
-    assert any("Generating" in t for t in texts)
+    service.cleanup.assert_not_awaited()
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_rate_limit_message_uses_configured_language(sample_config, mock_logger):
-    """Rate limit message is sent in the configured language (Russian)."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+async def test_rate_limit_message_uses_configured_language(
+    sample_config,
+    mock_logger,
+):
+    """Rate limit message is sent in the configured language."""
+    service = _make_command_service()
+    service.check_access.return_value = CommandResult(
+        status=CommandStatus.RATE_LIMITED,
+        message="Пожалуйста, подождите перед повторной попыткой.",
+    )
+
+    handler = BotCommandHandler(
+        sample_config,
+        mock_logger,
+        command_service=service,
+    )
     update = _make_update(123456789)
 
-    with patch.object(
-        src.bot_commands, "generate_and_send_digest", new=AsyncMock(return_value=True)
-    ):
-        await handler.handle_digest(update, MagicMock())
-        update.message.reply_text.reset_mock()
-        await handler.handle_digest(update, MagicMock())
+    await handler.handle_digest(update, MagicMock())
 
-    texts = [call[0][0] for call in update.message.reply_text.call_args_list]
-    assert len(texts) == 1
-    assert "Пожалуйста" in texts[0] or "подождите" in texts[0]
+    update.message.reply_text.assert_awaited_once_with(
+        "Пожалуйста, подождите перед повторной попыткой."
+    )
+
+    service.digest.assert_not_awaited()
 
 
 @pytest.mark.unit
@@ -291,22 +364,29 @@ async def test_help_not_rate_limited(english_config, mock_logger):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_cleanup_rate_limited(english_config, mock_logger):
-    """Rapid successive /cleanup commands from same user are throttled."""
-    handler = BotCommandHandler(english_config, mock_logger)
+async def test_cleanup_rate_limited(
+    english_config,
+    mock_logger,
+):
+    """Cleanup handler replies when the command service rate limits the user."""
+    service = _make_command_service()
+    service.check_access.return_value = CommandResult(
+        status=CommandStatus.RATE_LIMITED,
+        message="Please wait before trying again.",
+    )
+
+    handler = BotCommandHandler(
+        english_config,
+        mock_logger,
+        command_service=service,
+    )
     update = _make_update(123456789)
 
-    with patch.object(src.bot_commands, "create_message_sender") as mock_cls:
-        mock_sender = MagicMock()
-        mock_sender.cleanup_old_digests = AsyncMock(return_value=True)
-        mock_cls.return_value = mock_sender
-        await handler.handle_cleanup(update, MagicMock())
-        update.message.reply_text.reset_mock()
-        await handler.handle_cleanup(update, MagicMock())
+    await handler.handle_cleanup(update, MagicMock())
 
-    texts = [call[0][0] for call in update.message.reply_text.call_args_list]
-    assert len(texts) == 1
-    assert "wait" in texts[0].lower() or "Please wait" in texts[0]
+    update.message.reply_text.assert_awaited_once_with("Please wait before trying again.")
+
+    service.cleanup.assert_not_awaited()
 
 
 # ---------------------------------------------------------------------------
@@ -386,42 +466,64 @@ async def test_handle_digest_without_message(sample_config, mock_logger):
     await handler.handle_digest(update, MagicMock())
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_digest_unauthorized(sample_config, mock_logger):
-    """handle_digest silently ignores unauthorized users."""
-    sample_config.settings.target_user_id = 123
+async def test_handle_digest_unauthorized(english_config):
+    """Digest handler ignores unauthorized users."""
+    service = _make_command_service()
+    service.check_access.return_value = CommandResult(
+        status=CommandStatus.UNAUTHORIZED,
+        message="",
+    )
 
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = BotCommandHandler(
+        english_config,
+        MagicMock(),
+        command_service=service,
+    )
+
     update = _make_update(456)
 
     await handler.handle_digest(update, MagicMock())
 
-    mock_logger.warning.assert_called_once_with("Unauthorized /digest attempt from user 456")
     update.message.reply_text.assert_not_awaited()
+    service.digest.assert_not_awaited()
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_digest_exception(sample_config, mock_logger):
-    """handle_digest reports exceptions from digest generation."""
+async def test_handle_digest_exception(
+    sample_config,
+    mock_logger,
+):
+    """handle_digest forwards an error returned by the command service."""
     sample_config.settings.target_user_id = 123
 
-    handler = BotCommandHandler(sample_config, mock_logger)
+    service = _make_command_service()
+    service.digest.return_value = CommandResult(
+        status=CommandStatus.ERROR,
+        message="An error occurred while generating the digest.",
+    )
+
+    handler = BotCommandHandler(
+        sample_config,
+        mock_logger,
+        command_service=service,
+    )
     update = _make_update(123)
 
-    with patch.object(
-        src.bot_commands,
-        "generate_and_send_digest",
-        new=AsyncMock(side_effect=RuntimeError("digest failed")),
-    ):
-        await handler.handle_digest(update, MagicMock())
+    await handler.handle_digest(update, MagicMock())
 
-    mock_logger.error.assert_called_once_with(
-        "Error in /digest command: digest failed",
-        exc_info=True,
+    assert (
+        update.message.reply_text.await_args_list[0].args[0] == (handler._ui["generating_digest"])
     )
-    update.message.reply_text.assert_any_await(handler._ui["digest_exception"])
+    assert update.message.reply_text.await_args_list[1].args[0] == (
+        "An error occurred while generating the digest."
+    )
+
+    service.digest.assert_awaited_once_with(
+        123,
+        access_checked=True,
+    )
 
 
 @pytest.mark.unit
@@ -450,59 +552,87 @@ async def test_handle_cleanup_without_message(sample_config, mock_logger):
     await handler.handle_cleanup(update, MagicMock())
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_cleanup_unauthorized(sample_config, mock_logger):
-    """handle_cleanup silently ignores unauthorized users."""
-    sample_config.settings.target_user_id = 123
+async def test_handle_cleanup_unauthorized(english_config):
+    """Cleanup handler ignores unauthorized users."""
+    service = _make_command_service()
+    service.check_access.return_value = CommandResult(
+        status=CommandStatus.UNAUTHORIZED,
+        message="",
+    )
 
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = BotCommandHandler(
+        english_config,
+        MagicMock(),
+        command_service=service,
+    )
+
     update = _make_update(456)
 
     await handler.handle_cleanup(update, MagicMock())
 
-    mock_logger.warning.assert_called_once_with("Unauthorized /cleanup attempt from user 456")
     update.message.reply_text.assert_not_awaited()
+    service.cleanup.assert_not_awaited()
 
 
-@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_cleanup_failure(sample_config, mock_logger):
-    """handle_cleanup reports partial cleanup failure."""
-    sample_config.settings.target_user_id = 123
-
-    handler = BotCommandHandler(sample_config, mock_logger)
-    update = _make_update(123)
-
-    mock_sender = MagicMock()
-    mock_sender.cleanup_old_digests = AsyncMock(return_value=False)
-
-    with patch.object(src.bot_commands, "create_message_sender", return_value=mock_sender):
-        await handler.handle_cleanup(update, MagicMock())
-
-    update.message.reply_text.assert_any_await(handler._ui["cleanup_partial"])
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_handle_cleanup_exception(sample_config, mock_logger):
-    """handle_cleanup reports cleanup exceptions."""
-    sample_config.settings.target_user_id = 123
-
-    handler = BotCommandHandler(sample_config, mock_logger)
-    update = _make_update(123)
-
-    mock_sender = MagicMock()
-    mock_sender.cleanup_old_digests = AsyncMock(side_effect=RuntimeError("cleanup failed"))
-
-    with patch.object(src.bot_commands, "create_message_sender", return_value=mock_sender):
-        await handler.handle_cleanup(update, MagicMock())
-
-    mock_logger.error.assert_called_once_with(
-        "Error in /cleanup command: cleanup failed",
-        exc_info=True,
+async def test_handle_cleanup_failure(english_config):
+    """Cleanup handler forwards a cleanup error result."""
+    service = _make_command_service()
+    service.cleanup.return_value = CommandResult(
+        status=CommandStatus.ERROR,
+        message="Some digests could not be removed.",
     )
-    update.message.reply_text.assert_any_await(handler._ui["cleanup_error"])
+
+    handler = BotCommandHandler(
+        english_config,
+        MagicMock(),
+        command_service=service,
+    )
+
+    update = _make_update(123)
+
+    await handler.handle_cleanup(update, MagicMock())
+
+    assert update.message.reply_text.await_args_list[0].args[0] == (handler._ui["cleaning_up"])
+    assert update.message.reply_text.await_args_list[1].args[0] == (
+        "Some digests could not be removed."
+    )
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_handle_cleanup_exception(
+    sample_config,
+    mock_logger,
+):
+    """handle_cleanup forwards an error returned by the command service."""
+    sample_config.settings.target_user_id = 123
+
+    service = _make_command_service()
+    service.cleanup.return_value = CommandResult(
+        status=CommandStatus.ERROR,
+        message="An error occurred during cleanup.",
+    )
+
+    handler = BotCommandHandler(
+        sample_config,
+        mock_logger,
+        command_service=service,
+    )
+    update = _make_update(123)
+
+    await handler.handle_cleanup(update, MagicMock())
+
+    assert update.message.reply_text.await_args_list[0].args[0] == (handler._ui["cleaning_up"])
+    assert update.message.reply_text.await_args_list[1].args[0] == (
+        "An error occurred during cleanup."
+    )
+
+    service.cleanup.assert_awaited_once_with(
+        123,
+        access_checked=True,
+    )
 
 
 @pytest.mark.unit
@@ -533,17 +663,30 @@ async def test_handle_status_without_message(sample_config, mock_logger):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_handle_status_unauthorized(sample_config, mock_logger):
+async def test_handle_status_unauthorized(
+    sample_config,
+    mock_logger,
+):
     """handle_status silently ignores unauthorized users."""
     sample_config.settings.target_user_id = 123
 
-    handler = BotCommandHandler(sample_config, mock_logger)
+    service = _make_command_service()
+    service.status.return_value = CommandResult(
+        status=CommandStatus.UNAUTHORIZED,
+        message="",
+    )
+
+    handler = BotCommandHandler(
+        sample_config,
+        mock_logger,
+        command_service=service,
+    )
     update = _make_update(456)
 
     await handler.handle_status(update, MagicMock())
 
-    mock_logger.warning.assert_called_once_with("Unauthorized /status attempt from user 456")
     update.message.reply_text.assert_not_awaited()
+    service.status.assert_called_once_with(456)
 
 
 @pytest.mark.unit

@@ -1,67 +1,60 @@
 """
-Bot command handlers for instant digest generation.
+Telegram bot command handlers.
 """
 
 import asyncio
 import logging
-import time
 from typing import Optional
 
 from telegram import BotCommand, Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
+from src.commands.models import CommandStatus
+from src.commands.service import CommandService
 from src.config.models import Config
-from src.core import generate_and_send_digest
-from src.platforms.factory import create_message_sender
 from src.scheduler import DigestScheduler
 from src.ui_strings import get_ui_strings
 
 
 class BotCommandHandler:
-    """Handles bot commands for manual digest generation."""
-
-    RATE_LIMIT_SECONDS = 30
+    """Telegram adapter for application commands."""
 
     def __init__(
-        self, config: Config, logger: logging.Logger, scheduler: Optional[DigestScheduler] = None
+        self,
+        config: Config,
+        logger: logging.Logger,
+        scheduler: Optional[DigestScheduler] = None,
+        command_service: CommandService | None = None,
     ):
         """
-        Initialize bot command handler.
+        Initialize the Telegram command handler.
 
         Args:
-            config: Application configuration
-            logger: Logger instance
-            scheduler: Scheduler instance (for status command)
+            config: Application configuration.
+            logger: Logger instance.
+            scheduler: Scheduler instance.
+            command_service: Application command service.
         """
         self.config = config
         self.logger = logger
         self.scheduler = scheduler
+        self.command_service = command_service or CommandService(
+            config,
+            logger,
+            scheduler,
+        )
         self.app: Optional[Application] = None
         self._ui = get_ui_strings(config.settings.output_language)
-        self._command_timestamps: dict[int, float] = {}
-
-    def _is_rate_limited(self, user_id: int) -> bool:
-        """Check if a user is rate-limited (30-second cooldown)."""
-        now = time.monotonic()
-        if user_id not in self._command_timestamps:
-            self._command_timestamps[user_id] = now
-            return False
-        if now - self._command_timestamps[user_id] < self.RATE_LIMIT_SECONDS:
-            return True
-        self._command_timestamps[user_id] = now
-        return False
 
     def setup_application(self) -> Application:
         """
         Set up Telegram bot application.
 
         Returns:
-            Configured Application instance
+            Configured Application instance.
         """
-        # Create application
         self.app = Application.builder().token(self.config.telegram_bot_token).build()
 
-        # Add command handlers
         self.app.add_handler(CommandHandler("digest", self.handle_digest))
         self.app.add_handler(CommandHandler("cleanup", self.handle_cleanup))
         self.app.add_handler(CommandHandler("status", self.handle_status))
@@ -73,8 +66,7 @@ class BotCommandHandler:
 
     async def setup_bot_menu(self) -> None:
         """
-        Set up bot command menu for easy command discovery.
-        This creates the menu that appears when users type '/' in the chat.
+        Set up the Telegram bot command menu.
         """
         if not self.app:
             self.logger.warning("Application not initialized, cannot set up bot menu")
@@ -94,192 +86,109 @@ class BotCommandHandler:
         except Exception as e:
             self.logger.error(f"Failed to set up bot menu: {e}")
 
-    def is_authorized(self, user_id: int) -> bool:
-        """
-        Check if user is authorized.
-
-        Args:
-            user_id: Telegram user ID
-
-        Returns:
-            True if authorized
-        """
-        return user_id == self.config.settings.target_user_id
-
-    async def handle_digest(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def handle_digest(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+    ) -> None:
         """
         Handle /digest command.
-
-        Args:
-            update: Telegram update
-            context: Bot context
         """
         if update.effective_user is None or update.message is None:
             return
 
         user_id = update.effective_user.id
 
-        # Security check
-        if not self.is_authorized(user_id):
-            self.logger.warning(f"Unauthorized /digest attempt from user {user_id}")
-            return  # Silently ignore
-
-        if self._is_rate_limited(user_id):
-            await update.message.reply_text(self._ui["rate_limited"])
+        access_result = self.command_service.check_access(user_id)
+        if access_result is not None:
+            if access_result.status is CommandStatus.RATE_LIMITED:
+                await update.message.reply_text(access_result.message)
             return
 
-        self.logger.info(f"Manual digest requested by user {user_id}")
-
-        # Send "processing" message
         await update.message.reply_text(self._ui["generating_digest"])
 
-        try:
-            # Generate and send digest
-            success = await generate_and_send_digest(
-                config=self.config, logger=self.logger, hours=24, user_id=user_id
-            )
+        result = await self.command_service.digest(
+            user_id,
+            access_checked=True,
+        )
 
-            if success:
-                await update.message.reply_text(self._ui["digest_done"])
-            else:
-                await update.message.reply_text(self._ui["digest_error"])
+        if result.status is CommandStatus.SUCCESS:
+            await update.message.reply_text(result.message)
+        else:
+            await update.message.reply_text(result.message)
 
-        except Exception as e:
-            self.logger.error(f"Error in /digest command: {e}", exc_info=True)
-            await update.message.reply_text(self._ui["digest_exception"])
-
-    async def handle_cleanup(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def handle_cleanup(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+    ) -> None:
         """
         Handle /cleanup command.
-
-        Args:
-            update: Telegram update
-            context: Bot context
         """
         if update.effective_user is None or update.message is None:
             return
 
         user_id = update.effective_user.id
 
-        # Security check
-        if not self.is_authorized(user_id):
-            self.logger.warning(f"Unauthorized /cleanup attempt from user {user_id}")
-            return  # Silently ignore
-
-        if self._is_rate_limited(user_id):
-            await update.message.reply_text(self._ui["rate_limited"])
+        access_result = self.command_service.check_access(user_id)
+        if access_result is not None:
+            if access_result.status is CommandStatus.RATE_LIMITED:
+                await update.message.reply_text(access_result.message)
             return
 
-        self.logger.info(f"Manual cleanup requested by user {user_id}")
-
-        # Send "processing" message
         await update.message.reply_text(self._ui["cleaning_up"])
 
-        try:
-            sender = create_message_sender(self.config, self.logger)
-            success = await sender.cleanup_old_digests(user_id)
+        result = await self.command_service.cleanup(
+            user_id,
+            access_checked=True,
+        )
 
-            if success:
-                await update.message.reply_text(self._ui["cleanup_done"])
-            else:
-                await update.message.reply_text(self._ui["cleanup_partial"])
+        await update.message.reply_text(result.message)
 
-        except Exception as e:
-            self.logger.error(f"Error in /cleanup command: {e}", exc_info=True)
-            await update.message.reply_text(self._ui["cleanup_error"])
-
-    async def handle_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def handle_status(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+    ) -> None:
         """
         Handle /status command.
-
-        Args:
-            update: Telegram update
-            context: Bot context
         """
         if update.effective_user is None or update.message is None:
             return
 
-        user_id = update.effective_user.id
+        result = self.command_service.status(update.effective_user.id)
 
-        # Security check
-        if not self.is_authorized(user_id):
-            self.logger.warning(f"Unauthorized /status attempt from user {user_id}")
+        if result.status is CommandStatus.UNAUTHORIZED:
             return
 
-        # Gather status information
-        ai_model = self.config.settings.ai_model
-        auto_cleanup_value = (
-            self._ui["enabled"]
-            if self.config.settings.auto_cleanup_old_digests
-            else self._ui["disabled"]
-        )
-        status_lines = [
-            self._ui["status_header"],
-            f"{self._ui['provider_label']}: {self.config.settings.ai_provider}",
-            f"{self._ui['model_label']}: {ai_model}",
-            f"{self._ui['channels_configured']}: {len(self.config.channels)}",
-            f"{self._ui['auto_cleanup_label']}: {auto_cleanup_value}",
-        ]
-
-        if self.scheduler:
-            next_run = self.scheduler.get_next_run_time()
-            status_lines.append(f"{self._ui['next_digest']}: {next_run}")
-        else:
-            status_lines.append(self._ui["scheduler_not_running"])
-
-        status_lines.extend(
-            [
-                "",
-                self._ui["available_commands"],
-                "/digest - " + self._ui["cmd_digest_desc"],
-                "/cleanup - " + self._ui["cmd_cleanup_desc"],
-                "/status - " + self._ui["cmd_status_desc"],
-                "/help - " + self._ui["cmd_help_desc"],
-            ]
+        await update.message.reply_text(
+            result.message,
+            parse_mode="Markdown",
         )
 
-        await update.message.reply_text("\n".join(status_lines), parse_mode="Markdown")
-
-    async def handle_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def handle_help(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+    ) -> None:
         """
         Handle /help and /start commands.
-
-        Args:
-            update: Telegram update
-            context: Bot context
         """
         if update.effective_user is None or update.message is None:
             return
 
-        user_id = update.effective_user.id
+        result = self.command_service.help(update.effective_user.id)
 
-        # Security check
-        if not self.is_authorized(user_id):
+        if result.status is CommandStatus.UNAUTHORIZED:
             return
 
-        help_text = (
-            f"{self._ui['help_title']}\n\n"
-            f"{self._ui['help_intro']}\n\n"
-            f"{self._ui['help_commands_header']}\n\n"
-            f"/digest - {self._ui['cmd_digest_desc']}\n"
-            f"/cleanup - {self._ui['cmd_cleanup_desc']}\n"
-            f"/status - {self._ui['cmd_status_desc']}\n"
-            f"/help - {self._ui['cmd_help_desc']}\n\n"
-            f"{self._ui['help_auto_mode']}\n"
-            + self._ui["help_auto_desc"].format(
-                schedule=self.config.settings.schedule_time + " UTC"
-            )
-            + f"\n\n{self._ui['help_features']}\n"
-            + self._ui["help_features_list"].format(
-                output_lang=self.config.settings.output_language,
-                provider=self.config.settings.ai_provider,
-            )
+        await update.message.reply_text(
+            result.message,
+            parse_mode="Markdown",
         )
 
-        await update.message.reply_text(help_text, parse_mode="Markdown")
-
-    async def run(self):
-        """Run the bot (polling mode)."""
+    async def run(self) -> None:
+        """Run the bot in polling mode."""
         if not self.app:
             self.setup_application()
 
@@ -290,14 +199,13 @@ class BotCommandHandler:
         await self.app.initialize()
         await self.app.start()
 
-        # Set up bot command menu
         await self.setup_bot_menu()
 
         await self.app.updater.start_polling()
 
         self.logger.info("✅ Bot is running and listening for commands")
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the bot."""
         if self.app and self.app.updater:
             self.logger.info("Stopping bot...")
@@ -306,7 +214,7 @@ class BotCommandHandler:
             await self.app.shutdown()
 
 
-async def main():
+async def main() -> None:
     """Test bot commands."""
     from src.config.loader import load_config
     from src.utils import setup_logging
@@ -321,7 +229,7 @@ async def main():
 
     try:
         await handler.run()
-        # Keep running
+
         while True:
             await asyncio.sleep(1)
     except KeyboardInterrupt:
