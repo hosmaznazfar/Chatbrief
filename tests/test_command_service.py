@@ -227,3 +227,32 @@ async def test_cleanup_rate_limited(english_config, mock_logger):
     assert first.status is CommandStatus.SUCCESS
     assert second.status is CommandStatus.RATE_LIMITED
     assert second.message == service._ui["rate_limited"]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_rate_limit_resets_after_cooldown(english_config, mock_logger):
+    """A command is allowed again after the rate-limit cooldown."""
+    english_config.settings.target_user_id = 123
+
+    service = CommandService(english_config, mock_logger)
+
+    with (
+        patch.object(
+            src.commands.service,
+            "generate_and_send_digest",
+            new=AsyncMock(return_value=True),
+        ),
+        patch.object(
+            src.commands.service.time,
+            "monotonic",
+            side_effect=[0.0, 10.0, 31.0],
+        ),
+    ):
+        first = await service.digest(123)
+        second = await service.digest(123)
+        third = await service.digest(123)
+
+    assert first.status is CommandStatus.SUCCESS
+    assert second.status is CommandStatus.RATE_LIMITED
+    assert third.status is CommandStatus.SUCCESS

@@ -68,15 +68,25 @@ class CommandService:
 
         return None
 
-    async def digest(self, user_id: int) -> CommandResult:
-        """Generate and send a digest for an authorized user."""
+    def check_access(self, user_id: int) -> CommandResult | None:
+        """Check authorization and rate limiting before executing a command."""
         authorization_result = self._check_authorization(user_id)
         if authorization_result is not None:
             return authorization_result
 
-        rate_limit_result = self._check_rate_limit(user_id)
-        if rate_limit_result is not None:
-            return rate_limit_result
+        return self._check_rate_limit(user_id)
+
+    async def digest(
+        self,
+        user_id: int,
+        *,
+        access_checked: bool = False,
+    ) -> CommandResult:
+        """Generate and send a digest for an authorized user."""
+        if not access_checked:
+            access_result = self.check_access(user_id)
+            if access_result is not None:
+                return access_result
 
         self.logger.info("Manual digest requested by user %s", user_id)
 
@@ -110,15 +120,17 @@ class CommandService:
                 message=self._ui["digest_exception"],
             )
 
-    async def cleanup(self, user_id: int) -> CommandResult:
+    async def cleanup(
+        self,
+        user_id: int,
+        *,
+        access_checked: bool = False,
+    ) -> CommandResult:
         """Clean up previously sent digests for an authorized user."""
-        authorization_result = self._check_authorization(user_id)
-        if authorization_result is not None:
-            return authorization_result
-
-        rate_limit_result = self._check_rate_limit(user_id)
-        if rate_limit_result is not None:
-            return rate_limit_result
+        if not access_checked:
+            access_result = self.check_access(user_id)
+            if access_result is not None:
+                return access_result
 
         self.logger.info("Manual cleanup requested by user %s", user_id)
 
