@@ -22,3 +22,12 @@ def create_message_sender(
 ) -> MessageSender:
     """Create the configured messaging-platform sender."""
     return TelegramMessageSender(config, logger)
+
+
+# def create_bot(
+#     config: Config,
+#     logger: logging.Logger,
+#     scheduler: DigestScheduler | None = None,
+# ) -> Bot:
+#     """Create the configured messaging-platform bot."""
+#     return TelegramBot(config, logger, scheduler)
