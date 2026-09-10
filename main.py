@@ -206,6 +206,7 @@ class ChatbriefApp:
                 self.mcp = build_server(
                     config,
                     logger,
+                    source,
                 )
 
             logger.info("✅ Initialization complete")
