@@ -1,4 +1,8 @@
-# Telegram channels/chats to monitor
+# Messaging platform
+
+# Supported platforms: telegram, bale
+platform: telegram
+
 channels:
   - id: "@channelname"
     name: "Example Channel"

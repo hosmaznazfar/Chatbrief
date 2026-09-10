@@ -1,5 +1,13 @@
 from dataclasses import dataclass, field
-from typing import Any, List
+from enum import StrEnum
+from typing import Any
+
+
+class Platform(StrEnum):
+    """Supported messaging platforms."""
+
+    TELEGRAM = "telegram"
+    BALE = "bale"
 
 
 @dataclass
@@ -12,9 +20,9 @@ class FilterSpec:
 
 @dataclass
 class ChannelConfig:
-    """Configuration for a single Telegram channel/chat."""
+    """Configuration for a single messaging-platform channel."""
 
-    id: str | int  # str for @username, int for numeric Telegram channel ID
+    id: str | int  # str for @username, int for numeric channel ID
     name: str
     lookback_hours: int | None = None  # None = use global settings.lookback_hours
     prompt_extra: str = ""  # appended to system prompt when summarizing this channel
@@ -84,7 +92,7 @@ class Settings:
     ollama_base_url: str = "http://localhost:11434"
     output_language: str = "Russian"
     digest_mode: str = "channel"
-    digest_groups: List[DigestGroupConfig] = field(default_factory=list)
+    digest_groups: list[DigestGroupConfig] = field(default_factory=list)
     filters: list[FilterSpec] = field(default_factory=list)
     dedup_topics: bool = False
 
@@ -93,7 +101,8 @@ class Settings:
 class Config:
     """Complete application configuration."""
 
-    channels: List[ChannelConfig]
+    platform: Platform
+    channels: list[ChannelConfig]
     settings: Settings
 
     # Environment variables

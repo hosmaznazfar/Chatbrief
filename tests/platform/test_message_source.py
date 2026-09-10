@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import src.platforms.telegram
 from src.message import Message
 from src.platforms.telegram import TelegramMessageSource
 
@@ -22,7 +21,7 @@ async def async_messages(messages):
 @pytest.fixture
 def message_source(sample_config, mock_logger):
     """Create a Telegram message source with a mocked Telegram client."""
-    with patch.object(src.platforms.telegram, "TelegramClient") as mock_client:
+    with patch.object(platforms.telegram.telegram, "TelegramClient") as mock_client:
         mock_client.return_value = MagicMock()
         source = TelegramMessageSource(sample_config, mock_logger)
 

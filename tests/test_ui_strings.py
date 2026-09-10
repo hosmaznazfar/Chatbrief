@@ -21,7 +21,7 @@ REQUIRED_KEYS = [
     "channels_processed",
     "total_messages",
     "period",
-    # bot_commands.py
+    # telegram_bot.py
     "cmd_start_desc",
     "cmd_digest_desc",
     "cmd_cleanup_desc",
@@ -59,7 +59,7 @@ REQUIRED_KEYS = [
     "from_channel",
     # formatter (open channel link)
     "open_channel",
-    # bot_commands (rate limiting)
+    # telegram_bot (rate limiting)
     "rate_limited",
 ]
 

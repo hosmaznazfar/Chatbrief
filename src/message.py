@@ -11,7 +11,7 @@ class Message:
     text: str
     sender: str
     timestamp: datetime
-    link: str
+    link: str | None
     channel_name: str
     has_media: bool
-    media_type: str
+    media_type: str | None

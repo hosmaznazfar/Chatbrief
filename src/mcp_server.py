@@ -1,7 +1,7 @@
-"""MCP server exposing Telebrief digests to MCP clients.
+"""MCP server exposing Chatbief digests to MCP clients.
 
-Runs inside the main Telebrief process so that digest generation reuses the same
-Telegram session, configuration and lock as the scheduler and the bot.
+Runs inside the main Chatbief process so that digest generation reuses the same
+Telegram session, Chatbief and lock as the scheduler and the bot.
 """
 
 from __future__ import annotations
@@ -11,15 +11,13 @@ import logging
 
 from mcp.server import MCPServer
 
+from platforms.base import MessageSource
 from src.config.models import Config
-from src.core import (
-    MAX_CHANNEL_MESSAGES,
-    MAX_DIGEST_HOURS,
-    build_digest,
-    collect_channel_messages,
-    read_last_digest,
-    validate_hours,
-)
+from src.constants import MAX_CHANNEL_MESSAGES, MAX_DIGEST_HOURS
+from src.digest.cache import read_last_digest
+from src.digest.collector import collect_channel_messages
+from src.digest.service import build_digest
+from src.digest.validators import validate_hours
 from src.message import Message
 
 
@@ -42,12 +40,17 @@ def _format_messages(channel: str, messages: list[Message], source: str, hours: 
     return f"{header}\n\n{body}"
 
 
-def build_server(config: Config, logger: logging.Logger) -> MCPServer:
+def build_server(
+    config: Config,
+    logger: logging.Logger,
+    source: MessageSource,
+) -> MCPServer:
     """Build the MCP server exposing the digest tools.
 
     Args:
         config: Application configuration
         logger: Logger instance
+        source: Source of App (Telegram, Bale, ...)
 
     Returns:
         Configured MCPServer, not yet running
@@ -59,7 +62,7 @@ def build_server(config: Config, logger: logging.Logger) -> MCPServer:
             "generation and read your channels. Bind 127.0.0.1 or firewall the port."
         )
 
-    mcp = MCPServer("telebrief")
+    mcp = MCPServer("chatbief")
 
     @mcp.tool()
     async def get_digest(hours: int = 24) -> str:
@@ -73,7 +76,7 @@ def build_server(config: Config, logger: logging.Logger) -> MCPServer:
             hours: How many hours back to look, 1 to 168 (default 24)
         """
         validate_hours(hours)
-        digest = await build_digest(config, logger, hours)
+        digest = await build_digest(config, logger, source, hours)
         return digest or f"No messages found in the last {hours} hours."
 
     @mcp.tool()
@@ -95,7 +98,7 @@ def build_server(config: Config, logger: logging.Logger) -> MCPServer:
     async def get_channel_messages(channel: str, hours: int = 24, limit: int = 200) -> str:
         """Return the individual messages of one configured channel, unsummarized.
 
-        Reads from Telebrief's message store when it holds the requested window, and
+        Reads from Chatbrief's message store when it holds the requested window, and
         falls back to a live Telegram read otherwise. Free and instant on the stored
         path; the fallback takes a few seconds. The response header says which was used.
 
@@ -104,10 +107,22 @@ def build_server(config: Config, logger: logging.Logger) -> MCPServer:
             hours: How many hours back to look, 1 to 168 (default 24)
             limit: Maximum messages to return, 1 to 500, newest kept (default 200)
         """
-        messages, source = await collect_channel_messages(config, logger, channel, hours, limit)
+        messages, storage_source = await collect_channel_messages(
+            config,
+            logger,
+            source,
+            channel,
+            hours,
+            limit,
+        )
         if not messages:
             return f"No messages in {channel!r} in the last {hours} hours."
-        return _format_messages(channel, messages, source, hours)
+        return _format_messages(
+            channel,
+            messages,
+            storage_source,
+            hours,
+        )
 
     logger.info(
         f"MCP tools registered: get_digest (max {MAX_DIGEST_HOURS}h), get_last_digest, "

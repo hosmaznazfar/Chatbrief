@@ -2,10 +2,11 @@
 
 import logging
 
+from platforms.telegram.telegram_sender import TelegramMessageSender
 from src.config.models import Config
-from src.platforms.base import MessageSender, MessageSource
+from src.platforms.base import Bot, MessageSender, MessageSource
 from src.platforms.telegram import TelegramMessageSource
-from src.platforms.telegram_sender import TelegramMessageSender
+from src.scheduler import DigestScheduler
 
 
 def create_message_source(
@@ -24,10 +25,12 @@ def create_message_sender(
     return TelegramMessageSender(config, logger)
 
 
-# def create_bot(
-#     config: Config,
-#     logger: logging.Logger,
-#     scheduler: DigestScheduler | None = None,
-# ) -> Bot:
-#     """Create the configured messaging-platform bot."""
-#     return TelegramBot(config, logger, scheduler)
+def create_bot(
+    config: Config,
+    logger: logging.Logger,
+    scheduler: DigestScheduler | None = None,
+) -> Bot:
+    """Create the configured messaging-platform bot."""
+    from platforms.telegram.telegram_bot import TelegramBot
+
+    return TelegramBot(config, logger, scheduler)

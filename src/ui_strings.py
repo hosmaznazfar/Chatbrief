@@ -108,7 +108,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "channels_processed": "Channels processed",
         "total_messages": "Total messages",
         "period": "Period",
-        # bot_commands.py
+        # platforms/telegram_bot.py
         "cmd_start_desc": "Start the bot",
         "cmd_digest_desc": "Generate digest for 24 hours",
         "cmd_cleanup_desc": "Delete old digests",
@@ -178,7 +178,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "channels_processed": "Обработано каналов",
         "total_messages": "Всего сообщений",
         "period": "Период",
-        # bot_commands.py
+        # platforms/telegram_bot.py
         "cmd_start_desc": "Начать работу с ботом",
         "cmd_digest_desc": "Сгенерировать дайджест за 24 часа",
         "cmd_cleanup_desc": "Удалить старые дайджесты",
@@ -248,7 +248,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "channels_processed": "Canales procesados",
         "total_messages": "Total de mensajes",
         "period": "Período",
-        # bot_commands.py
+        # platforms/telegram_bot.py
         "cmd_start_desc": "Iniciar el bot",
         "cmd_digest_desc": "Generar resumen de 24 horas",
         "cmd_cleanup_desc": "Eliminar resúmenes antiguos",
@@ -318,7 +318,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "channels_processed": "Verarbeitete Kanäle",
         "total_messages": "Nachrichten gesamt",
         "period": "Zeitraum",
-        # bot_commands.py
+        # platforms/telegram_bot.py
         "cmd_start_desc": "Bot starten",
         "cmd_digest_desc": "24-Stunden-Zusammenfassung erstellen",
         "cmd_cleanup_desc": "Alte Zusammenfassungen löschen",
@@ -388,7 +388,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "channels_processed": "Chaînes traitées",
         "total_messages": "Total des messages",
         "period": "Période",
-        # bot_commands.py
+        # platforms/telegram_bot.py
         "cmd_start_desc": "Démarrer le bot",
         "cmd_digest_desc": "Générer le résumé des 24h",
         "cmd_cleanup_desc": "Supprimer les anciens résumés",

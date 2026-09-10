@@ -16,8 +16,8 @@ from src.scheduler import DigestScheduler
 from src.ui_strings import get_ui_strings
 
 
-class BotCommandHandler:
-    """Telegram adapter for application commands."""
+class TelegramBot:
+    """Telegram implementation of the bot interface."""
 
     def __init__(
         self,
@@ -222,7 +222,7 @@ async def main() -> None:
     config = load_config()
     logger = setup_logging(config.log_level)
 
-    handler = BotCommandHandler(config, logger)
+    handler = TelegramBot(config, logger)
     handler.setup_application()
 
     logger.info("Bot command handler ready. Starting polling...")

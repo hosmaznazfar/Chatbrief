@@ -1,12 +1,14 @@
 import logging
 from typing import List
 
-from .constants import PROVIDER_DEFAULT_MODELS, SUPPORTED_LANGUAGES, SUPPORTED_PROVIDERS
+from src.constants import PROVIDER_DEFAULT_MODELS, SUPPORTED_LANGUAGES, SUPPORTED_PROVIDERS
+
 from .models import (
     ChannelConfig,
     DigestGroupConfig,
     FilterSpec,
     McpConfig,
+    Platform,
     PromptsConfig,
     StorageConfig,
 )
@@ -166,6 +168,23 @@ def validate_channel_id_name(i: int, ch: dict) -> None:
         raise ValueError(f"channels[{i}].name must be a non-empty string, got {ch['name']!r}")
     if not isinstance(ch["id"], (str, int)) or isinstance(ch["id"], bool):
         raise ValueError(f"channels[{i}].id must be a string or int, got {type(ch['id']).__name__}")
+
+
+def parse_platform(yaml_config: dict) -> Platform:
+    """Parse and validate the configured messaging platform."""
+
+    raw_platform = yaml_config.get("platform", "telegram")
+
+    if not isinstance(raw_platform, str):
+        raise ValueError(f"platform must be a string, got {type(raw_platform).__name__}")
+
+    try:
+        return Platform(raw_platform.strip().lower())
+    except ValueError:
+        supported = ", ".join(platform.value for platform in Platform)
+        raise ValueError(
+            f"Unsupported platform: '{raw_platform}'. Supported platforms: {supported}"
+        ) from None
 
 
 def parse_channel_entry(i: int, ch: object) -> ChannelConfig:

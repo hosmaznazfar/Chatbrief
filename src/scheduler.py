@@ -2,29 +2,39 @@
 Scheduler for automated daily digest generation.
 """
 
-import asyncio
 import logging
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from src.config.models import Config
-from src.core import generate_and_send_digest
+from src.digest.service import generate_and_send_digest
+from src.platforms.base import MessageSender, MessageSource
 
 
 class DigestScheduler:
     """Schedules daily digest generation."""
 
-    def __init__(self, config: Config, logger: logging.Logger):
+    def __init__(
+        self,
+        config: Config,
+        logger: logging.Logger,
+        source: MessageSource,
+        sender: MessageSender,
+    ):
         """
         Initialize scheduler.
 
         Args:
             config: Application configuration
             logger: Logger instance
+            source: Message source used to collect messages
+            sender: Message sender used to deliver digests
         """
         self.config = config
         self.logger = logger
+        self.source = source
+        self.sender = sender
         self.scheduler = AsyncIOScheduler()
         self.is_running = False
 
@@ -34,13 +44,14 @@ class DigestScheduler:
             self.logger.warning("Scheduler already running")
             return
 
-        # Parse schedule time
         hour, minute = self._parse_schedule_time()
 
-        # Create cron trigger for daily execution
-        trigger = CronTrigger(hour=hour, minute=minute, timezone=self.config.settings.timezone)
+        trigger = CronTrigger(
+            hour=hour,
+            minute=minute,
+            timezone=self.config.settings.timezone,
+        )
 
-        # Add job
         self.scheduler.add_job(
             func=self._scheduled_digest_job,
             trigger=trigger,
@@ -49,7 +60,6 @@ class DigestScheduler:
             replace_existing=True,
         )
 
-        # Start scheduler
         self.scheduler.start()
         self.is_running = True
 
@@ -75,7 +85,11 @@ class DigestScheduler:
 
         try:
             success = await generate_and_send_digest(
-                config=self.config, logger=self.logger, hours=self.config.settings.lookback_hours
+                config=self.config,
+                logger=self.logger,
+                source=self.source,
+                sender=self.sender,
+                hours=self.config.settings.lookback_hours,
             )
 
             if success:
@@ -84,7 +98,10 @@ class DigestScheduler:
                 self.logger.error("❌ Scheduled digest failed to send")
 
         except Exception as e:
-            self.logger.error(f"❌ Scheduled digest job failed: {e}", exc_info=True)
+            self.logger.error(
+                f"❌ Scheduled digest job failed: {e}",
+                exc_info=True,
+            )
 
     def _parse_schedule_time(self) -> tuple[int, int]:
         """
@@ -115,30 +132,3 @@ class DigestScheduler:
         if job and job.next_run_time:
             return str(job.next_run_time.strftime("%Y-%m-%d %H:%M:%S %Z"))
         return "No job scheduled"
-
-
-async def main():
-    """Test scheduler."""
-    from src.config.loader import load_config
-    from src.utils import setup_logging
-
-    config = load_config()
-    logger = setup_logging(config.log_level)
-
-    scheduler = DigestScheduler(config, logger)
-    scheduler.start()
-
-    logger.info("Scheduler running. Press Ctrl+C to stop.")
-    logger.info(f"Next run: {scheduler.get_next_run_time()}")
-
-    try:
-        # Keep running
-        while True:
-            await asyncio.sleep(60)
-    except KeyboardInterrupt:
-        logger.info("Stopping scheduler...")
-        scheduler.stop()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

@@ -1,13 +1,13 @@
-"""Tests for bot_commands module — language / output_language coverage and rate limiting."""
+"""Tests for telegram_bot platform adapter — commands, language, and rate limiting."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import src.platforms.telegram_bot
+import platforms.telegram.telegram_bot
 from src.commands.models import CommandResult, CommandStatus
 from src.commands.service import CommandService
-from src.platforms.telegram_bot import BotCommandHandler
+from platforms.telegram.telegram_bot import TelegramBot
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def _make_command_service() -> MagicMock:
 @pytest.mark.asyncio
 async def test_setup_bot_menu_uses_output_language(english_config, mock_logger):
     """setup_bot_menu command descriptions respect output_language."""
-    handler = BotCommandHandler(english_config, mock_logger)
+    handler = TelegramBot(english_config, mock_logger)
     mock_app = MagicMock()
     mock_app.bot.set_my_commands = AsyncMock()
     handler.app = mock_app
@@ -82,7 +82,7 @@ async def test_handle_digest_processing_message_uses_output_language(
         message="Digest generated successfully.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         mock_logger,
         command_service=service,
@@ -111,7 +111,7 @@ async def test_handle_digest_success_message_uses_output_language(english_config
         message="Digest generated successfully.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         MagicMock(),
         command_service=service,
@@ -144,7 +144,7 @@ async def test_handle_digest_error_message_uses_output_language(english_config):
         message="Failed to generate digest.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         MagicMock(),
         command_service=service,
@@ -179,7 +179,7 @@ async def test_handle_cleanup_messages_use_output_language(english_config):
         message="Cleanup completed.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         MagicMock(),
         command_service=service,
@@ -208,7 +208,7 @@ async def test_handle_cleanup_messages_use_output_language(english_config):
 @pytest.mark.asyncio
 async def test_handle_status_uses_output_language(english_config, mock_logger):
     """handle_status status message respects output_language."""
-    handler = BotCommandHandler(english_config, mock_logger)
+    handler = TelegramBot(english_config, mock_logger)
     update = _make_update(123456789)
 
     await handler.handle_status(update, MagicMock())
@@ -233,7 +233,7 @@ async def test_handle_status_uses_output_language(english_config, mock_logger):
 @pytest.mark.asyncio
 async def test_handle_help_uses_output_language(english_config, mock_logger):
     """handle_help text respects output_language."""
-    handler = BotCommandHandler(english_config, mock_logger)
+    handler = TelegramBot(english_config, mock_logger)
     update = _make_update(123456789)
 
     await handler.handle_help(update, MagicMock())
@@ -262,7 +262,7 @@ async def test_handle_digest_rate_limited(english_config):
         message="Please wait before trying again.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         MagicMock(),
         command_service=service,
@@ -286,7 +286,7 @@ async def test_handle_cleanup_rate_limited(english_config):
         message="Please wait before trying again.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         MagicMock(),
         command_service=service,
@@ -314,7 +314,7 @@ async def test_rate_limit_message_uses_configured_language(
         message="Пожалуйста, подождите перед повторной попыткой.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         sample_config,
         mock_logger,
         command_service=service,
@@ -334,7 +334,7 @@ async def test_rate_limit_message_uses_configured_language(
 @pytest.mark.asyncio
 async def test_status_not_rate_limited(english_config, mock_logger):
     """/status is not rate limited — can be called rapidly."""
-    handler = BotCommandHandler(english_config, mock_logger)
+    handler = TelegramBot(english_config, mock_logger)
     update = _make_update(123456789)
 
     await handler.handle_status(update, MagicMock())
@@ -350,7 +350,7 @@ async def test_status_not_rate_limited(english_config, mock_logger):
 @pytest.mark.asyncio
 async def test_help_not_rate_limited(english_config, mock_logger):
     """/help is not rate limited — can be called rapidly."""
-    handler = BotCommandHandler(english_config, mock_logger)
+    handler = TelegramBot(english_config, mock_logger)
     update = _make_update(123456789)
 
     await handler.handle_help(update, MagicMock())
@@ -375,7 +375,7 @@ async def test_cleanup_rate_limited(
         message="Please wait before trying again.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         mock_logger,
         command_service=service,
@@ -397,11 +397,11 @@ async def test_cleanup_rate_limited(
 @pytest.mark.unit
 def test_setup_application(sample_config, mock_logger):
     """setup_application registers all bot command handlers."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     mock_app = MagicMock()
 
-    with patch.object(src.platforms.telegram_bot.Application, "builder") as mock_builder:
+    with patch.object(platforms.telegram.telegram_bot.Application, "builder") as mock_builder:
         mock_builder.return_value.token.return_value.build.return_value = mock_app
 
         result = handler.setup_application()
@@ -416,7 +416,7 @@ def test_setup_application(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_setup_bot_menu_without_application(sample_config, mock_logger):
     """setup_bot_menu warns when the application is not initialized."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     await handler.setup_bot_menu()
 
@@ -429,7 +429,7 @@ async def test_setup_bot_menu_without_application(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_setup_bot_menu_exception(sample_config, mock_logger):
     """setup_bot_menu logs an error when Telegram rejects the command menu."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     mock_app = MagicMock()
     mock_app.bot.set_my_commands = AsyncMock(side_effect=RuntimeError("Telegram error"))
@@ -444,7 +444,7 @@ async def test_setup_bot_menu_exception(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_handle_digest_without_user(sample_config, mock_logger):
     """handle_digest returns when the update has no effective user."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     update = _make_update(123456789)
     update.effective_user = None
@@ -458,7 +458,7 @@ async def test_handle_digest_without_user(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_handle_digest_without_message(sample_config, mock_logger):
     """handle_digest returns when the update has no message."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     update = _make_update(123456789)
     update.message = None
@@ -475,7 +475,7 @@ async def test_handle_digest_unauthorized(english_config):
         message="",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         MagicMock(),
         command_service=service,
@@ -504,7 +504,7 @@ async def test_handle_digest_exception(
         message="An error occurred while generating the digest.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         sample_config,
         mock_logger,
         command_service=service,
@@ -530,7 +530,7 @@ async def test_handle_digest_exception(
 @pytest.mark.asyncio
 async def test_handle_cleanup_without_user(sample_config, mock_logger):
     """handle_cleanup returns when the update has no effective user."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     update = _make_update(123456789)
     update.effective_user = None
@@ -544,7 +544,7 @@ async def test_handle_cleanup_without_user(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_handle_cleanup_without_message(sample_config, mock_logger):
     """handle_cleanup returns when the update has no message."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     update = _make_update(123456789)
     update.message = None
@@ -561,7 +561,7 @@ async def test_handle_cleanup_unauthorized(english_config):
         message="",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         MagicMock(),
         command_service=service,
@@ -584,7 +584,7 @@ async def test_handle_cleanup_failure(english_config):
         message="Some digests could not be removed.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         english_config,
         MagicMock(),
         command_service=service,
@@ -615,7 +615,7 @@ async def test_handle_cleanup_exception(
         message="An error occurred during cleanup.",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         sample_config,
         mock_logger,
         command_service=service,
@@ -639,7 +639,7 @@ async def test_handle_cleanup_exception(
 @pytest.mark.asyncio
 async def test_handle_status_without_user(sample_config, mock_logger):
     """handle_status returns when the update has no effective user."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     update = _make_update(123456789)
     update.effective_user = None
@@ -653,7 +653,7 @@ async def test_handle_status_without_user(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_handle_status_without_message(sample_config, mock_logger):
     """handle_status returns when the update has no message."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     update = _make_update(123456789)
     update.message = None
@@ -676,7 +676,7 @@ async def test_handle_status_unauthorized(
         message="",
     )
 
-    handler = BotCommandHandler(
+    handler = TelegramBot(
         sample_config,
         mock_logger,
         command_service=service,
@@ -698,7 +698,7 @@ async def test_handle_status_with_scheduler(sample_config, mock_logger):
     scheduler = MagicMock()
     scheduler.get_next_run_time.return_value = "2026-09-07 08:00:00 UTC"
 
-    handler = BotCommandHandler(sample_config, mock_logger, scheduler)
+    handler = TelegramBot(sample_config, mock_logger, scheduler)
     update = _make_update(123)
 
     await handler.handle_status(update, MagicMock())
@@ -714,7 +714,7 @@ async def test_handle_status_with_scheduler(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_handle_help_without_user(sample_config, mock_logger):
     """handle_help returns when the update has no effective user."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     update = _make_update(123456789)
     update.effective_user = None
@@ -728,7 +728,7 @@ async def test_handle_help_without_user(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_handle_help_without_message(sample_config, mock_logger):
     """handle_help returns when the update has no message."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     update = _make_update(123456789)
     update.message = None
@@ -742,7 +742,7 @@ async def test_handle_help_unauthorized(sample_config, mock_logger):
     """handle_help silently ignores unauthorized users."""
     sample_config.settings.target_user_id = 123
 
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
     update = _make_update(456)
 
     await handler.handle_help(update, MagicMock())
@@ -754,7 +754,7 @@ async def test_handle_help_unauthorized(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_run_without_application(sample_config, mock_logger):
     """run initializes the application when needed."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     mock_app = MagicMock()
     mock_app.updater = MagicMock()
@@ -780,7 +780,7 @@ async def test_run_without_application(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_run_application_initialization_failure(sample_config, mock_logger):
     """run raises when the application has no updater."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     mock_app = MagicMock()
     mock_app.updater = None
@@ -794,7 +794,7 @@ async def test_run_application_initialization_failure(sample_config, mock_logger
 @pytest.mark.asyncio
 async def test_stop_running_application(sample_config, mock_logger):
     """stop shuts down a running bot application."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     mock_app = MagicMock()
     mock_app.updater = MagicMock()
@@ -815,7 +815,7 @@ async def test_stop_running_application(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_stop_without_application(sample_config, mock_logger):
     """stop does nothing when no application exists."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     await handler.stop()
 
@@ -826,7 +826,7 @@ async def test_stop_without_application(sample_config, mock_logger):
 @pytest.mark.asyncio
 async def test_stop_without_updater(sample_config, mock_logger):
     """stop does nothing when the application has no updater."""
-    handler = BotCommandHandler(sample_config, mock_logger)
+    handler = TelegramBot(sample_config, mock_logger)
 
     mock_app = MagicMock()
     mock_app.updater = None

@@ -4,8 +4,8 @@ import logging
 import time
 
 from src.config.models import Config
-from src.core import generate_and_send_digest
-from src.platforms.factory import create_message_sender
+from src.digest.service import generate_and_send_digest
+from src.platforms.base import MessageSender, MessageSource
 from src.scheduler import DigestScheduler
 from src.ui_strings import get_ui_strings
 
@@ -21,10 +21,14 @@ class CommandService:
         self,
         config: Config,
         logger: logging.Logger,
+        source: MessageSource,
+        sender: MessageSender,
         scheduler: DigestScheduler | None = None,
     ) -> None:
         self.config = config
         self.logger = logger
+        self.source = source
+        self.sender = sender
         self.scheduler = scheduler
         self._ui = get_ui_strings(config.settings.output_language)
         self._command_timestamps: dict[int, float] = {}
@@ -50,7 +54,10 @@ class CommandService:
     def _check_authorization(self, user_id: int) -> CommandResult | None:
         """Check whether a user is authorized to execute commands."""
         if not self.is_authorized(user_id):
-            self.logger.warning("Unauthorized command attempt from user %s", user_id)
+            self.logger.warning(
+                "Unauthorized command attempt from user %s",
+                user_id,
+            )
             return CommandResult(
                 status=CommandStatus.UNAUTHORIZED,
                 message="",
@@ -94,6 +101,8 @@ class CommandService:
             success = await generate_and_send_digest(
                 config=self.config,
                 logger=self.logger,
+                source=self.source,
+                sender=self.sender,
                 hours=24,
                 user_id=user_id,
             )
@@ -135,8 +144,7 @@ class CommandService:
         self.logger.info("Manual cleanup requested by user %s", user_id)
 
         try:
-            sender = create_message_sender(self.config, self.logger)
-            success = await sender.cleanup_old_digests(user_id)
+            success = await self.sender.cleanup_old_digests(user_id)
 
             if success:
                 return CommandResult(

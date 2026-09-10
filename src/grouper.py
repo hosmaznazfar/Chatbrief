@@ -92,7 +92,7 @@ _QG_HEDGE_RE = re.compile(
 _QG_ENTITY_DIGIT_RE = re.compile(r"\d")
 _QG_ENTITY_AT_RE = re.compile(r"@\w")
 _QG_ENTITY_URL_RE = re.compile(r"https?://|t\.me/")
-_QG_ENTITY_PROPER_RE = re.compile(r"\b(?:[A-ZА-ЯЁ][\w’'-]{1,}\b.*?){2,}|[A-ZА-Я]{3,}")
+_QG_ENTITY_PROPER_RE = re.compile(r"\b(?:[A-ZА-ЯЁ][\w’'-]+\b.*?){2,}|[A-ZА-Я]{3,}")
 
 
 def _qg_has_concrete_entity(point: str) -> bool:

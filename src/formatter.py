@@ -3,7 +3,6 @@ Markdown formatter for digest output.
 """
 
 import logging
-import re
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -12,8 +11,6 @@ from src.grouper import GroupedPoint
 from src.message import Message
 from src.summarizer import ERROR_SUMMARY_PREFIX
 from src.ui_strings import get_month_names, get_ui_strings
-
-_CHANNEL_URL_RE = re.compile(r"^https://t\.me/(?:c/\d+|[^/]{2,})$")
 
 
 class DigestFormatter:
@@ -44,12 +41,41 @@ class DigestFormatter:
         month_name = self._month_names[dt.month - 1]
         return f"{dt.day:02d} {month_name} {dt.year}"
 
+    def _create_channel_section(
+        self,
+        channel_name: str,
+        summary: str,
+        channel_url: Optional[str] = None,
+    ) -> str:
+        """
+        Create section for a single channel.
+
+        Args:
+            channel_name: Channel name
+            summary: Channel summary
+            channel_url: Platform-specific channel URL
+
+        Returns:
+            Formatted section
+        """
+        emoji = self._pick_emoji(channel_name)
+
+        if channel_url:
+            header = f"## {emoji} {channel_name} · [{self._ui['open_channel']} →]({channel_url})\n"
+        else:
+            header = f"## {emoji} {channel_name}\n"
+
+        section_parts = [header, summary, "\n"]
+
+        return "\n".join(section_parts)
+
     def create_digest(
         self,
         overview: str,
         channel_summaries: Dict[str, str],
         messages_by_channel: Dict[str, List[Message]],
         hours: int = 24,
+        channel_urls: Optional[Dict[str, str]] = None,
     ) -> str:
         """
         Create formatted digest.
@@ -57,8 +83,9 @@ class DigestFormatter:
         Args:
             overview: Executive summary
             channel_summaries: Per-channel summaries
-            messages_by_channel: Original messages (for links)
+            messages_by_channel: Original messages (for statistics and links)
             hours: Time range covered
+            channel_urls: Platform-specific URLs keyed by channel name
 
         Returns:
             Formatted Markdown digest
@@ -69,11 +96,13 @@ class DigestFormatter:
         )
         self.logger.debug(f"Channel summaries: {len(channel_summaries)} channels")
 
+        channel_urls = channel_urls or {}
+
         # Build digest parts
         parts = []
 
         # Header
-        header = self._create_header(hours)
+        header = self._create_header()
         parts.append(header)
 
         # Overview section
@@ -95,7 +124,9 @@ class DigestFormatter:
                 continue
 
             section = self._create_channel_section(
-                channel_name, summary, messages_by_channel.get(channel_name, [])
+                channel_name=channel_name,
+                summary=summary,
+                channel_url=channel_urls.get(channel_name),
             )
             parts.append(section)
             self.logger.debug(f"Added channel section for '{channel_name}'")
@@ -110,12 +141,9 @@ class DigestFormatter:
         self.logger.info(f"Digest formatted: {len(digest)} characters")
         return digest
 
-    def _create_header(self, hours: int) -> str:
+    def _create_header(self) -> str:
         """
         Create digest header.
-
-        Args:
-            hours: Time range
 
         Returns:
             Header string
@@ -123,49 +151,6 @@ class DigestFormatter:
         date_str = self._format_date(datetime.now(timezone.utc))
         emoji = "📊" if self.use_emojis else ""
         return f"# {emoji} {self._ui['daily_digest']} - {date_str}\n"
-
-    def _extract_channel_url(self, messages: List[Message]) -> Optional[str]:
-        """
-        Derive the channel base URL from the first message with a valid link.
-
-        Args:
-            messages: Messages from the channel
-
-        Returns:
-            Channel URL (e.g. https://t.me/username) or None if unavailable
-        """
-        for msg in messages:
-            if msg.link and msg.link != "#":
-                base = msg.link.rsplit("/", 1)[0]
-                if _CHANNEL_URL_RE.match(base):
-                    return base
-        return None
-
-    def _create_channel_section(
-        self, channel_name: str, summary: str, messages: List[Message]
-    ) -> str:
-        """
-        Create section for a single channel.
-
-        Args:
-            channel_name: Channel name
-            summary: Channel summary
-            messages: Messages from channel (for link extraction)
-
-        Returns:
-            Formatted section
-        """
-        emoji = self._pick_emoji(channel_name)
-        channel_url = self._extract_channel_url(messages)
-
-        if channel_url:
-            header = f"## {emoji} {channel_name} · [{self._ui['open_channel']} →]({channel_url})\n"
-        else:
-            header = f"## {emoji} {channel_name}\n"
-
-        section_parts = [header, summary, "\n"]
-
-        return "\n".join(section_parts)
 
     def _pick_emoji(self, channel_name: str) -> str:
         """
@@ -183,44 +168,137 @@ class DigestFormatter:
         name_lower = channel_name.lower()
 
         # Tech/Dev
-        if any(word in name_lower for word in ["tech", "dev", "code", "программ", "разработ"]):
+        if any(
+            word in name_lower
+            for word in [
+                "tech",
+                "dev",
+                "code",
+                "программ",
+                "разработ",
+                "فناوری",
+                "تکنولوژی",
+                "برنامه‌نویسی",
+                "برنامه نویسی",
+                "توسعه",
+            ]
+        ):
             return "💻"
+
         # Crypto/Finance
-        elif any(word in name_lower for word in ["crypto", "bitcoin", "финанс", "крипто"]):
+        elif any(
+            word in name_lower
+            for word in [
+                "crypto",
+                "bitcoin",
+                "финанс",
+                "крипто",
+                "ارز",
+                "کریپتو",
+                "بیت‌کوین",
+                "بیت کوین",
+                "مالی",
+                "اقتصاد",
+            ]
+        ):
             return "💰"
+
         # News
-        elif any(word in name_lower for word in ["news", "новост"]):
+        elif any(word in name_lower for word in ["news", "новост", "خبر", "اخبار"]):
             return "📰"
+
         # Business
-        elif any(word in name_lower for word in ["business", "бизнес", "startup"]):
+        elif any(
+            word in name_lower
+            for word in [
+                "business",
+                "бизнес",
+                "startup",
+                "کسب‌وکار",
+                "کسب و کار",
+                "استارتاپ",
+                "تجارت",
+            ]
+        ):
             return "💼"
+
         # Science
-        elif any(word in name_lower for word in ["science", "research", "наук"]):
+        elif any(
+            word in name_lower
+            for word in [
+                "science",
+                "research",
+                "наук",
+                "علم",
+                "علوم",
+                "پژوهش",
+                "تحقیق",
+            ]
+        ):
             return "🔬"
+
         # AI/ML
-        elif any(word in name_lower for word in ["ai", "ml", "artificial", "ии", "искусственн"]):
+        elif any(
+            word in name_lower
+            for word in [
+                "ai",
+                "ml",
+                "artificial",
+                "ии",
+                "искусственн",
+                "هوش مصنوعی",
+                "یادگیری ماشین",
+                "یادگیری ماشینی",
+            ]
+        ):
             return "🤖"
+
         # Design
-        elif any(word in name_lower for word in ["design", "дизайн", "ui", "ux"]):
+        elif any(
+            word in name_lower
+            for word in [
+                "design",
+                "дизайн",
+                "ui",
+                "ux",
+                "طراحی",
+            ]
+        ):
             return "🎨"
+
         # Marketing
-        elif any(word in name_lower for word in ["marketing", "маркетинг", "smm"]):
+        elif any(
+            word in name_lower
+            for word in [
+                "marketing",
+                "маркетинг",
+                "smm",
+                "بازاریابی",
+            ]
+        ):
             return "📈"
+
         # Default
         else:
             return "📺"
 
     def format_channel_message(
-        self, channel_name: str, summary: str, messages: List[Message], hours: int = 24
+        self,
+        channel_name: str,
+        summary: str,
+        messages: List[Message],
+        hours: int = 24,
+        channel_url: Optional[str] = None,
     ) -> str:
         """
-        Format a single channel's summary as a standalone Telegram message.
+        Format a single channel's summary as a standalone message.
 
         Args:
             channel_name: Name of the channel
             summary: AI-generated summary
             messages: Original messages from the channel
             hours: Time range covered
+            channel_url: Platform-specific channel URL
 
         Returns:
             Formatted message ready to send
@@ -232,11 +310,16 @@ class DigestFormatter:
         # Channel header with date
         date_str = self._format_date(datetime.now(timezone.utc))
         emoji = self._pick_emoji(channel_name)
-        channel_url = self._extract_channel_url(messages)
+
         if channel_url:
-            header = f"# {emoji} {channel_name} · [{self._ui['open_channel']} →]({channel_url})\n*{date_str}*\n"
+            header = (
+                f"# {emoji} {channel_name} · "
+                f"[{self._ui['open_channel']} →]({channel_url})\n"
+                f"*{date_str}*\n"
+            )
         else:
             header = f"# {emoji} {channel_name}\n*{date_str}*\n"
+
         parts.append(header)
 
         # Summary
@@ -254,7 +337,8 @@ class DigestFormatter:
         # Verify length doesn't exceed Telegram limit
         if len(message) > 4096:
             self.logger.warning(
-                f"Channel message for '{channel_name}' exceeds 4096 chars ({len(message)}), truncating..."
+                f"Channel message for '{channel_name}' exceeds 4096 chars "
+                f"({len(message)}), truncating..."
             )
             # Truncate to 4000 to leave room for ellipsis
             truncated = message[:4000].rsplit("\n", 1)[0]

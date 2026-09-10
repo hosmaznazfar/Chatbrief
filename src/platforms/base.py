@@ -33,9 +33,16 @@ class MessageSource(Protocol):
         """Fetch messages from a single configured channel."""
         ...
 
+    async def get_channel_url(
+        self,
+        channel_config: ChannelConfig,
+    ) -> str | None:
+        """Get the platform-specific URL for a configured channel."""
+        ...
+
 
 class MessageSender(Protocol):
-    """Interface for delivering generated digests."""
+    """Interface for sending messages through a messaging platform."""
 
     async def cleanup_old_digests(self, user_id: int | None = None) -> bool:
         """Delete previously sent digest messages."""
@@ -52,7 +59,7 @@ class MessageSender(Protocol):
 
 
 class Bot(Protocol):
-    """Interface for running an interactive messaging bot."""
+    """Interface for a messaging-platform bot."""
 
     async def run(self) -> None:
         """Start the bot and begin handling commands."""

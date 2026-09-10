@@ -6,7 +6,6 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Awaitable, Dict, List, cast
 
 from telethon import TelegramClient
 from telethon.errors import ChannelPrivateError, FloodWaitError
@@ -74,10 +73,10 @@ class TelegramMessageSource(MessageSource):
 
     async def disconnect(self):
         """Disconnect from Telegram."""
-        self.client.disconnect()
+        await self.client.disconnect()
         self.logger.info("Disconnected from Telegram")
 
-    async def fetch_messages(self, hours: int = 24) -> Dict[str, List[Message]]:
+    async def fetch_messages(self, hours: int = 24) -> dict[str, list[Message]]:
         """
         Fetch messages from all configured channels.
 
@@ -143,7 +142,7 @@ class TelegramMessageSource(MessageSource):
 
     async def fetch_channel_messages(
         self, channel_config: ChannelConfig, lookback_time: datetime
-    ) -> List[Message]:
+    ) -> list[Message]:
         """
         Fetch messages from a single channel.
 
@@ -151,16 +150,14 @@ class TelegramMessageSource(MessageSource):
             channel_config: Channel configuration
             lookback_time: Earliest message time
 
-        Returns:
-            List of Message objects
+        Returns:List of Message objects
         """
         messages = []
         max_messages = self.config.settings.max_messages_per_channel
 
         try:
             # Get channel entity
-            entity = cast(User | Chat | Channel, await self.client.get_entity(channel_config.id))
-
+            entity = await self.client.get_entity(channel_config.id)
             # Fetch messages
             async for message in self.client.iter_messages(
                 entity, limit=max_messages, offset_date=datetime.now(timezone.utc)
@@ -182,7 +179,7 @@ class TelegramMessageSource(MessageSource):
                     media_type = self._get_media_type(message) if message.media else ""
 
                 # Get sender name
-                sender = str(await cast(TelegramMessage, message).get_sender())
+                sender = await self._get_sender_name(message)
 
                 # Generate message link
                 link = await self._generate_message_link(entity, message.id)
@@ -205,6 +202,19 @@ class TelegramMessageSource(MessageSource):
 
         messages.sort(key=lambda m: m.timestamp)
         return messages
+
+    async def get_channel_url(
+        self,
+        channel_config: ChannelConfig,
+    ) -> str | None:
+        """Get the Telegram URL for a configured channel."""
+        try:
+            entity = await self.client.get_entity(channel_config.id)
+
+            return self._generate_channel_url(entity)
+        except Exception as e:
+            self.logger.warning(f"Could not generate channel URL for {channel_config.name}: {e}")
+            return None
 
     def _get_media_type(self, message: TelegramMessage) -> str:
         """
@@ -260,7 +270,7 @@ class TelegramMessageSource(MessageSource):
             Sender name or "Unknown"
         """
         try:
-            sender = await cast(TelegramMessage, message).get_sender()
+            sender = await message.get_sender()
             if sender:
                 if hasattr(sender, "first_name"):
                     name = str(sender.first_name)
@@ -277,31 +287,33 @@ class TelegramMessageSource(MessageSource):
         except Exception:
             return "Unknown"
 
-    async def _generate_message_link(self, entity, message_id: int) -> str:
-        """
-        Generate clickable link to message.
-
-        Args:
-            entity: Channel entity
-            message_id: Message ID
-
-        Returns:
-            Message link URL
-        """
+    async def _generate_message_link(
+        self,
+        entity: User | Chat | Channel,
+        message_id: int,
+    ) -> str:
+        """Generate a clickable Telegram link to a message."""
         try:
-            # For public channels/groups
-            if hasattr(entity, "username") and entity.username:
-                return f"https://t.me/{entity.username}/{message_id}"
-            # For private channels/groups
-            elif hasattr(entity, "id"):
-                # Format: https://t.me/c/CHANNEL_ID/MESSAGE_ID
-                # Remove -100 prefix from channel ID
-                channel_id = str(entity.id).replace("-100", "")
-                return f"https://t.me/c/{channel_id}/{message_id}"
-            else:
-                return "#"
+            channel_url = self._generate_channel_url(entity)
+
+            if channel_url:
+                return f"{channel_url}/{message_id}"
+
+            return "#"
         except Exception:
             return "#"
+
+    @staticmethod
+    def _generate_channel_url(entity: User | Chat | Channel) -> str | None:
+        """Generate the Telegram URL for a channel entity."""
+        if hasattr(entity, "username") and entity.username:
+            return f"https://t.me/{entity.username}"
+
+        if hasattr(entity, "id"):
+            channel_id = str(entity.id).replace("-100", "")
+            return f"https://t.me/c/{channel_id}"
+
+        return None
 
 
 async def main():
@@ -322,7 +334,7 @@ async def main():
     print("You will be prompted for your phone number and a login code.")
 
     try:
-        await cast(Awaitable[TelegramClient], collector.client.start())
+        await collector.client.start()
         print("Authenticated! Session saved to sessions/user.session")
 
         messages = await collector.fetch_messages(hours=1)

@@ -14,6 +14,7 @@ from .validation import (
     parse_digest_settings,
     parse_filter_specs,
     parse_mcp_config,
+    parse_platform,
     parse_prompts_config,
     parse_storage_config,
     resolve_ai_settings,
@@ -91,8 +92,11 @@ def load_config(config_path: str = "config.yaml") -> Config:
     with open(config_path, "r", encoding="utf-8") as f:
         yaml_config = yaml.safe_load(f)
 
-    # Parse channels
-    channels = parse_channels(yaml_config)
+        # Parse messaging platform
+        platform = parse_platform(yaml_config)
+
+        # Parse channels
+        channels = parse_channels(yaml_config)
 
     # Parse storage config
     storage_config = parse_storage_config(yaml_config)
@@ -150,6 +154,7 @@ def load_config(config_path: str = "config.yaml") -> Config:
     env_vars = _load_and_validate_env_vars(ai_provider)
 
     return Config(
+        platform=platform,
         channels=channels,
         settings=settings,
         storage=storage_config,
