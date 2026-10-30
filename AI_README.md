@@ -85,7 +85,7 @@ These are assistant workflow conventions, not native ChatGPT slash-command regis
 
 ## Current implementation status
 
-The current branch has migrated tests to `chatbrief.*`, moved legacy core behavior tests into `tests/test_digest.py`, removed the obsolete platform factory, and made `PlatformBuilder`/root `main.py` the platform composition path. `TelegramBot` requires an injected `CommandService`; the service receives `MessageSource` and `MessageSender` dependencies. Coverage configuration targets the `chatbrief` package. The completed extensibility and storage plans are archived under `docs/plans/completed/`.
+The current branch has migrated tests to `chatbrief.*`, moved legacy core behavior tests into `tests/test_digest.py`, removed the obsolete platform factory, and made `PlatformBuilder`/root `main.py` the platform composition path. `TelegramBot` requires an injected `CommandService`; the service receives `MessageSource` and `MessageSender` dependencies. Coverage configuration targets the `chatbrief` package. The default prompt template resolves from the packaged resource while older `src/prompts/base_summary.txt` configuration remains compatible. The completed extensibility and storage plans are archived under `docs/plans/completed/`.
 
 Bale remains unimplemented. The current implementation supports Telegram only.
 

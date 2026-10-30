@@ -58,7 +58,7 @@ Completed:
 - Updated `CommandService` to use injected `MessageSource` and `MessageSender` dependencies.
 - Fixed the remaining type-checking-only legacy package import.
 - Aligned coverage targets with the `chatbrief` package.
-- Updated current README/config/Docker instructions and archived the completed extensibility/storage plans.
+- Updated current README/config/Docker instructions, moved the default prompt template to the package path while preserving the legacy config sentinel, and archived the completed extensibility/storage plans.
 
 Remaining:
 - Review the committed changes in the developer's local checkout without overwriting local work.
