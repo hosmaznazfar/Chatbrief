@@ -8,7 +8,8 @@ This document adapts the reusable workflow defined in [AIWorkFlow](https://githu
 
 - Keep project context, architecture decisions, plans, checklists, and handovers in Git.
 - Give every AI assistant the same architecture and code-relationship context through the committed Graphify artifacts.
-- Use Graphify locally to maintain a code relationship graph and commit reviewed, portable artifacts to GitHub.
+- Use Graphify locally to maintain a code relationship graph and commit reviewed, portable artifacts to GitHub before implementation decisions when the graph needs refreshing.
+- Follow the developer's graph-first, research-before-decision, stepwise-implementation, and commit-each-step workflow for every feature or bug fix.
 - Use `pj` as the single project-local command interface for Python checks and Graphify automation.
 - Preserve safe, reviewable Git operations: no implicit staging, commits, pushes, merges, deployments, or migrations.
 - Avoid dependencies on any one AI vendor, editor, plugin, MCP server, or proprietary agent integration.
@@ -41,8 +42,8 @@ These rules apply regardless of whether the work is performed through ChatGPT, a
 5. **Respect project architecture and existing decisions.** Do not invent abstractions, platform support, configuration, or dependencies. Check ADRs and update them when a material architecture decision changes.
 6. **Keep changes scoped and reviewable.** Do not overwrite unrelated user changes, silently broaden scope, or make destructive changes without explicit approval.
 7. **Do not claim unperformed validation.** Report exactly which commands ran and their results. Do not run the full test suite until the developer declares the current package/platform refactor ready for validation.
-8. **Refresh and review the graph after source changes.** Keep the graph aligned with the source revision. Do not stage or commit generated graph changes without reviewing them.
-9. **Preserve developer control over Git and external actions.** Never stage, commit, push, merge, deploy, or run migrations implicitly. Ask for explicit approval where required.
+8. **Refresh the graph before implementation decisions when needed, and after source changes.** Use the local `pj` graph commands; review generated changes and keep graph artifacts aligned with the source revision.
+9. **Follow the task's Git authorization.** For this developer's requested workflow, commit each reviewed implementation step and its related documentation directly to the intended branch when direct Git changes/commits are authorized. Never push, merge, deploy, or run migrations without explicit authorization. If direct Git access or commit authorization is absent, prepare the exact changes and ask for the required action.
 10. **Update the handover at meaningful milestones.** Record verified facts, checks, graph freshness, blockers, and next steps; distinguish supplied local evidence from independently verified remote state.
 
 No assistant-specific Graphify plugin, skill, MCP server, editor extension, or Codex hook is required by this workflow. An assistant may use its own ordinary capabilities to read repository files, but it must follow the same Graphify-first navigation and verification rules above. The supported shared integration is the standalone local Graphify CLI, `pj`, generated graph artifacts in Git, and local Git hooks.
@@ -58,26 +59,35 @@ No assistant-specific Graphify plugin, skill, MCP server, editor extension, or C
 5. Read the relevant source/tests/configuration and verify task-critical graph relationships. The graph is a navigation aid, not an authority.
 6. Reconcile any mismatch between the handover, graph, and current source before making claims.
 
-### Feature work
+### Feature work — required developer workflow
 
-1. Explore relevant graph relationships, source, tests, and documentation.
-2. Define the problem, scope, acceptance criteria, non-goals, risks, and implementation phases.
-3. Update the relevant plan and checklist.
-4. Ask for approval before modifying application code when the request is exploratory or the implementation scope is not yet approved.
-5. Implement in small phases, preserving existing conventions and architecture boundaries.
-6. Add or migrate tests for changed behavior; do not remove coverage merely to make a refactor pass.
-7. Refresh the local graph after relevant changes and review its diff.
-8. Run only the checks authorized and appropriate for the current refactor phase.
-9. Update the handover with actual changes, validation, graph state, blockers, and next actions.
+Follow this order. Do not skip the graph review or decision gates.
+
+1. **Inspect the current state.** Verify repository, branch, latest commit, worktree state when available, and the current graph revision. Query the graph to locate relevant modules, symbols, callers, dependencies, and likely impact.
+2. **Ask for a graph refresh when needed.** If the graph is missing, stale, incomplete, or does not represent the current code relationships, do not proceed as though it is current. Ask the developer to run:
+   ```bash
+   ./pj graph refresh
+   ./pj graph diff
+   ```
+   The developer reviews and commits the generated, portable graph artifacts. Then inspect the updated graph and its matching source revision from Git. If the graph is already current, explain why another refresh is unnecessary.
+3. **Verify the implementation context.** Trace the graph findings against actual source, tests, configuration, ADRs, and relevant documentation. Identify the real behavior and boundaries before proposing a design.
+4. **Present decisions before implementation.** List every material decision that affects architecture, APIs, data models, dependencies, platform behavior, migration, compatibility, or user-visible behavior. Research current options online when external facts, project/library capabilities, or changing best practices matter. Cite sources, compare viable options and trade-offs, recommend one with reasons, and ask the developer to choose. Do not silently decide or start application-code changes while material choices remain unanswered.
+5. **Agree on scope and sequence.** Once decisions are answered, state the approved design, acceptance criteria, non-goals, risks, and small implementation steps. Keep existing planning/migration documents accurate during work, but complete their final migration/planning updates after implementation is finished.
+6. **Implement one step at a time.** Apply the approved changes directly to the intended Git branch when repository write access is available. After each step, inspect the complete diff, update the related code documentation/tests/ADR as needed, and commit that step before starting the next. Keep commits focused and explain their contents. Do not bundle unrelated steps.
+7. **Keep the graph aligned.** After code relationships change, ask the developer to refresh the local graph with `./pj graph refresh`, inspect `./pj graph diff`, and commit reviewed graph artifacts with the source revision they describe. Do not claim the remote graph is current until the refreshed artifacts are committed and visible on the branch.
+8. **Finish the documentation and validation.** After all implementation steps, update the relevant migration and planning Markdown files to reflect what actually changed, completed/deferred work, and remaining migration tasks. Run only the checks authorized and appropriate for the current refactor phase.
+9. **Close the task.** Review the branch diff and commit sequence, update `docs/handover/current.md`, and report exact commits, checks, graph state, remaining risks, and next actions.
+
+If direct Git write access or commit authorization is not available, do not pretend to have applied or committed changes. Provide the exact patch/commands and ask the developer to perform the local Git actions.
 
 ### Bug fixing
 
-1. Reproduce or precisely characterize the reported behavior.
-2. Query the graph to locate the relevant flow, callers, dependencies, and likely blast radius.
-3. Trace the actual implementation and tests to establish the root cause.
-4. Propose the smallest appropriate fix and regression coverage.
-5. Implement only the agreed scope, update the graph, and validate with the authorized checks.
-6. Record evidence and remaining risks in the handover.
+1. Characterize or reproduce the behavior and verify the branch/revision.
+2. Query the graph and inspect the relevant relationships. If the graph is stale or incomplete, ask the developer to run `./pj graph refresh` and `./pj graph diff`, commit the reviewed graph artifacts, and then inspect the updated graph from Git.
+3. Trace the actual implementation, tests, configuration, and ADRs to establish the root cause.
+4. Present material fix options. Research current external/library facts online where relevant, explain trade-offs, and ask the developer to choose before changing code.
+5. Implement the approved fix in small steps; review each diff, update related docs/tests, and commit each completed step.
+6. Refresh and commit graph artifacts when code relationships change. After the fix is complete, update relevant migration/planning documents, validate as authorized, and record evidence in the handover.
 
 ### Review
 
@@ -110,7 +120,16 @@ Build the initial code-only graph:
 ./pj graph build
 ~~~
 
-After source changes:
+Before implementation decisions, and whenever the graph needs a complete refresh:
+
+~~~bash
+./pj graph refresh
+./pj graph diff
+~~~
+
+`refresh` updates/builds the code graph, runs Graphify's `cluster-only` step to generate the report and HTML, and prints artifact status. `diff` shows Git status and tracked graph changes against HEAD. Review and commit only portable graph artifacts before continuing.
+
+For a graph-only incremental update without report generation:
 
 ~~~bash
 ./pj graph update
@@ -225,7 +244,7 @@ The root `pj` script remains Python standard-library-only. Its existing check pi
 ./pj check
 ~~~
 
-Graphify commands are optional workflow operations:
+Graphify commands are optional workflow operations. For the developer's normal feature/fix flow, prefer `refresh` followed by `diff` when the graph must be brought current and reviewed:
 
 ~~~bash
 ./pj graph install
@@ -233,6 +252,8 @@ Graphify commands are optional workflow operations:
 ./pj graph build
 ./pj graph update
 ./pj graph sync
+./pj graph refresh
+./pj graph diff
 ./pj graph query "question"
 ./pj graph path "A" "B"
 ./pj graph explain "symbol"
@@ -250,12 +271,12 @@ These are optional natural-language shortcuts for conversations; they do not req
 
 - `/help` — explain the available workflow and safety rules.
 - `/status` — inspect branch, GitHub HEAD, known local state, graph artifact availability, and validation evidence.
-- `/feature <goal>` — inspect graph/source/docs/tests, define scope and acceptance criteria, update the plan, and wait for approval before implementation.
-- `/fix <problem>` — trace the graph and source to establish root cause, then propose a minimal fix and regression coverage.
+- `/feature <goal>` — inspect graph/source/docs/tests; request and review a graph refresh if needed; research material options and ask for decisions; then implement in committed steps and finish migration/planning docs.
+- `/fix <problem>` — trace graph/source to establish root cause; research material fix options and ask for a decision; then implement and commit each approved step.
 - `/trace <area>` — query graph paths and verify them against source; cite concrete files and symbols.
 - `/review` — inspect the complete diff, architecture, tests, security, and graph freshness.
 - `/test` — run only authorized checks; otherwise provide exact commands and request output.
-- `/sync` — refresh Graphify, inspect the generated diff, and report local Git state; never stage/commit/push.
+- `/sync` — ask the developer to run `./pj graph refresh` and `./pj graph diff` when local execution is unavailable; inspect the committed graph update. Never claim local work was run when it was not.
 - `/branch <name>` — verify target and preserve uncommitted work before switching.
 - `/merge <source> -> <target>` — compare branches, inspect conflicts and validation, and require explicit approval before merging.
 - `/handover` — update docs/handover/current.md with verified state, actual checks, graph status, and next steps.
