@@ -235,6 +235,7 @@ async def test_split_group_name_is_listed_once_in_summary_header(
     source = _make_source(sample_messages)
     grouped = {"News": [GroupedPoint(point="Point A", source="Test Channel")]}
     _, _, formatter = _configure_group_builder(monkeypatch, grouped)
+    formatter.format_group_message.side_effect = None
     formatter.format_group_message.return_value = "x" * 4500
 
     result = await build_digest_parts(sample_config, mock_logger, source, hours=24)
@@ -409,6 +410,51 @@ async def test_channel_empty_filter_list_overrides_global_filters(
     result = await _apply_filters(channel, sample_messages, sample_config, mock_logger)
 
     assert result == sample_messages
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_channel_filter_list_replaces_global_filter_chain(
+    sample_config, mock_logger, sample_messages
+):
+    sample_config.settings.filters = [
+        FilterSpec(
+            class_path="chatbrief.extensions.filters.MinLengthFilter",
+            config={"min_chars": 99999},
+        )
+    ]
+    channel = ChannelConfig(
+        id="@test",
+        name="Test Channel",
+        filters=[
+            FilterSpec(
+                class_path="chatbrief.extensions.filters.KeywordFilter",
+                config={"include": ["message 2"]},
+            )
+        ],
+    )
+
+    result = await _apply_filters(channel, sample_messages, sample_config, mock_logger)
+
+    assert [message.text for message in result] == ["Test message 2"]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_filter_initialization_failure_is_logged_and_skipped(
+    sample_config, mock_logger, sample_messages
+):
+    class BrokenConstructor:
+        def __init__(self):
+            raise RuntimeError("invalid configuration")
+
+    sample_config.settings.filters = [FilterSpec("broken.filter", {})]
+    channel = ChannelConfig(id="@test", name="Test Channel")
+    with patch.object(digest_collector, "load_class", return_value=BrokenConstructor):
+        result = await _apply_filters(channel, sample_messages, sample_config, mock_logger)
+
+    assert result == sample_messages
+    mock_logger.error.assert_called_once()
 
 
 @pytest.mark.unit
