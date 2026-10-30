@@ -1,16 +1,16 @@
 <div align="center">
-  <img src="misc/logo.png" alt="Telebrief Logo" width="200"/>
+  <img src="misc/logo.png" alt="Chatbrief Logo" width="200"/>
 
-  # Telebrief
+  # Chatbrief
 
   **Automated Telegram Digest Generator powered by AI**
 
-  [![CI](https://github.com/belaytzev/Telebrief/actions/workflows/ci.yml/badge.svg)](https://github.com/belaytzev/Telebrief/actions/workflows/ci.yml)
+  [![CI](https://github.com/hosmaznazfar/Chatbrief/actions/workflows/ci.yml/badge.svg)](https://github.com/hosmaznazfar/Chatbrief/actions/workflows/ci.yml)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
   [![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
   [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-  Telebrief collects messages from your Telegram channels (in any language), generates AI-powered summaries, and delivers beautiful daily digests directly to your Telegram account. Group digests by channel or by **AI-detected topics**. Supports multiple AI providers: **OpenAI**, **Ollama** (local), and **Anthropic**. Output language is configurable (default: Russian).
+  Chatbrief collects messages from your Telegram channels (in any language), generates AI-powered summaries, and delivers beautiful daily digests directly to your Telegram account. Group digests by channel or by **AI-detected topics**. Supports multiple AI providers: **OpenAI**, **Ollama** (local), and **Anthropic**. Output language is configurable (default: Russian).
 </div>
 
 ---
@@ -56,13 +56,13 @@ Before you begin, you'll need:
 
 ## 🐳 Docker Deployment
 
-Telebrief can be run in Docker for easy deployment. **No Python installation required on host!**
+Chatbrief can be run in Docker for easy deployment. **No Python installation required on host!**
 
 The image is published to GitHub Container Registry on every release:
 
 ```bash
 # Pull the latest image
-docker pull ghcr.io/belaytzev/telebrief:latest
+docker pull ghcr.io/belaytzev/chatbrief:latest
 ```
 
 Available tags: `latest`, `X.Y` (minor), `X.Y.Z` (patch).
@@ -75,10 +75,10 @@ Available tags: `latest`, `X.Y` (minor), `X.Y.Z` (patch).
 docker compose up -d
 
 # 3. View logs
-docker compose logs -f telebrief
+docker compose logs -f chatbrief
 ```
 
-The `docker-compose.yml` uses the pre-built GHCR image by default, so no local build step is needed. If you want to build from source instead, replace the `image:` line with `build: .`.
+The `docker-compose.yml` builds the local image and starts the `chatbrief` service.
 
 **Important**: You must create the Telegram session file BEFORE running Docker. The script uses Docker itself, so no additional dependencies needed.
 
@@ -100,7 +100,7 @@ Open Telegram and message your bot:
 
 ## 📊 Example Output
 
-Telebrief supports two digest modes configured via `digest_mode` in `config.yaml`.
+Chatbrief supports two digest modes configured via `digest_mode` in `config.yaml`.
 
 ### Channel mode (`digest_mode: "channel"` — default)
 
@@ -217,7 +217,7 @@ channels:
 
 ## 🗄️ Persistent Storage
 
-By default, Telebrief generates digests on demand without storing raw messages. You can enable a persistent storage layer that saves every collected message to a database for historical access or external LLM workflows.
+By default, Chatbrief generates digests on demand without storing raw messages. You can enable a persistent storage layer that saves every collected message to a database for historical access or external LLM workflows.
 
 Storage is **disabled by default** and opt-in via `config.yaml`.
 
@@ -268,7 +268,7 @@ Both backends create the same logical schema on first run (table and index are c
 
 ## 🔌 Extensibility
 
-Telebrief exposes four hook surfaces that let you customise behaviour via `config.yaml` without modifying core logic. All new fields are optional — existing configs run unchanged.
+Chatbrief exposes four hook surfaces that let you customise behaviour via `config.yaml` without modifying core logic. All new fields are optional — existing configs run unchanged.
 
 ### Filters
 
@@ -287,11 +287,11 @@ Configure a global filter chain under `settings.filters`. Each entry needs a `cl
 ```yaml
 settings:
   filters:
-    - class_path: src.extensions.filters.KeywordFilter
+    - class_path: chatbrief.extensions.filters.KeywordFilter
       config:
         include: ["job", "hiring", "remote"]
         exclude: ["nsfw"]
-    - class_path: src.extensions.filters.MinLengthFilter
+    - class_path: chatbrief.extensions.filters.MinLengthFilter
       config:
         min_chars: 30
 ```
@@ -303,7 +303,7 @@ channels:
   - id: "@jobboard"
     name: "Job Board"
     filters:
-      - class_path: src.extensions.filters.RegexFilter
+      - class_path: chatbrief.extensions.filters.RegexFilter
         config:
           pattern: "senior|staff|principal"
           mode: "include"
@@ -313,8 +313,8 @@ Write your own filter by implementing the `MessageFilter` Protocol:
 
 ```python
 from __future__ import annotations
-from src.extensions.filters import MessageFilter
-from src.config_loader import ChannelConfig
+from chatbrief.extensions.filters import MessageFilter
+from chatbrief.config.models import ChannelConfig
 from src.collector import Message
 
 
@@ -359,8 +359,8 @@ base template (with {language} substituted)
 To use a custom composer, implement the `PromptComposer` Protocol and set `composer` to its dotted path:
 
 ```python
-from src.config_loader import ChannelConfig, DigestGroupConfig
-from src.extensions.prompts import PromptComposer
+from chatbrief.config.models import ChannelConfig, DigestGroupConfig
+from chatbrief.extensions.prompts import PromptComposer
 
 
 class MyComposer:
@@ -404,7 +404,7 @@ Channels without a `group` field (or `group: null`) use the base template and th
 When storage is enabled (`storage.enabled: true`), the `StorageBackend` exposes a `query_messages` read API for external tooling:
 
 ```python
-from src.storage import SQLiteBackend
+from chatbrief.storage import SQLiteBackend
 from datetime import datetime, timezone
 
 backend = SQLiteBackend("data/messages.db")
@@ -424,9 +424,9 @@ All parameters are optional. `channel_name` matches the human-readable `channels
 
 ## 🔗 MCP Server
 
-Telebrief can expose its digests over the [Model Context Protocol](https://modelcontextprotocol.io), so an MCP client (Claude Code, for example) can request a digest directly instead of reading it in Telegram.
+Chatbrief can expose its digests over the [Model Context Protocol](https://modelcontextprotocol.io), so an MCP client (Claude Code, for example) can request a digest directly instead of reading it in Telegram.
 
-The server runs **inside the Telebrief process**, sharing its Telegram session, configuration and generation lock with the scheduler and the bot. Digests it returns are byte-for-byte what Telegram receives, including topic grouping and deduplication.
+The server runs **inside the Chatbrief process**, sharing its Telegram session, configuration and generation lock with the scheduler and the bot. Digests it returns are byte-for-byte what Telegram receives, including topic grouping and deduplication.
 
 ### Enabling it
 
@@ -441,7 +441,7 @@ mcp:
 Then register it with your client:
 
 ```bash
-claude mcp add --transport http telebrief http://127.0.0.1:8765/mcp
+claude mcp add --transport http chatbrief http://127.0.0.1:8765/mcp
 ```
 
 ### Tools
@@ -487,7 +487,7 @@ Two deliberate differences from digest generation:
 
 **The MCP server has no authentication.** It relies on binding to loopback, where the SDK also enables DNS-rebinding protection. Anyone who can reach the port can trigger digest generation and read your channel summaries.
 
-Keep `host` on `127.0.0.1`. Telebrief logs a warning at startup if you bind anywhere else. In Docker, publish the port as `127.0.0.1:8765:8765` rather than exposing it on all interfaces, and put it behind a firewall or reverse proxy with auth if you genuinely need remote access.
+Keep `host` on `127.0.0.1`. Chatbrief logs a warning at startup if you bind anywhere else. In Docker, publish the port as `127.0.0.1:8765:8765` rather than exposing it on all interfaces, and put it behind a firewall or reverse proxy with auth if you genuinely need remote access.
 
 ---
 

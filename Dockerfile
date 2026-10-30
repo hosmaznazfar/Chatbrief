@@ -23,10 +23,10 @@ RUN uv sync --locked --no-dev
 COPY . .
 
 # Create non-root user
-RUN useradd -r -u 1000 -s /usr/sbin/nologin telebrief
+RUN useradd -r -u 1000 -s /usr/sbin/nologin chatbrief
 
 # Create necessary directories and set ownership
-RUN mkdir -p logs sessions data && chown -R telebrief:telebrief logs sessions data
+RUN mkdir -p logs sessions data && chown -R chatbrief:chatbrief logs sessions data
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -39,7 +39,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import os, signal; os.kill(1, 0)"
 
 # Switch to non-root user
-USER telebrief
+USER chatbrief
 
 # Run the application
 CMD ["python", "main.py"]

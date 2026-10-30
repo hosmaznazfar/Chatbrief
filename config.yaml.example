@@ -71,11 +71,11 @@ settings:
   # Runs after collection; filtered messages are never stored or summarized.
   # Built-in filters: KeywordFilter, RegexFilter, MinLengthFilter
   # filters:
-  #   - class_path: src.extensions.filters.KeywordFilter
+  #   - class_path: chatbrief.extensions.filters.KeywordFilter
   #     config:
   #       include: ["job", "hiring", "remote"]
   #       exclude: ["nsfw"]
-  #   - class_path: src.extensions.filters.MinLengthFilter
+  #   - class_path: chatbrief.extensions.filters.MinLengthFilter
   #     config:
   #       min_chars: 30
 
@@ -135,8 +135,8 @@ settings:
 #   url: ""                  # postgres: postgresql://user:pass@host:5432/db
 
 # MCP server — expose digests to MCP clients (Claude Code, etc.) over HTTP
-# Runs inside the Telebrief process; tools: get_digest(hours), get_last_digest()
-# Connect with: claude mcp add --transport http telebrief http://127.0.0.1:8765/mcp
+# Runs inside the Chatbrief process; tools: get_digest(hours), get_last_digest()
+# Connect with: claude mcp add --transport http chatbrief http://127.0.0.1:8765/mcp
 # WARNING: there is no authentication. Keep host on loopback, or firewall the port.
 # In Docker, publish it as "127.0.0.1:8765:8765" rather than binding 0.0.0.0 openly.
 # mcp:

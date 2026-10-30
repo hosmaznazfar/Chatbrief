@@ -1,7 +1,8 @@
 services:
-  telebrief:
-    image: ghcr.io/belaytzev/telebrief:latest
-    container_name: telebrief
+  chatbrief:
+    image: chatbrief:latest
+    build: .
+    container_name: chatbrief
     restart: unless-stopped
 
     # Environment variables from .env file

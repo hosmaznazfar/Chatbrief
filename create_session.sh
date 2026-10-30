@@ -57,7 +57,7 @@ fi
 mkdir -p sessions
 
 echo -e "${BLUE}Building Docker image (this may take a minute)...${NC}"
-docker compose build telebrief
+docker compose build chatbrief
 
 echo ""
 echo -e "${GREEN}Starting interactive session creation...${NC}"
@@ -75,7 +75,7 @@ docker run --rm -it \
     --env-file .env \
     -v "$(pwd)/sessions:/app/sessions" \
     -v "$(pwd)/.env:/app/.env:ro" \
-    telebrief:latest \
+    chatbrief:latest \
     python -c "
 import asyncio
 import os
@@ -111,7 +111,7 @@ async def create_session():
         print()
         print('Next steps:')
         print('  1. Run: docker compose up -d')
-        print('  2. Check logs: docker compose logs -f telebrief')
+        print('  2. Check logs: docker compose logs -f chatbrief')
         print()
 
     except KeyboardInterrupt:
