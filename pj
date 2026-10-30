@@ -369,7 +369,7 @@ def graph_diff(root: Path) -> int:
     if status.returncode:
         return status.returncode
 
-    print("\\n[pj graph diff] Tracked graph changes against HEAD")
+    print("\n[pj graph diff] Tracked graph changes against HEAD")
     diff = subprocess.run(
         [git, "diff", "HEAD", "--", "graphify-out"],
         cwd=root,
@@ -379,7 +379,7 @@ def graph_diff(root: Path) -> int:
         return diff.returncode
 
     print(
-        "\\nReview untracked graph files shown by git status separately. "
+        "\nReview untracked graph files shown by git status separately. "
         "After staging only approved artifacts, run "
         "'git diff --cached -- graphify-out' before committing."
     )
