@@ -7,7 +7,9 @@ from chatbrief.scheduler import DigestScheduler
 
 
 def make_scheduler(sample_config, mock_logger):
-    scheduler = DigestScheduler(sample_config, mock_logger)
+    scheduler = DigestScheduler(
+        sample_config, mock_logger, source=MagicMock(), sender=MagicMock()
+    )
 
     mock_scheduler = MagicMock()
     scheduler.scheduler = mock_scheduler
@@ -133,6 +135,8 @@ async def test_scheduled_digest_job_success(sample_config, mock_logger):
     mock_generate.assert_awaited_once_with(
         config=sample_config,
         logger=mock_logger,
+        source=scheduler.source,
+        sender=scheduler.sender,
         hours=sample_config.settings.lookback_hours,
     )
     mock_logger.info.assert_any_call("✅ Scheduled digest completed successfully")
