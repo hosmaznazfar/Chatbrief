@@ -58,21 +58,14 @@ Before you begin, you'll need:
 
 Chatbrief can be run in Docker for easy deployment. **No Python installation required on host!**
 
-The image is published to GitHub Container Registry on every release:
-
-```bash
-# Pull the latest image
-docker pull ghcr.io/belaytzev/chatbrief:latest
-```
-
-Available tags: `latest`, `X.Y` (minor), `X.Y.Z` (patch).
+The Compose configuration builds the image locally from the repository's Dockerfile.
 
 ```bash
 # 1. Create Telegram session (REQUIRED - one-time setup)
 ./create_session.sh
 
 # 2. Start the service
-docker compose up -d
+docker compose up -d --build
 
 # 3. View logs
 docker compose logs -f chatbrief
