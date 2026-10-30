@@ -101,19 +101,3 @@ The branch contains the src/chatbrief/ package layout and imports rooted at chat
 7. After every git pull/merge, run ./pj graph sync; before source commits, run ./pj graph sync and review graph changes.
 8. Continue the approved package/platform refactor without running the full Chatbrief test suite prematurely.
 9. Once the developer declares the refactor complete, run the configured Python checks and record their actual output.
-## Validation status
-
-- Graphify integration documentation and cross-references have been read back from GitHub successfully.
-- No Graphify CLI installation, skill registration, graph generation, or graph query was performed in this work segment.
-- No Chatbrief tests, Ruff, Pyright, Pylint, Bandit, Vulture, website build, or other project validation checks have been run in this work segment.
-- Per the developer's instruction, defer the full Chatbrief test suite until the refactor is complete and the developer explicitly authorizes validation.
-- Historical pre-refactor baseline: 471 passed, 7 skipped, 80.28% coverage. This is not a current-branch result.
-
-## Exact next steps
-
-1. Pull the latest refactor/chatbrief-package-layout commits with fast-forward only; inspect local status first and preserve any local work.
-2. Install Graphify locally if not already available: uv tool install graphifyy; register Codex with graphify codex install if needed.
-3. From a Codex session in the Chatbrief root, run $graphify . to create the initial graph; inspect all generated outputs.
-4. Verify graphify-out/graph.json, GRAPH_REPORT.md, and graph.html are present, relevant, and safe to commit; then commit them with the source revision they describe after explicit review.
-5. Continue the approved package/platform refactor without running the full Chatbrief test suite prematurely.
-6. Once the developer declares the refactor complete, run the configured Python checks and record their actual output.
