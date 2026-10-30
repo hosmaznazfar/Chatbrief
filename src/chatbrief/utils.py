@@ -4,7 +4,6 @@ Utility functions and logging setup for Telebrief.
 
 import json
 import logging
-import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -20,7 +19,8 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
         Configured logger instance
     """
     # Create logs directory if it doesn't exist
-    os.makedirs("../../logs", exist_ok=True)
+    log_dir = Path("logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
 
     # Configure logging format
     log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
@@ -41,7 +41,7 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
     logger.addHandler(console_handler)
 
     # File handler
-    log_file = "../../logs/telebrief.log"
+    log_file = log_dir / "telebrief.log"
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(getattr(logging, log_level.upper()))
     file_formatter = logging.Formatter(log_format, date_format)
