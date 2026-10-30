@@ -225,7 +225,7 @@ def run_checks(root: Path, config: dict, *, dry_run: bool) -> int:
                     timeout=step.get("timeout_seconds"),
                 )
             except subprocess.TimeoutExpired:
-                print(f"FAIL {name}: timed out after {step['timeout_seconds']} seconds")
+                print(f"FAIL {name}: timed out (limit: {step.get('timeout_seconds', 'not set')} seconds)")
                 step_failed = True
             except OSError as exc:
                 print(f"FAIL {name}: could not start command: {exc}")
