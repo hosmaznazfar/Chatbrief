@@ -4,11 +4,10 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-import chatbrief.platforms.telegram.telegram_source as telegram_source
 from telethon.errors import ChannelPrivateError, FloodWaitError
 from telethon.tl.types import Document, MessageMediaDocument
 
+import chatbrief.platforms.telegram.telegram_source as telegram_source
 from chatbrief.platforms.telegram.telegram_source import TelegramMessageSource
 
 TEST_MESSAGE_TIME = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
