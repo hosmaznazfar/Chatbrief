@@ -81,7 +81,7 @@ Graphify is the selected optional code-graph tool. It runs locally as a standalo
 
 ## Development workflow contract
 
-Follow `docs/AI_WORKFLOW.md` for the developer's required sequence: inspect the code and graph; request `./pj graph refresh` and `./pj graph diff` when the local graph needs updating; review and commit the graph artifacts; research material design options and ask for the developer's decision; implement approved changes in small reviewed commits; update related documentation per step; and finalize migration/planning Markdown files after implementation. Do not skip decision gates or claim local Graphify execution from a GitHub-only session.
+Follow `docs/AI_WORKFLOW.md` for the developer's required sequence: inspect the code and graph; request `./pj graph refresh` and `./pj graph diff` at the start of each non-trivial feature/fix/review; review and commit the graph artifacts; research material design options and ask for the developer's decision; implement approved changes in small reviewed commits; update related documentation per step; and finalize migration/planning Markdown files after implementation. Do not skip decision gates or claim local Graphify execution from a GitHub-only session.
 
 ## Tooling and commands
 
