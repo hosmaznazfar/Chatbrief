@@ -188,7 +188,6 @@ class ChatbriefApp:
             logger.info("Initializing bot...")
 
             bot = platform_builder.create_bot(
-                scheduler=scheduler,
                 command_service=command_service,
             )
 

@@ -2,7 +2,6 @@
 Telegram bot command handlers.
 """
 
-import asyncio
 import logging
 from typing import Optional
 
@@ -12,7 +11,6 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 from chatbrief.commands.models import CommandStatus
 from chatbrief.commands.service import CommandService
 from chatbrief.config.models import Config
-from chatbrief.scheduler import DigestScheduler
 from chatbrief.ui_strings import get_ui_strings
 
 
@@ -20,29 +18,22 @@ class TelegramBot:
     """Telegram implementation of the bot interface."""
 
     def __init__(
-            self,
-            config: Config,
-            logger: logging.Logger,
-            scheduler: Optional[DigestScheduler] = None,
-            command_service: CommandService | None = None,
-    ):
+        self,
+        config: Config,
+        logger: logging.Logger,
+        command_service: CommandService,
+    ) -> None:
         """
         Initialize the Telegram command handler.
 
         Args:
             config: Application configuration.
             logger: Logger instance.
-            scheduler: Scheduler instance.
             command_service: Application command service.
         """
         self.config = config
         self.logger = logger
-        self.scheduler = scheduler
-        self.command_service = command_service or CommandService(
-            config,
-            logger,
-            scheduler,
-        )
+        self.command_service = command_service
         self.app: Optional[Application] = None
         self._ui = get_ui_strings(config.settings.output_language)
 
@@ -213,29 +204,3 @@ class TelegramBot:
             await self.app.stop()
             await self.app.shutdown()
 
-
-async def main() -> None:
-    """Test bot commands."""
-    from chatbrief.config.loader import load_config
-    from chatbrief.utils import setup_logging
-
-    config = load_config()
-    logger = setup_logging(config.log_level)
-
-    handler = TelegramBot(config, logger)
-    handler.setup_application()
-
-    logger.info("Bot command handler ready. Starting polling...")
-
-    try:
-        await handler.run()
-
-        while True:
-            await asyncio.sleep(1)
-    except KeyboardInterrupt:
-        logger.info("Stopping...")
-        await handler.stop()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

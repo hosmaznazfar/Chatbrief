@@ -8,7 +8,6 @@ from chatbrief.platforms.base import Bot, MessageSender, MessageSource
 from chatbrief.platforms.telegram.telegram_bot import TelegramBot
 from chatbrief.platforms.telegram.telegram_sender import TelegramMessageSender
 from chatbrief.platforms.telegram.telegram_source import TelegramMessageSource
-from chatbrief.scheduler import DigestScheduler
 
 
 class PlatformBuilder:
@@ -38,7 +37,6 @@ class PlatformBuilder:
 
     def create_bot(
         self,
-        scheduler: DigestScheduler,
         command_service: CommandService,
     ) -> Bot:
         """Create the bot for the configured platform."""
@@ -46,7 +44,6 @@ class PlatformBuilder:
             bot = TelegramBot(
                 config=self.config,
                 logger=self.logger,
-                scheduler=scheduler,
                 command_service=command_service,
             )
             bot.setup_application()
