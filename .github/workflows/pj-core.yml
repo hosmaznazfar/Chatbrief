@@ -1,0 +1,34 @@
+name: pj core
+on:
+  push:
+    paths: ["pj-core/**", "pj", "scripts/setup.mjs", "templates/**", ".github/workflows/pj-core.yml"]
+  pull_request:
+    paths: ["pj-core/**", "pj", "scripts/setup.mjs", "templates/**", ".github/workflows/pj-core.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check scripts/setup.mjs
+      - run: |
+          tmpdir=$(mktemp -d)
+          trap 'rm -rf "$tmpdir"' EXIT
+          node scripts/setup.mjs "$tmpdir"
+          test -x "$tmpdir/pj"
+          test -f "$tmpdir/pj-core/Cargo.toml"
+          test -f "$tmpdir/pj-core/src/main.rs"
+          grep -q 'pj init' "$tmpdir/README.md"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --manifest-path pj-core/Cargo.toml
+      - run: cargo fmt --manifest-path pj-core/Cargo.toml -- --check
+      - run: cargo test --manifest-path pj-core/Cargo.toml
+      - run: cargo clippy --manifest-path pj-core/Cargo.toml --all-targets
