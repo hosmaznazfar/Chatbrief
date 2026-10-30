@@ -238,3 +238,19 @@ At meaningful milestones, update docs/handover/current.md with:
 - blockers and exact next steps.
 
 Never invent local state, graph freshness, command output, or test results.
+
+
+## Graphify artifact completion check
+
+A successful code extraction does not necessarily mean all shareable graph artifacts have been generated. If Graphify reports that `cluster-only` is the next step, run it explicitly from the repository root:
+
+~~~bash
+graphify cluster-only .
+./pj graph status
+~~~
+
+After source changes or a pull/merge, run `./pj graph sync`, then regenerate the report/visualization with `graphify cluster-only .` when needed. Confirm that `graphify-out/GRAPH_REPORT.md` and `graphify-out/graph.html` exist before calling the graph complete or relying on the report for broad architecture review.
+
+Graphify hooks may start a background rebuild after a commit. Check the log/status and Git diff after the hook finishes; review and commit any subsequent graph changes before pushing. Never stage or commit hook output automatically.
+
+The project's Graphify integration is deliberately local CLI + pj + Git hooks. Do not add Codex, editor, MCP, or other assistant-specific integrations unless the developer separately requests them. Review unexpected generated files before staging; internal analysis files and absolute-path markers are not automatically shareable graph artifacts.
