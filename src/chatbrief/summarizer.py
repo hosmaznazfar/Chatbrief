@@ -68,11 +68,12 @@ class Summarizer:
         self._channels_by_name = {ch.name: ch for ch in config.channels}
 
         # Resolve template path; use absolute bundled default when config holds the sentinel value
+        is_default_template = config.prompts.base_template in {
+            _DEFAULT_TEMPLATE_PATH,
+            _LEGACY_DEFAULT_TEMPLATE_PATH,
+        }
         template_path = (
-            _DEFAULT_TEMPLATE_PATH
-            if config.prompts.base_template
-            in {_DEFAULT_TEMPLATE_PATH, _LEGACY_DEFAULT_TEMPLATE_PATH}
-            else config.prompts.base_template
+            _DEFAULT_TEMPLATE_PATH if is_default_template else config.prompts.base_template
         )
         base_template = _load_base_template(template_path)
 
