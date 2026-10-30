@@ -186,13 +186,11 @@ See docs/GRAPHIFY.md for command details, output tracking policy, hook behavior,
 
 The graph and source should describe the same project revision.
 
-Recommended local cycle:
+Recommended local graph-review cycle:
 
 ~~~bash
-./pj graph sync
-graphify cluster-only .
-./pj graph status
-git status --short
+./pj graph refresh
+./pj graph diff
 ~~~
 
 Review the graph artifacts and stage only the intended, portable files together with the corresponding source/documentation changes. For example, stage explicit paths rather than blindly staging the entire worktree:
@@ -202,19 +200,17 @@ git add src tests docs graphify-out/graph.json graphify-out/GRAPH_REPORT.md grap
 git diff --cached
 ~~~
 
-Commit only after reviewing the staged diff and receiving the required approval. Graphify's post-commit refresh may finish asynchronously. Check the hook log and `git status --short` afterward. If the graph becomes modified after the commit, review and commit that graph update before pushing. Push the reviewed commits only when explicitly intended.
+Commit the reviewed graph artifacts with the source revision they describe. For implementation work, commit each approved code step and its related documentation after reviewing the staged diff. Graphify's post-commit refresh may finish asynchronously. Check the hook log and `git status --short` afterward. If the graph becomes modified after the commit, review and commit that graph update before pushing. Push the reviewed commits only when explicitly intended.
 
 After a pull or merge:
 
 ~~~bash
 git pull --ff-only
-./pj graph sync
-graphify cluster-only .
-./pj graph status
-git status --short
+./pj graph refresh
+./pj graph diff
 ~~~
 
-Never stage, commit, or push automatically. Do not use `git add .` without reviewing ignored and generated files.
+Do not push, merge, deploy, publish, or run migrations without explicit authorization. For the developer's requested workflow, commit each reviewed implementation step when the task is authorized for direct Git changes. The developer reviews/commits local graph refreshes when the assistant cannot execute the local CLI. Do not use `git add .` without reviewing ignored and generated files.
 
 ## How AI assistants should use GitHub
 
