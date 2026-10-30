@@ -22,7 +22,7 @@ install-dev:
 	pre-commit install
 
 test:
-	pytest --cov=src --cov-report=html --cov-report=term-missing -v
+	pytest --cov=chatbrief --cov-report=html --cov-report=term-missing -v
 
 test-fast:
 	pytest -v
