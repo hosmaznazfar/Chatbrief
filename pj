@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -x "$ROOT/pj-core/target/release/pj" ]; then
+  exec "$ROOT/pj-core/target/release/pj" "$@"
+fi
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "[pj] Rust/Cargo is required for the source build."
+  echo "[pj] Official installer: https://www.rust-lang.org/tools/install"
+  if [ ! -t 0 ] || [ ! -t 1 ]; then
+    echo "[pj] Non-interactive session; install Rust/Cargo and retry." >&2
+    exit 127
+  fi
+  printf "Install Rust using the official rustup installer now? [y/N] "
+  IFS= read -r answer
+  case "$answer" in
+    y|Y|yes|YES)
+      if ! command -v curl >/dev/null 2>&1; then
+        echo "[pj] curl is required to download the official installer." >&2
+        exit 127
+      fi
+      installer=$(mktemp)
+      trap 'rm -f "$installer"' EXIT HUP INT TERM
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o "$installer"
+      sh "$installer" -y
+      rm -f "$installer"
+      trap - EXIT HUP INT TERM
+      PATH="$HOME/.cargo/bin:$PATH"
+      export PATH
+      ;;
+    *)
+      echo "[pj] Install Rust/Cargo from https://www.rust-lang.org/tools/install and retry." >&2
+      exit 127
+      ;;
+  esac
+fi
+exec cargo run --quiet --manifest-path "$ROOT/pj-core/Cargo.toml" -- "$@"
