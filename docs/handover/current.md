@@ -159,5 +159,5 @@ The developer clarified the required working sequence. This is now documented in
 
 - GitHub read-back confirmed the updated files and commits on `refactor/chatbrief-package-layout`.
 - The remote `pj` source was inspected after editing, including the new parser/actions and graph refresh/diff implementations.
-- The local `pj` commands have not been executed in the developer's environment from this session. Run `./pj graph refresh --help` is not a supported form; use `./pj graph --help` and `./pj graph refresh`, then `./pj graph diff` to verify locally.
+- The local `pj` commands have not been executed in the developer's environment from this session. Verify with `./pj graph --help`, then run `./pj graph refresh` and `./pj graph diff` locally.
 - No Chatbrief tests or quality checks were run. Continue respecting the developer's instruction to defer the full test suite until the package/platform refactor is declared ready.
