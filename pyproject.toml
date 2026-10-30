@@ -1,7 +1,7 @@
 [project]
 name = "chatbrief"
 version = "0.1.0"
-description = "Automated Multi Platform Digest Generator powered by AI"
+description = "AI-powered Telegram digest generator"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
