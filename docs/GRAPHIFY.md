@@ -180,13 +180,13 @@ The graph is a navigation and impact-analysis aid, not the source of truth. Sour
 
 ## Complete the report and visualization
 
-The extraction command can successfully write `graphify-out/graph.json` without creating the human-readable report or HTML visualization. When Graphify prints a message recommending `cluster-only`, run that command from the repository root:
+The extraction command can successfully write `graphify-out/graph.json` without creating the human-readable report or HTML visualization. Prefer the combined command from the repository root:
 
 ~~~bash
-graphify cluster-only .
-./pj graph status
+./pj graph refresh
+./pj graph diff
 ~~~
 
-Prefer `./pj graph refresh` to perform extraction/update and report generation in one command. Then run `./pj graph diff` to inspect the Git changes before committing. The expected shareable outputs are `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html`; commit `manifest.json` when generated and confirmed portable. Do not consider the graph complete until the report and visualization are present. Repeat `graphify cluster-only .` after `./pj graph sync` or `./pj graph update` when those commands leave the report/visualization missing or stale.
+This performs extraction/update, runs Graphify's `cluster-only` step, prints artifact status, and shows Git changes for review. If you need to run the report-generation step manually, use `graphify cluster-only .` followed by `./pj graph status`. The expected shareable outputs are `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html`; commit `manifest.json` when generated and confirmed portable. Do not consider the graph complete until the report and visualization are present. After using the lower-level `./pj graph sync` or `./pj graph update` commands, run `graphify cluster-only .` if the report/visualization is missing or stale.
 
 Review generated files before staging. Internal analysis data and root markers may contain implementation details or absolute machine paths; do not commit them without verifying their purpose and portability. Likewise, do not assume assistant-specific files such as `.codex/hooks.json` or generated agent instruction files are required. Chatbrief's intended integration is the local CLI, pj commands, and Git hooks—not a Codex/editor/assistant integration.
