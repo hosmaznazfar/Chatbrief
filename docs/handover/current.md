@@ -3,8 +3,8 @@
 **Updated:** 2026-10-30  
 **Repository:** https://github.com/hosmaznazfar/Chatbrief  
 **Active branch:** `refactor/chatbrief-package-layout`  
-**Verified GitHub HEAD before this handover update:** `690e439113d4318c135c1abcf959943e195f7fbb`
-**Branch comparison:** 116 commits ahead of `main`, 0 behind (at the verified comparison).
+**Verified GitHub HEAD before this handover update:** `6e9b241f28b329c0242d39040bd87ff6d66aa8f0`
+**Branch comparison:** 117 commits ahead of `main`, 0 behind (at the verified comparison).
 **Local worktree:** unknown; GitHub cannot show local uncommitted changes.
 
 ## Product purpose
@@ -24,7 +24,7 @@ The project also includes SQLite/PostgreSQL storage, extension hooks for filters
 - `CommandService`, `DigestScheduler`, digest collection/building, storage, formatting, summarization, and MCP logic receive platform-neutral dependencies.
 - Telegram-specific authentication, fetching, channel/message URL generation, sending, and bot command handling live under `chatbrief.platforms.telegram`.
 - `Message` remains platform-neutral. Individual message links are represented by `Message.link`; channel URL generation belongs to the `MessageSource` adapter.
-- `PlatformBuilder` is the sole platform-construction path. The obsolete `chatbrief.platforms.factory` module has been removed.
+- `PlatformBuilder` is the sole application platform-construction path. The obsolete `chatbrief.platforms.factory` module has been removed.
 
 ## Package/platform refactor status
 
