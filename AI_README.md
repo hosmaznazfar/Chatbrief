@@ -108,7 +108,7 @@ Read-only commands:
 ./pj check --dry-run
 ```
 
-`./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The workflow is deliberately Python-only; the separate Astro website is not part of `pj` checks.
+`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The workflow is deliberately Python-only; the separate Astro website is not part of `pj` checks.
 
 ## Git and change safety
 
