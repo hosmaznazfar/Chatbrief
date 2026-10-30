@@ -13,13 +13,14 @@ At the start of a new session, verify the repository and branch, then read:
 2. `docs/handover/current.md`
 3. `FEATURE_IMPLEMENTATION_CHECKLIST.md`
 4. `README.md`
-5. Relevant ADRs in `docs/adr/`, plans in `docs/plans/`, and the current source/tests.
+5. `docs/GRAPHIFY.md`
+6. Relevant ADRs in `docs/adr/`, plans in `docs/plans/`, and the current source/tests.
 
 The handover is a snapshot, not proof of current state. GitHub does not expose the developer's local uncommitted work.
 
 ## Product and stack
 
-Chatbrief is an asynchronous, AI-powered digest application. The current implementation collects Telegram messages, summarizes/group them using configurable AI providers, and delivers digests. It also has scheduling, storage, extension hooks, and an optional MCP server. Bale is a future platform target, not an implemented adapter.
+Chatbrief is an asynchronous, AI-powered digest application. The current implementation collects Telegram messages, summarizes/groups them using configurable AI providers, and delivers digests. It also has scheduling, storage, extension hooks, and an optional MCP server. Bale is a future platform target, not an implemented adapter.
 
 The repository includes:
 - Python application/package under `src/chatbrief/`
@@ -28,7 +29,7 @@ The repository includes:
 - Tests: `tests/`
 - Astro website: `website/`
 - CI: `.github/workflows/ci.yml`
-- Architecture decisions and implementation plans: `docs/adr/`, `docs/plans/`
+- Architecture decisions and plans: `docs/adr/`, `docs/plans/`
 
 ## Architectural decisions to preserve
 
@@ -59,11 +60,27 @@ Known remaining work from the last project review:
 
 Treat these as investigation targets, not assertions that no newer changes exist. Verify current source before acting.
 
+## Graphify — shared code knowledge graph
+
+Graphify is the selected optional code-graph tool for Chatbrief's GitHub-based AI workflow. The purpose is to commit the generated graph alongside source so ChatGPT and other agents inspecting GitHub can read the same architectural map.
+
+- Operational instructions: `docs/GRAPHIFY.md`.
+- Commit the primary outputs `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html` with the source revision they describe.
+- Do not ignore `graphify-out/`; the generated graph is intentionally shared through Git.
+- Local optional install: `uv tool install graphifyy`; Codex skill registration: `graphify codex install`.
+- In Codex, first build with `$graphify .`, then refresh changed files with `$graphify . --update`.
+- Graphify is not an application dependency, must not enter `pyproject.toml`/ `uv.lock`, Docker, or `.pj/workflow.toml`, and is not required for normal development.
+- For ChatGPT using GitHub, read the committed report and relevant graph JSON from the selected branch. ChatGPT does not automatically have access to a developer's local Graphify process or MCP server.
+- Treat graph relationships as navigation/impact-analysis evidence. Verify important paths against current source, tests, and ADRs; inferred/ambiguous edges are not facts.
+- If artifacts are absent or stale, state that clearly and trace source directly. Do not claim graph refresh/query unless it actually occurred.
+
+Graph generation is not yet verified on this branch. Do not claim that `graphify-out/` exists or is current until the artifacts are present on GitHub and read back.
+
 ## Tooling and commands
 
 Use `uv` and the committed lockfile. Configured tools include Ruff, Pyright, Pylint, Bandit, Vulture, pytest, pytest-cov, pytest-asyncio, and pre-commit. Website dependencies are managed independently with npm and `website/package-lock.json`.
 
-Do not add Graphify as a mandatory dependency. If available, use it only as a navigation aid and verify every claim against source/tests.
+Do not add Graphify to `pj`: the project-local check workflow remains Python-only and Graphify is an optional AI navigation integration.
 
 ## Project-local workflow
 
