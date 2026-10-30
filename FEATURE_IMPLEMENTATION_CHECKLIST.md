@@ -2,23 +2,24 @@
 
 Use this checklist for non-trivial work. Check an item only when its completion is supported by inspected source, a diff, or actual command output.
 
-## Before implementation
+## Inspect and decide before implementation
 
 - [ ] Verify repository, intended branch, latest GitHub commit, and available local worktree state.
 - [ ] Read `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/AI_WORKFLOW.md`, `docs/handover/current.md`, `docs/GRAPHIFY.md`, README, relevant ADRs/plans, source, and tests.
-- [ ] Check whether the committed Graphify report/JSON exist on the selected branch; use them to locate relevant relationships and verify findings against source/tests.
-- [ ] Identify existing conventions and architecture boundaries before proposing new abstractions.
-- [ ] Define scope, acceptance criteria, risks, and phases.
-- [ ] Update the relevant plan/docs and obtain approval before application-code implementation.
+- [ ] Inspect the committed graph on the exact branch/revision. If missing, stale, or incomplete, ask the developer to run `./pj graph refresh` and `./pj graph diff`, review and commit portable graph artifacts, then inspect the graph commit on GitHub.
+- [ ] Trace graph findings against source, tests, configuration, and ADRs; identify existing conventions and architecture boundaries.
+- [ ] List material design/implementation decisions. Research current external options online where relevant, cite evidence, compare trade-offs, recommend an option, and ask the developer to choose.
+- [ ] Agree on scope, acceptance criteria, non-goals, risks, and implementation steps before changing application code.
 
 ## Implementation
 
-- [ ] Implement only the approved scope, one phase at a time.
+- [ ] Implement only the approved scope, one small step at a time.
+- [ ] After each step, review the complete diff, update directly related docs/tests/ADRs, and commit that step before proceeding (when direct Git commits are authorized).
 - [ ] Keep platform-specific behavior in adapters and domain/digest logic platform-neutral.
 - [ ] Preserve existing behavior and configuration compatibility unless a change is explicitly approved.
 - [ ] Add or migrate tests for changed behavior; do not delete coverage merely to make imports pass.
 - [ ] Update documentation and this checklist as implementation progresses.
-- [ ] If source relationships changed, run `./pj graph sync` locally and review the generated `graphify-out/` diff before committing it with the matching source revision.
+- [ ] If source relationships changed, ask the developer to run `./pj graph refresh` and `./pj graph diff`; review and commit portable graph artifacts with the source revision they describe before treating the shared graph as current.
 - [ ] Confirm Graphify Git hooks are installed when automatic post-commit/branch-switch refresh is desired (`./pj graph hooks status`).
 - [ ] Keep secrets, local sessions, generated caches, and machine-specific files out of Git; Graphify's documented project graph artifacts are intentionally tracked.
 
@@ -32,8 +33,9 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Review the complete diff, CI results, generated Graphify artifacts, and whitespace.
 - [ ] Distinguish passed, failed, skipped, and not-run checks.
 
-## Handover
+## Completion and handover
 
+- [ ] After all implementation steps are complete, update the relevant migration and planning Markdown files to describe actual completed work, deferred items, and remaining migration tasks.
 - [ ] Update `docs/handover/current.md` with verified branch/commit and completed work.
 - [ ] Record Graphify artifact availability and freshness only when verified.
 - [ ] Record actual validation output, deferred checks, blockers, and exact next steps.
