@@ -24,6 +24,19 @@ This is the operational guide for AI-assisted work in Chatbrief. Project facts b
 
 Do not add dependencies or change package managers just to fit the workflow. Graphify is optional development tooling, not an application/runtime dependency and not a required `pj` check.
 
+## Required feature/fix workflow
+
+For every feature request, bug fix, or codebase investigation, follow the ordered workflow in [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md): inspect the current branch and code relationships; request a local graph refresh when needed; inspect the committed graph update; research material decision options and ask the developer to choose; then implement approved work in small reviewed commits. Update related documentation alongside each step. After implementation is complete, finalize the migration and planning Markdown files and update the handover.
+
+When local Graphify execution is unavailable to the assistant, ask the developer to run these commands and commit the reviewed graph artifacts before continuing:
+
+```bash
+./pj graph refresh
+./pj graph diff
+```
+
+Do not treat an uncommitted local graph as visible on GitHub. Verify the new graph commit and source revision before relying on it.
+
 ## Graph-assisted development (Graphify)
 
 Chatbrief uses the standalone Graphify CLI locally. Its generated graph artifacts are committed to GitHub so ChatGPT can inspect the same architecture map alongside source code.
@@ -32,7 +45,8 @@ Chatbrief uses the standalone Graphify CLI locally. Its generated graph artifact
 - Follow [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md) for the complete project AI workflow adapted from AIWorkFlow.
 - No Codex integration, editor skill, MCP server, or assistant-specific Graphify installation is required.
 - Install the standalone CLI with **./pj graph install**.
-- Build/update/synchronize locally with **./pj graph build**, **./pj graph update**, and **./pj graph sync**.
+- Use **./pj graph refresh** to update/build the graph, generate the report and HTML, and print status; use **./pj graph diff** to inspect Git changes to graph artifacts. The developer reviews and commits portable graph outputs before implementation decisions.
+- Lower-level operations remain available as **./pj graph build**, **./pj graph update**, and **./pj graph sync**.
 - Query locally with **./pj graph query "question"**, **./pj graph path "A" "B"**, and **./pj graph explain "symbol"**.
 - Install Graphify's local Git automation with **./pj graph hooks install**; inspect it with **./pj graph hooks status**.
 - Commit **graphify-out/graph.json**, **graphify-out/GRAPH_REPORT.md**, and **graphify-out/graph.html** with the source revision they describe. Keep known machine-local state ignored.
@@ -47,15 +61,15 @@ These are assistant workflow conventions, not native ChatGPT slash-command regis
 
 - `/help`: explain the available workflows and safety rules.
 - `/status`: inspect branch, GitHub HEAD, local worktree (only when local output is available), graph artifact availability/freshness, and validation state.
-- `/feature <goal>`: inspect source/tests/docs and the relevant graph subgraph; define scope, acceptance criteria, risks, and phases; update the plan/checklist; wait for approval before implementing application-code changes.
-- `/fix <problem>`: use graph paths to locate likely flow, then verify the root cause in source/tests; propose a minimal fix and regression coverage before implementation.
+- `/feature <goal>`: inspect graph/source/docs/tests; request a graph refresh and graph-artifact commit if needed; research material options and ask the developer to decide; then implement approved steps as focused commits, update related docs, and finalize migration/planning files after implementation.
+- `/fix <problem>`: trace graph and source to establish root cause; research material fix options and ask the developer to decide; then implement approved changes in reviewed, focused commits.
 - `/trace <area>`: use committed Graphify artifacts when available to follow imports/calls/dependencies, then verify every relevant relationship against actual source and tests.
 - `/review`: inspect the complete diff for architecture, correctness, security, data integrity, localization, tests, and whether graph artifacts need updating.
 - `/test`: run only relevant checks when execution access is available; otherwise provide exact commands and request their output.
 - `/branch <name>`: verify the target and preserve work; never discard or switch away from uncommitted changes silently.
 - `/merge <source> -> <target>`: compare branches, inspect conflicts and validation, and require explicit final approval.
 - `/handover`: update `docs/handover/current.md` with verified GitHub state, completed work, actual validation, graph availability/freshness, blockers, and next steps.
-- `/sync`: in a local coding-assistant session, refresh Graphify after relevant source changes, inspect the graph/source diff, and report what actually succeeded. Never stage, commit, or push automatically.
+- `/sync`: request `./pj graph refresh` and `./pj graph diff` when local execution is unavailable; inspect the graph commit on GitHub before relying on it.
 - `/create`: use the plan-first process for new features or components.
 
 ## Architecture guardrails
