@@ -361,6 +361,9 @@ def graph_command(root: Path, args: argparse.Namespace) -> int:
         if uv is None:
             print("[pj graph] uv is required to install Graphify: https://docs.astral.sh/uv/", file=sys.stderr)
             return 1
+        if shutil.which("graphify"):
+            print("[pj graph] Graphify is already available; no installation needed.")
+            return 0
         print("[pj graph] Installing the standalone Graphify CLI (no AI-editor integration).")
         result = subprocess.run([uv, "tool", "install", "graphifyy"], cwd=root, check=False)
         return result.returncode
