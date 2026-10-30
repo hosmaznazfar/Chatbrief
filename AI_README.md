@@ -6,9 +6,10 @@ This is the operational guide for AI-assisted work in Chatbrief. Project facts b
 
 1. Confirm repository `hosmaznazfar/Chatbrief`, intended branch, and current GitHub HEAD.
 2. Read `CHATGPT_CONTEXT.md`, `docs/handover/current.md`, `FEATURE_IMPLEMENTATION_CHECKLIST.md`, the root `README.md`, relevant ADRs/plans, and the source/tests related to the task.
-3. Reconcile the handover with current source. GitHub state does not reveal the developer's local uncommitted work; ask for local `git status` when it matters.
-4. Inspect the current implementation and existing conventions before proposing changes. Do not infer that a planned feature or architecture is already implemented.
-5. Use `docs/CHATGPT_NEW_CHAT_STARTER.md` when starting a new chat.
+3. Read [`docs/GRAPHIFY.md`](docs/GRAPHIFY.md) for the shared code-graph workflow. Check the graph artifacts on the exact branch/commit being inspected.
+4. Reconcile the handover with current source. GitHub state does not reveal the developer's local uncommitted work; ask for local `git status` when it matters.
+5. Inspect the current implementation and existing conventions before proposing changes. Do not infer that a planned feature or architecture is already implemented.
+6. Use `docs/CHATGPT_NEW_CHAT_STARTER.md` when starting a new chat.
 
 ## Project facts and stack
 
@@ -21,23 +22,36 @@ This is the operational guide for AI-assisted work in Chatbrief. Project facts b
 - Development tools declared in `pyproject.toml`: Ruff, Pyright, Pylint, Bandit, Vulture, pytest, pytest-cov, pytest-asyncio, and pre-commit.
 - CI: `.github/workflows/ci.yml`; inspect it before changing validation assumptions.
 
-Do not add dependencies or change package managers just to fit the workflow. Graphify is optional and is not required for normal development.
+Do not add dependencies or change package managers just to fit the workflow. Graphify is optional development tooling, not an application/runtime dependency and not a required `pj` check.
+
+## Graph-assisted development (Graphify)
+
+Chatbrief uses Graphify's generated graph as a **Git-tracked architecture artifact** so that both local coding assistants and ChatGPT working through GitHub can inspect code relationships.
+
+- Read [`docs/GRAPHIFY.md`](docs/GRAPHIFY.md) for installation, generation, refresh, Git, and assistant procedures.
+- The primary committed artifacts are `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html`.
+- Do not add `graphify-out/` to `.gitignore`; review and commit generated graph updates with the source revision they describe.
+- Install Graphify locally with `uv tool install graphifyy`; register Codex with `graphify codex install` when needed. This is optional developer tooling and must not be added to `pyproject.toml`, `uv.lock`, Docker, application runtime, or `.pj/workflow.toml`.
+- In Codex, build with `$graphify .` and refresh with `$graphify . --update`.
+- For ChatGPT sessions using GitHub, inspect the committed graph report and relevant graph JSON on the selected branch. Do not claim access to a local filesystem or MCP server that is not available in the current session.
+- Use graph relationships to guide exploration and impact analysis, then verify them against current source, tests, and ADRs. Extracted edges are stronger evidence than inferred/ambiguous edges, but source remains authoritative.
+- If the graph is missing or stale, report that explicitly and trace source directly. Do not treat a stale graph as current architecture.
 
 ## Chat workflow conventions
 
 These are assistant workflow conventions, not native ChatGPT slash-command registrations.
 
 - `/help`: explain the available workflows and safety rules.
-- `/status`: inspect branch, GitHub HEAD, local worktree (only when local output is available), docs, and validation state.
-- `/feature <goal>`: inspect source/tests/docs; define scope, acceptance criteria, risks, and phases; update the plan/checklist; wait for approval before implementing application-code changes.
-- `/fix <problem>`: trace the behavior to the responsible source and tests, identify root cause, propose a minimal fix and regression coverage, then implement the agreed scope.
-- `/trace <area>`: follow real imports, calls, and data flow. If Graphify is installed, use it as an aid, never as the authority.
-- `/review`: inspect the complete diff for architecture, correctness, security, data integrity, localization, tests, and accidental generated/secrets files.
+- `/status`: inspect branch, GitHub HEAD, local worktree (only when local output is available), graph artifact availability/freshness, and validation state.
+- `/feature <goal>`: inspect source/tests/docs and the relevant graph subgraph; define scope, acceptance criteria, risks, and phases; update the plan/checklist; wait for approval before implementing application-code changes.
+- `/fix <problem>`: use graph paths to locate likely flow, then verify the root cause in source/tests; propose a minimal fix and regression coverage before implementation.
+- `/trace <area>`: use committed Graphify artifacts when available to follow imports/calls/dependencies, then verify every relevant relationship against actual source and tests.
+- `/review`: inspect the complete diff for architecture, correctness, security, data integrity, localization, tests, and whether graph artifacts need updating.
 - `/test`: run only relevant checks when execution access is available; otherwise provide exact commands and request their output.
 - `/branch <name>`: verify the target and preserve work; never discard or switch away from uncommitted changes silently.
 - `/merge <source> -> <target>`: compare branches, inspect conflicts and validation, and require explicit final approval.
-- `/handover`: update `docs/handover/current.md` with verified GitHub state, completed work, actual validation, blockers, and next steps.
-- `/sync`: refresh any configured graph, inspect repository status and diffs, and report what actually succeeded.
+- `/handover`: update `docs/handover/current.md` with verified GitHub state, completed work, actual validation, graph availability/freshness, blockers, and next steps.
+- `/sync`: in a local coding-assistant session, refresh Graphify after relevant source changes, inspect the graph/source diff, and report what actually succeeded. Never stage, commit, or push automatically.
 - `/create`: use the plan-first process for new features or components.
 
 ## Architecture guardrails
@@ -108,7 +122,7 @@ Read-only commands:
 ./pj check --dry-run
 ```
 
-`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The workflow is deliberately Python-only; the separate Astro website is not part of `pj` checks.
+`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The workflow is deliberately Python-only; the separate Astro website is not part of `pj` checks. Graphify remains a separate optional AI navigation tool and is not a `pj` prerequisite.
 
 ## Git and change safety
 
@@ -122,4 +136,4 @@ Read-only commands:
 
 ## End-of-session handover
 
-Update `docs/handover/current.md` when meaningful work is completed. Record the exact repository/branch/commit if verified, decisions, files changed, checks actually run, checks deliberately deferred, blockers, and the next concrete action. Do not invent local state or test results.
+Update `docs/handover/current.md` when meaningful work is completed. Record the exact repository/branch/commit if verified, decisions, files changed, checks actually run, checks deliberately deferred, graph artifact availability/freshness, blockers, and the next concrete action. Do not invent local state or test results.
