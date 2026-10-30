@@ -135,7 +135,10 @@ def doctor(root: Path) -> int:
         print(f" uv        available: {uv}")
     else:
         print(" uv        not found (required)")
-        print(" guidance  install uv: https://docs.astral.sh/uv/getting-started/installation/")
+        print(
+            " guidance  install uv: "
+            "https://docs.astral.sh/uv/getting-started/installation/"
+        )
         healthy = False
 
     config_path = root / CONFIG
@@ -208,7 +211,9 @@ def run_checks(root: Path, config: dict, *, dry_run: bool) -> int:
             print(f"[dry-run] ({cwd}) {display}")
             continue
 
-        missing = [item for item in step.get("requires", []) if shutil.which(item) is None]
+        missing = [
+            item for item in step.get("requires", []) if shutil.which(item) is None
+        ]
         if missing:
             print(f"SKIP {name}: missing {', '.join(missing)}")
             step_failed = True
@@ -225,7 +230,8 @@ def run_checks(root: Path, config: dict, *, dry_run: bool) -> int:
                     timeout=step.get("timeout_seconds"),
                 )
             except subprocess.TimeoutExpired:
-                print(f"FAIL {name}: timed out (limit: {step.get('timeout_seconds', 'not set')} seconds)")
+                limit = step.get("timeout_seconds", "not set")
+                print(f"FAIL {name}: timed out (limit: {limit} seconds)")
                 step_failed = True
             except OSError as exc:
                 print(f"FAIL {name}: could not start command: {exc}")
