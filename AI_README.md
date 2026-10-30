@@ -90,11 +90,15 @@ Do not claim any command ran unless its output is available. The existing CI wor
 
 **Current refactor constraint:** the package-layout and platform-abstraction refactor is still in progress. Do not run the full test suite or declare the refactor complete until the developer explicitly says implementation is ready for validation. The historical baseline of 471 passed / 7 skipped and 80.28% coverage belongs to the pre-refactor state; it is not evidence that this branch currently passes.
 
-## Project workflow CLI
+## Project workflow helper
 
-The repository-local `pj` CLI is implemented in Rust under `pj-core/`. The root launcher is executable and uses a release binary when present, otherwise it builds/runs the CLI through Cargo. No prebuilt release binary is bundled, so the first invocation requires Rust/Cargo and crate registry access.
+The root `./pj` is a Python 3.14+ script implemented with the Python standard library only. It does not require Cargo, Rust, Node.js, npm, Graphify, or third-party Python packages.
 
-Start with read-only commands:
+Runtime/tool requirements:
+- Python 3.14+ to execute `pj`.
+- `uv` to synchronize the environment and run the configured Python checks.
+
+Read-only commands:
 
 ```bash
 ./pj --help
@@ -104,11 +108,7 @@ Start with read-only commands:
 ./pj check --dry-run
 ```
 
-`./pj init` preserves an existing `.pj/workflow.toml`, updates a managed README section, reports tool availability, and may offer optional uv/Graphify installation prompts. Review the config and README diff. Graphify is optional; decline its prompt unless you deliberately want graph-assisted exploration.
-
-`./pj check` executes the configured checks in order. The Python pytest step must not be run until the developer declares the current refactor ready for validation. The website build step is optional locally and requires `npm ci` in `website/` first. Do not add a command to the check list unless it is grounded in a project manifest, CI workflow, or an explicit developer decision.
-
-The Rust CLI source was copied from AIWorkFlow and has a dedicated GitHub Actions workflow in this repository. Treat it as unverified until that workflow completes successfully. Its implemented commands are limited to `init`, `doctor`, `workflow validate`, and the `check` operations; do not advertise graph, trace, sync, status, or handover CLI commands as implemented.
+`./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The workflow is deliberately Python-only; the separate Astro website is not part of `pj` checks.
 
 ## Git and change safety
 
