@@ -267,7 +267,7 @@ Chatbrief exposes four hook surfaces that let you customise behaviour via `confi
 
 A filter chain runs after message collection and before storage and summarization. Dropped messages never reach the AI or the database.
 
-Built-in filters live in `src/extensions/filters.py`:
+Built-in filters live in `src/chatbrief/extensions/filters.py`:
 
 | Filter | Purpose |
 |--------|---------|
@@ -308,7 +308,7 @@ Write your own filter by implementing the `MessageFilter` Protocol:
 from __future__ import annotations
 from chatbrief.extensions.filters import MessageFilter
 from chatbrief.config.models import ChannelConfig
-from src.collector import Message
+from chatbrief.message import Message
 
 
 class MyFilter:
@@ -333,12 +333,12 @@ settings:
 
 ### Prompts
 
-The base prompt template lives in `src/prompts/base_summary.txt`. You can point to a custom template file or plug in a custom `PromptComposer` class.
+The default prompt template is bundled at `src/chatbrief/prompts/base_summary.txt`. You can point to a custom template file or plug in a custom `PromptComposer` class.
 
 ```yaml
 prompts:
-  base_template: src/prompts/base_summary.txt  # path to template file
-  composer: ""                                  # empty = built-in DefaultComposer
+  base_template: prompts/custom_summary.txt  # optional path relative to the working directory
+  composer: ""                               # empty = built-in DefaultComposer
 ```
 
 The built-in `DefaultComposer` assembles the final system prompt in this order (empty parts are skipped):
@@ -531,8 +531,8 @@ The core `pj` helper uses only the Python standard library. Python 3.14+ runs it
 
 # Optional local Graphify workflow
 ./pj graph install
-./pj graph build
-./pj graph sync
+./pj graph refresh
+./pj graph diff
 ./pj graph status
 ./pj graph hooks install
 ```
