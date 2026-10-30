@@ -64,12 +64,12 @@ No assistant-specific Graphify plugin, skill, MCP server, editor extension, or C
 Follow this order. Do not skip the graph review or decision gates.
 
 1. **Inspect the current state.** Verify repository, branch, latest commit, worktree state when available, and the current graph revision. Query the graph to locate relevant modules, symbols, callers, dependencies, and likely impact.
-2. **Ask for a graph refresh when needed.** If the graph is missing, stale, incomplete, or does not represent the current code relationships, do not proceed as though it is current. Ask the developer to run:
+2. **Request a fresh graph for each non-trivial feature, bug fix, or code review.** After the initial source/relationship inspection, ask the developer to run the local refresh so the graph is regenerated against the current checkout:
    ```bash
    ./pj graph refresh
    ./pj graph diff
    ```
-   The developer reviews and commits the generated, portable graph artifacts. Then inspect the updated graph and its matching source revision from Git. If the graph is already current, explain why another refresh is unnecessary.
+   The developer reviews the Git changes and commits any changed, portable graph artifacts. If the refresh produces no graph diff, no graph-only commit is needed. Then inspect the refreshed graph and matching source revision from Git before presenting decisions.
 3. **Verify the implementation context.** Trace the graph findings against actual source, tests, configuration, ADRs, and relevant documentation. Identify the real behavior and boundaries before proposing a design.
 4. **Present decisions before implementation.** List every material decision that affects architecture, APIs, data models, dependencies, platform behavior, migration, compatibility, or user-visible behavior. Research current options online when external facts, project/library capabilities, or changing best practices matter. Cite sources, compare viable options and trade-offs, recommend one with reasons, and ask the developer to choose. Do not silently decide or start application-code changes while material choices remain unanswered.
 5. **Agree on scope and sequence.** Once decisions are answered, state the approved design, acceptance criteria, non-goals, risks, and small implementation steps. Keep existing planning/migration documents accurate during work, but complete their final migration/planning updates after implementation is finished.
@@ -83,7 +83,7 @@ If direct Git write access or commit authorization is not available, do not pret
 ### Bug fixing
 
 1. Characterize or reproduce the behavior and verify the branch/revision.
-2. Query the graph and inspect the relevant relationships. If the graph is stale or incomplete, ask the developer to run `./pj graph refresh` and `./pj graph diff`, commit the reviewed graph artifacts, and then inspect the updated graph from Git.
+2. Query the graph and inspect the relevant relationships. Ask the developer to run `./pj graph refresh` and `./pj graph diff`; the developer commits any reviewed graph changes, then inspect the refreshed graph from Git.
 3. Trace the actual implementation, tests, configuration, and ADRs to establish the root cause.
 4. Present material fix options. Research current external/library facts online where relevant, explain trade-offs, and ask the developer to choose before changing code.
 5. Implement the approved fix in small steps; review each diff, update related docs/tests, and commit each completed step.
@@ -120,7 +120,7 @@ Build the initial code-only graph:
 ./pj graph build
 ~~~
 
-Before implementation decisions, and whenever the graph needs a complete refresh:
+At the start of each non-trivial feature/fix/review, and whenever the graph needs another complete refresh:
 
 ~~~bash
 ./pj graph refresh
