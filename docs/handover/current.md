@@ -1,165 +1,81 @@
-# Chatbrief — current handover
+# Chatbrief — current project handover
 
-> Snapshot from verified GitHub branch reads/writes. Re-check GitHub and the developer's local worktree before continuing.
+**Updated:** 2026-10-30  
+**Repository:** https://github.com/hosmaznazfar/Chatbrief  
+**Active branch:** `refactor/chatbrief-package-layout`  
+**Verified GitHub HEAD before this handover update:** `4d2fed3cd15fa4164eb7ce697a762d8dea0088fa`  
+**Branch comparison:** 107 commits ahead of `main`, 0 behind (at the verified comparison).  
+**Local worktree:** unknown; GitHub cannot show local uncommitted changes.
 
-## Repository state
+## Product purpose
 
-- Repository: https://github.com/hosmaznazfar/Chatbrief
-- Active branch: refactor/chatbrief-package-layout
-- Latest workflow-update commit: 5cb8b99277848035592bdf0862154364beb22fc7 (made task-start graph refresh mandatory in the workflow and related assistant guidance).
-- This integration was made directly on the remote branch through GitHub. The developer's local branch/HEAD/worktree remains unknown; inspect local status before pulling.
-- Workflow source: https://github.com/hosmaznazfar/AIWorkFlow (the project workflow was adapted to Chatbrief's Python/Astro stack; the Rust implementation was not copied).
+Chatbrief is an asynchronous AI-powered messaging digest application. It collects messages from configured Telegram channels, filters irrelevant content, summarizes and groups useful information with configurable AI providers, and delivers readable digests on demand or on a schedule.
 
-## Objective
+The current implemented platform adapter is Telegram. Bale is a future adapter target; the enum/configuration boundary exists, but no Bale source, sender, or bot adapter is implemented.
 
-Finish the package-layout and platform-abstraction refactor, then validate it. Keep the project-local AI workflow lightweight, Python-specific, and separate from application runtime dependencies. Use Graphify as an optional, Git-shared architecture map for AI-assisted development.
+The project also includes SQLite/PostgreSQL storage, extension hooks for filters and prompts, configurable digest grouping, and an optional MCP server.
 
-## Project-local workflow integration
+## Current architecture
 
-- Created docs/AI_WORKFLOW.md, adapting AIWorkFlow's workflow lifecycle, graph-assisted exploration, project command contract, safety rules, chat conventions, and handover contract to Chatbrief.
-- Rewrote docs/GRAPHIFY.md around the standalone local Graphify CLI and pj automation. No Codex/editor skill, MCP server, or assistant-specific Graphify installation is required.
-- Added the separate pj graph command group: install, status, build, update, sync, query, path, explain, watch, and hooks install/status/uninstall.
-- Default pj graph build/update/sync operations set GRAPHIFY_BACKEND=none and use code-only extraction. Semantic document extraction is opt-in through --semantic.
-- Added known local-only Graphify output exclusions to .gitignore: graphify-out/cost.json, graphify-out/.graphify_python, graphify-out/.cloud-cta-shown, and graphify-out/cache/.
-- Updated AI_README.md, CHATGPT_CONTEXT.md, docs/CHATGPT_NEW_CHAT_STARTER.md, FEATURE_IMPLEMENTATION_CHECKLIST.md, and README.md to use the local CLI/pj workflow and to tell ChatGPT to inspect committed graph artifacts through GitHub.
-- The primary shareable graph artifacts are graphify-out/graph.json, graphify-out/GRAPH_REPORT.md, graphify-out/graph.html, plus portable manifest.json if Graphify generates it.
-- Graphify's local hook integration is exposed through pj graph hooks. It installs post-commit, post-checkout, post-merge, and post-rewrite hooks plus a graph.json merge driver. After git pull/merge, run pj graph sync. Review .gitattributes changes created by hook installation.
-- Graphify artifacts are intended to be committed with the source revision they describe. Never stage/commit/push automatically.
-- No graphify-out/ artifacts have been generated or verified on this branch yet. No local Graphify CLI was installed or executed in this work segment.
-- ChatGPT using GitHub can inspect committed artifacts but cannot run the developer's local Graphify CLI or inspect uncommitted local changes. If the graph is absent/stale, report that and trace source directly.
-- Graph relationships are navigation/impact-analysis evidence. Verify important paths against current source, tests, and ADRs; inferred/ambiguous edges are leads, not facts.
+- Python package: `src/chatbrief/`; imports use `chatbrief.*`.
+- Root `main.py` is the application composition root.
+- `PlatformBuilder` constructs the selected platform's `MessageSource`, `MessageSender`, and `Bot`.
+- Platform-neutral contracts live in `chatbrief.platforms.base`.
+- `CommandService`, `DigestScheduler`, digest collection/building, storage, formatting, summarization, and MCP logic receive platform-neutral dependencies.
+- Telegram-specific authentication, fetching, channel/message URL generation, sending, and bot command handling live under `chatbrief.platforms.telegram`.
+- `Message` remains platform-neutral. Individual message links are represented by `Message.link`; channel URL generation belongs to the `MessageSource` adapter.
+- `PlatformBuilder` is the sole platform-construction path. The obsolete `chatbrief.platforms.factory` module has been removed.
 
-## pj helper
+## Package/platform refactor status
 
-- .pj/workflow.toml still contains exactly four Python checks, in order: Ruff lint, Ruff format check, Pyright, and pytest. All commands execute through uv run.
-- Root pj remains an executable Python 3.14+ script using only the Python standard library.
-- Added a separate optional Graphify command group without adding Graphify to the Python check pipeline or application dependencies.
-- pj graph install uses uv tool install graphifyy and is idempotent when graphify is already on PATH.
-- pj graph build uses graphify extract . --code-only by default.
-- pj graph update runs graphify update . with GRAPHIFY_BACKEND=none by default.
-- pj graph sync builds when graphify-out/graph.json is missing and otherwise incrementally updates.
-- pj graph query/path/explain delegate to the corresponding Graphify CLI query commands.
-- pj graph hooks install/status/uninstall delegate to Graphify's Git hook management. pj graph watch delegates to the optional Graphify watch feature.
-- pj graph status reports CLI availability, primary artifact presence, graphify-out Git changes, and Graphify hook status.
-- pj doctor reports Graphify as optional and does not fail if it is not installed.
-- Graphify is not a .pj/workflow.toml check, pyproject.toml dependency, uv.lock dependency, Docker dependency, or runtime dependency.
-- The Python check pipeline remains unchanged; tests are still deferred until the developer declares the refactor ready.
+<badge label="Implementation migration ready for validation" color="success" />
 
-## Verified project facts
+The code and test migration work on this branch is complete. Validation is deliberately still pending.
 
-- Python package: chatbrief, located under src/chatbrief/.
-- Python requirement: >=3.14; use uv and the committed uv.lock.
-- Root main.py remains the composition root.
-- The application is an asynchronous Telegram digest bot with AI provider integrations, scheduling, storage, extension hooks, and an optional MCP server. Bale remains a future platform target, not an implemented adapter.
-- Python development tools include Ruff, Pyright, Pylint, Bandit, Vulture, pytest, pytest-cov, pytest-asyncio, and pre-commit.
-- The Astro website is under website/; inspect its own package manifest/lockfile before website changes.
-- Existing CI is .github/workflows/ci.yml; inspect its current contents before changing validation assumptions.
-- Architecture decisions and plans live under docs/adr/ and docs/plans/; preserve and update them when material decisions change.
+Completed in this work:
 
-## Architecture decisions to preserve
+1. Migrated test imports to the canonical `chatbrief.*` package paths, including the Telegram and extension tests.
+2. Replaced the legacy `tests/test_core.py` suite with `tests/test_digest.py`, migrating its behavior coverage to the focused digest collector, builder, service, cache, and validator modules. The tests were migrated rather than simply discarded.
+3. Added `tests/platform/test_builder.py` for Telegram adapter construction, command-service injection, and the explicit unsupported-Bale behavior.
+4. Updated `tests/conftest.py` to construct `Config` with the required `Platform.TELEGRAM` value.
+5. Removed the obsolete platform factory. The standalone summarizer utility now obtains its source through `PlatformBuilder`.
+6. Made `TelegramBot` require an injected `CommandService`; removed its stale service-construction fallback and adapter-level application entry point. Root `main.py` remains responsible for wiring and startup.
+7. Updated `PlatformBuilder.create_bot()` and `main.py` to pass the already-constructed command service.
+8. Updated `CommandService` tests to verify injected source/sender dependencies and sender-based cleanup.
+9. Fixed the remaining type-checking-only `src.chatbrief.*` import in the prompt protocol.
+10. Validated package-data configuration by inspection: the bundled prompt template is included by setuptools.
+11. Aligned coverage configuration with the installed package name: `chatbrief` in pytest, CI, Makefile, and `pyproject.toml`.
+12. Updated the README, config example, Dockerfile, Compose service, session helper, and localized UI branding for Chatbrief. Docker Compose now builds the local `chatbrief:latest` image; the README no longer claims an unverified GHCR image is published.
+13. Archived the completed extensibility and storage implementation plans under `docs/plans/completed/`. Their original paths and commands remain as historical design context; implementation items are checked off where verified, while validation items remain unchecked.
 
-- Keep digest/domain logic independent of Telegram and future platform SDKs.
-- Keep platform-specific behavior in adapters and inject MessageSource / MessageSender.
-- Message remains platform-neutral; do not reintroduce channel-level platform metadata into it.
-- Message.link is the individual message URL; channel URL generation belongs to the platform source abstraction.
-- Keep root main.py as composition root and the package under src/chatbrief/.
-- Bale is a future adapter; do not add credentials/config behavior that implies it is implemented.
-- Do not remove old factories or tests until all real references and behavior coverage have been migrated.
-- Do not make code-graph tooling a runtime dependency or a mandatory part of pj; Graphify is optional development tooling.
+A source/test import review found no remaining imports rooted at a top-level `src.*` package. Historical documentation under the archived plans and ADRs may still mention the original pre-package paths; those references are intentionally retained as historical context.
 
-## Refactor work represented in the branch
+## Remaining before the refactor can be declared complete
 
-The branch contains the src/chatbrief/ package layout and imports rooted at chatbrief.*. Platform-abstraction work has moved digest collection/building/service, cache access, scheduler, command service, and MCP composition toward injected platform interfaces.
+1. Review the committed branch changes in the developer's local checkout after checking `git status`; preserve any local work before pulling.
+2. Perform the final local static review and resolve any issues found.
+3. Wait for the developer to explicitly authorize validation. Do not run the full test suite before that approval.
+4. Once authorized, run the configured checks, including Ruff lint/format, Pyright, and pytest. Also run the repository's configured Pylint, Bandit, and Vulture checks as appropriate.
+5. Record the actual command output and fix any failures before declaring the refactor complete.
 
-## Remaining refactor work to investigate
+No full tests or quality checks have been run during this work. The historical pre-refactor baseline (471 passed, 7 skipped, 80.28% coverage) is not evidence that this branch currently passes.
 
-1. Finish migrating tests from former src.* imports and legacy src.core assumptions.
-2. Preserve behavior coverage formerly supplied by tests/test_core.py; migrate that coverage before deleting/replacing tests.
-3. Inspect the standalone summarizer.py entry point and remaining old factory usage.
-4. Remove obsolete factories/constants only after searching all production and test references.
-5. Review Telegram-specific prompts, URL/length assumptions, and constants for correct adapter/domain ownership.
-6. Refresh stale README development instructions/examples after source migration is complete.
-7. Install/register Graphify locally if needed, generate the initial graph from the current Chatbrief source, inspect the outputs, and commit the reviewed graphify-out/ artifacts with the matching source revision.
-8. Pull and verify the latest documentation updates in the developer's local checkout; local state is unknown.
+## Graphify state
 
-## Validation status
+Graphify remains optional local development tooling, not an application dependency or required Python check.
 
-- Read-back verification succeeded for pj, docs/GRAPHIFY.md, docs/AI_WORKFLOW.md, AI_README.md, CHATGPT_CONTEXT.md, docs/CHATGPT_NEW_CHAT_STARTER.md, FEATURE_IMPLEMENTATION_CHECKLIST.md, README.md, docs/handover/current.md, .gitignore, and .pj/workflow.toml.
-- No local Graphify installation, graph generation, query, or Git hook installation was performed.
-- No Chatbrief tests, Ruff, Pyright, Pylint, Bandit, Vulture, or website build were run. Do not infer runtime correctness from GitHub file writes.
-- Per the developer's instruction, defer the full Chatbrief test suite until the refactor is complete and the developer explicitly authorizes validation.
-- Historical pre-refactor baseline: 471 passed, 7 skipped, 80.28% coverage. This is not a current-branch result.
+The developer indicated the graph-refresh step had already been handled and did not request another refresh. No local Graphify command was run in this session.
 
-## Exact next steps
+The verified GitHub tree currently contains `graphify-out/graph.json` and `graphify-out/manifest.json`; `GRAPH_REPORT.md` and `graph.html` are not present in that remote snapshot. The tracked `.graphify_analysis.json` and `.graphify_root` files also remain in the branch. Treat the committed graph as an aid, not as proof of current local state; verify important relationships against source and tests. Any Graphify artifact hygiene is a separate follow-up and is not a blocker for the package/platform code migration.
 
-1. Inspect local git status, then pull refactor/chatbrief-package-layout with --ff-only; preserve any local work.
-2. Inspect pj --help and ./pj graph --help; run ./pj doctor and ./pj graph status.
-3. Install the standalone Graphify CLI with ./pj graph install if it is not already available.
-4. Run ./pj graph build to generate the initial local code-only graph. Inspect the report, JSON, HTML, and any additional generated files.
-5. Run ./pj graph hooks install if automatic post-commit/branch-switch refresh is desired. Review local Git hook status, Git config, and any .gitattributes change.
-6. Review graphify-out artifacts and commit the portable graph files with the source revision they describe. Keep local-only output excluded.
-7. After every git pull/merge, run ./pj graph sync; before source commits, run ./pj graph sync and review graph changes.
-8. Continue the approved package/platform refactor without running the full Chatbrief test suite prematurely.
-9. Once the developer declares the refactor complete, run the configured Python checks and record their actual output.
+## Workflow and safety rules
 
+- Follow `docs/AI_WORKFLOW.md` and `AI_README.md` for graph-first exploration, research before material design decisions, small reviewed implementation steps, and commit-per-step development.
+- Keep platform-specific behavior inside adapters. Do not add Bale credentials/configuration that imply Bale is implemented.
+- Keep Graphify optional and outside runtime dependencies and `.pj/workflow.toml`.
+- Preserve user changes. Do not stage, commit, push, merge, deploy, publish, or run migrations without the applicable authorization.
+- Report validation as passed, failed, skipped, or not run. Never claim an unperformed check.
 
-## Local Graphify bootstrap — developer-reported state (2026-10-30)
+## Immediate next action
 
-The developer supplied terminal output confirming the following local operations on `refactor/chatbrief-package-layout`:
-
-- Installed Graphify CLI is available at `/home/hmnf/.local/bin/graphify`; reported version: `0.9.95`.
-- `./pj doctor` succeeded and reported Python 3.14.8, uv available, and a valid workflow config with four checks. Graphify is correctly treated as optional.
-- `./pj graph hooks install` installed the post-commit, post-checkout, post-merge, and post-rewrite hooks and registered the `graphify` merge driver. A second install/status confirmed these were already installed.
-- `./pj graph sync` created the code-only graph. The subsequent `./pj graph build` incrementally scanned 85 unchanged code files and wrote a graph with 1,911 nodes and 4,260 edges.
-- `./pj graph status` reports `graph.json` present, but `GRAPH_REPORT.md` and `graph.html` missing; the graph is therefore incomplete. Graphify's output explicitly recommends `graphify cluster-only <project-root>`. Run `graphify cluster-only .` from the repository root, then verify `./pj graph status` again.
-- The post-commit hook launched a background rebuild with log at `/home/hmnf/.cache/graphify-rebuild.log`. Its completion/result has not been supplied; inspect the log and Git status before the next push.
-- The developer committed and pushed commit `7047c4a` (`apply latest changes`) to this branch. This is developer-reported terminal evidence; re-check GitHub HEAD before relying on it.
-- The `git add .` commit also included `.codex/hooks.json`, `AGENTS.md`, `graphify-out/.graphify_analysis.json`, and `graphify-out/.graphify_root`. These were not part of the intended shareable artifact list. The inspected `.codex/hooks.json` invokes Graphify from a Codex Bash hook; `AGENTS.md` contains assistant/skill-specific instructions; `.graphify_root` contains an absolute local path. Review whether these should be removed from the shared branch and add appropriate ignore rules for machine-local/internal Graphify files. Do not silently add further assistant-specific integrations; the intended design remains local Graphify CLI + pj + Git hooks.
-- No Chatbrief tests or quality checks were run in the supplied output. Continue deferring the full test suite until the developer declares the package/platform refactor ready for validation.
-
-### Immediate Graphify follow-up
-
-~~~bash
-graphify cluster-only .
-./pj graph status
-tail -n 100 ~/.cache/graphify-rebuild.log
-git status --short
-~~~
-
-Review the generated report, visualization, and any hook-produced changes. Commit only reviewed, portable graph artifacts with the source revision they describe. Do not use `git add .` for this cleanup; stage explicit paths after deciding how to handle the unexpected assistant-specific and machine-local files.
-
-
-## Developer workflow contract — updated 2026-10-30
-
-The developer clarified the required working sequence. This is now documented in `docs/AI_WORKFLOW.md`, `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/CHATGPT_NEW_CHAT_STARTER.md`, and `FEATURE_IMPLEMENTATION_CHECKLIST.md`:
-
-1. Inspect the current repository/branch, source, tests, docs, and code relationships using the committed Graphify graph.
-2. For each non-trivial feature, bug fix, or code review, ask the developer to run `./pj graph refresh` and `./pj graph diff`. The developer reviews Git changes and commits any changed portable graph artifacts (no graph-only commit is needed when there is no diff); the assistant then inspects the refreshed graph/source revision.
-3. Before implementation, list material decisions, research current options online where relevant, explain trade-offs, recommend an option, and ask the developer to decide.
-4. Apply approved implementation changes directly to the intended branch in small steps. Review each diff, update directly related docs/tests/ADRs, and commit each step before proceeding when direct Git commits are authorized.
-5. After implementation, finalize the relevant migration/planning Markdown files, perform authorized validation, and update this handover.
-
-### pj command improvements
-
-- Added `./pj graph refresh`: incrementally updates the graph (or builds it if missing), runs Graphify `cluster-only` to generate the report/HTML, then reports artifact status. Default behavior remains code-only/local (`GRAPHIFY_BACKEND=none`); `--semantic` remains opt-in.
-- Added `./pj graph diff`: prints Git status for `graphify-out/` and the tracked graph diff against HEAD. Untracked files are listed by status; after staging only reviewed portable files, inspect them with `git diff --cached -- graphify-out`.
-- Updated `pj graph status` guidance to recommend `./pj graph refresh` when primary graph artifacts are missing.
-- Kept `pj workflow validate` separate: it validates `.pj/workflow.toml`; it is not a feature lifecycle orchestrator. `pj check` remains the configured Python quality-check runner. Graphify remains optional and outside that check pipeline.
-
-### Commits made for this workflow update
-
-- `7f21d47` — add graph refresh/diff commands.
-- `cfeaa21` — define graph-first decision and stepwise commit workflow.
-- `bbae7c4`, `23844e7`, `4ddda65` — align AI guide, checklist, and Graphify docs.
-- `973ff8e`, `f47d161`, `24d4037` — fix CLI output formatting and clarify review/commit guidance.
-- `80ce105`, `7fa17d5` — update project context and new-chat starter.
-- `346d19c`, `42cd96e`, `79fb0ca` — align Git handoff and new-chat instructions.
-- `975e56c`, `50b474b` — clarify `pj workflow` versus `pj graph` responsibilities and correct local verification instructions.
-- `a594289`, `52dc620`, `2b529bf`, `e98ac44`, `9d29924`, `5cb8b99` — finalize the handover and require a task-start graph refresh across the workflow, AI guide, checklist, starter prompt, and project context.
-
-### Verification status
-
-- GitHub read-back confirmed the updated files and commits on `refactor/chatbrief-package-layout`.
-- The remote `pj` source was inspected after editing, including the new parser/actions and graph refresh/diff implementations.
-- The local `pj` commands have not been executed in the developer's environment from this session. Verify with `./pj graph --help`, then run `./pj graph refresh` and `./pj graph diff` locally.
-- No Chatbrief tests or quality checks were run. Continue respecting the developer's instruction to defer the full test suite until the package/platform refactor is declared ready.
+The implementation changes are committed to `refactor/chatbrief-package-layout`. The developer should inspect local status and bring the branch into the local checkout without overwriting uncommitted work. When satisfied that the implementation is ready, explicitly authorize validation; until then, keep the full test suite deferred.
