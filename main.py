@@ -12,7 +12,6 @@ import sys
 from contextlib import suppress
 from typing import Any
 
-
 from chatbrief.commands.service import CommandService
 from chatbrief.config.loader import load_config
 from chatbrief.config.models import Config

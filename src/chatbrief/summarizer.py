@@ -97,7 +97,7 @@ class Summarizer:
                     f"Original error: {exc}"
                 ) from exc
             if not isinstance(self._composer, PromptComposer) or not callable(
-                    getattr(self._composer, "compose", None)
+                getattr(self._composer, "compose", None)
             ):
                 raise TypeError(
                     f"Custom composer {config.prompts.composer!r} does not implement "
