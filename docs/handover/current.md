@@ -6,7 +6,7 @@
 
 - Repository: https://github.com/hosmaznazfar/Chatbrief
 - Active branch: refactor/chatbrief-package-layout
-- Latest workflow-update commit: 50b474be360fcb5282746773b772b95adea69ca3 (corrected local verification instructions after the `pj` and documentation updates).
+- Latest workflow-update commit: 5cb8b99277848035592bdf0862154364beb22fc7 (made task-start graph refresh mandatory in the workflow and related assistant guidance).
 - This integration was made directly on the remote branch through GitHub. The developer's local branch/HEAD/worktree remains unknown; inspect local status before pulling.
 - Workflow source: https://github.com/hosmaznazfar/AIWorkFlow (the project workflow was adapted to Chatbrief's Python/Astro stack; the Rust implementation was not copied).
 
@@ -134,7 +134,7 @@ Review the generated report, visualization, and any hook-produced changes. Commi
 The developer clarified the required working sequence. This is now documented in `docs/AI_WORKFLOW.md`, `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/CHATGPT_NEW_CHAT_STARTER.md`, and `FEATURE_IMPLEMENTATION_CHECKLIST.md`:
 
 1. Inspect the current repository/branch, source, tests, docs, and code relationships using the committed Graphify graph.
-2. If the graph is stale, incomplete, or does not represent current code, ask the developer to run `./pj graph refresh` and `./pj graph diff`. The developer reviews and commits portable graph artifacts; the assistant then inspects the committed graph/source revision.
+2. For each non-trivial feature, bug fix, or code review, ask the developer to run `./pj graph refresh` and `./pj graph diff`. The developer reviews Git changes and commits any changed portable graph artifacts (no graph-only commit is needed when there is no diff); the assistant then inspects the refreshed graph/source revision.
 3. Before implementation, list material decisions, research current options online where relevant, explain trade-offs, recommend an option, and ask the developer to decide.
 4. Apply approved implementation changes directly to the intended branch in small steps. Review each diff, update directly related docs/tests/ADRs, and commit each step before proceeding when direct Git commits are authorized.
 5. After implementation, finalize the relevant migration/planning Markdown files, perform authorized validation, and update this handover.
@@ -155,6 +155,7 @@ The developer clarified the required working sequence. This is now documented in
 - `80ce105`, `7fa17d5` — update project context and new-chat starter.
 - `346d19c`, `42cd96e`, `79fb0ca` — align Git handoff and new-chat instructions.
 - `975e56c`, `50b474b` — clarify `pj workflow` versus `pj graph` responsibilities and correct local verification instructions.
+- `a594289`, `52dc620`, `2b529bf`, `e98ac44`, `9d29924`, `5cb8b99` — finalize the handover and require a task-start graph refresh across the workflow, AI guide, checklist, starter prompt, and project context.
 
 ### Verification status
 
