@@ -187,6 +187,6 @@ graphify cluster-only .
 ./pj graph status
 ~~~
 
-The expected shareable outputs are `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html`; commit `manifest.json` when generated and confirmed portable. Do not consider the graph complete until the report and visualization are present. Repeat `graphify cluster-only .` after `./pj graph sync` or `./pj graph update` when those commands leave the report/visualization missing or stale.
+Prefer `./pj graph refresh` to perform extraction/update and report generation in one command. Then run `./pj graph diff` to inspect the Git changes before committing. The expected shareable outputs are `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html`; commit `manifest.json` when generated and confirmed portable. Do not consider the graph complete until the report and visualization are present. Repeat `graphify cluster-only .` after `./pj graph sync` or `./pj graph update` when those commands leave the report/visualization missing or stale.
 
 Review generated files before staging. Internal analysis data and root markers may contain implementation details or absolute machine paths; do not commit them without verifying their purpose and portability. Likewise, do not assume assistant-specific files such as `.codex/hooks.json` or generated agent instruction files are required. Chatbrief's intended integration is the local CLI, pj commands, and Git hooks—not a Codex/editor/assistant integration.
