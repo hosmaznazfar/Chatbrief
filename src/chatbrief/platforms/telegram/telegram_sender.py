@@ -16,9 +16,9 @@ from chatbrief.utils import (
     save_digest_message_ids,
     split_message,
 )
-from src.chatbrief.config.models import Config
-from src.chatbrief.formatter import DigestFormatter
-from src.chatbrief.platforms.base import MessageSender
+from chatbrief.config.models import Config
+from chatbrief.formatter import DigestFormatter
+from chatbrief.platforms.base import MessageSender
 
 
 class TelegramMessageSender(MessageSender):
