@@ -140,7 +140,7 @@ Read-only commands:
 ./pj check --dry-run
 ```
 
-`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The quality-check workflow remains Python-only; the separate Astro website is not part of pj checks. Graphify is not a check prerequisite: its independent pj graph commands are optional local graph operations.
+`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. `./pj workflow validate` only validates `.pj/workflow.toml`; it does not orchestrate feature/fix stages. `./pj check` runs the configured Python quality checks, while `./pj graph refresh` and `./pj graph diff` support the graph-first development process. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The quality-check workflow remains Python-only; the separate Astro website is not part of pj checks. Graphify is not a check prerequisite: its independent pj graph commands are optional local graph operations.
 
 ## Git and change safety
 
