@@ -16,9 +16,15 @@ def english_config(sample_config):
     return sample_config
 
 
-def _make_command_service(config, logger):
+def _make_command_service(config, logger, source=None, sender=None, scheduler=None):
     """Create a command service with injected platform-neutral dependencies."""
-    return CommandService(config, logger, MagicMock(), MagicMock())
+    return CommandService(
+        config,
+        logger,
+        source if source is not None else MagicMock(),
+        sender if sender is not None else MagicMock(),
+        scheduler,
+    )
 
 
 @pytest.mark.unit
@@ -56,15 +62,28 @@ async def test_digest_success(english_config, mock_logger):
     """digest returns a successful result when generation succeeds."""
     english_config.settings.target_user_id = 123
 
-    service = _make_command_service(english_config, mock_logger)
+    source = MagicMock()
+    sender = MagicMock()
+    service = _make_command_service(
+        english_config, mock_logger, source=source, sender=sender
+    )
+    generate = AsyncMock(return_value=True)
 
     with patch.object(
         chatbrief.commands.service,
         "generate_and_send_digest",
-        new=AsyncMock(return_value=True),
+        new=generate,
     ):
         result = await service.digest(123)
 
+    generate.assert_awaited_once_with(
+        config=english_config,
+        logger=mock_logger,
+        source=source,
+        sender=sender,
+        hours=24,
+        user_id=123,
+    )
     assert result.status is CommandStatus.SUCCESS
     assert result.message == service._ui["digest_done"]
 
@@ -148,6 +167,20 @@ def test_status_returns_success(english_config, mock_logger):
     assert "Chatbrief Status" in result.message
     assert "Provider" in result.message
     assert "Model" in result.message
+
+
+@pytest.mark.unit
+def test_status_includes_scheduler_next_run(english_config, mock_logger):
+    """The application service adds the scheduler's next run to status output."""
+    english_config.settings.target_user_id = 123
+    scheduler = MagicMock()
+    scheduler.get_next_run_time.return_value = "2026-09-07 08:00:00 UTC"
+    service = _make_command_service(english_config, mock_logger, scheduler=scheduler)
+
+    result = service.status(123)
+
+    assert "2026-09-07 08:00:00 UTC" in result.message
+    scheduler.get_next_run_time.assert_called_once_with()
 
 
 @pytest.mark.unit
