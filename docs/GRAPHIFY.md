@@ -176,3 +176,17 @@ The graph is a navigation and impact-analysis aid, not the source of truth. Sour
 - [Graphify CLI reference](https://graphiffy.com/docs/cli)
 - [Graphify installation](https://graphiffy.com/docs/install)
 - [Graphify tutorial](https://graphiffy.com/docs/tutorial)
+
+
+## Complete the report and visualization
+
+The extraction command can successfully write `graphify-out/graph.json` without creating the human-readable report or HTML visualization. When Graphify prints a message recommending `cluster-only`, run that command from the repository root:
+
+~~~bash
+graphify cluster-only .
+./pj graph status
+~~~
+
+The expected shareable outputs are `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html`; commit `manifest.json` when generated and confirmed portable. Do not consider the graph complete until the report and visualization are present. Repeat `graphify cluster-only .` after `./pj graph sync` or `./pj graph update` when those commands leave the report/visualization missing or stale.
+
+Review generated files before staging. Internal analysis data and root markers may contain implementation details or absolute machine paths; do not commit them without verifying their purpose and portability. Likewise, do not assume assistant-specific files such as `.codex/hooks.json` or generated agent instruction files are required. Chatbrief's intended integration is the local CLI, pj commands, and Git hooks—not a Codex/editor/assistant integration.
