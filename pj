@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -269,7 +270,7 @@ def run_graphify(root: Path, arguments: list[str], *, local_only: bool = False) 
 
     environment = None
     if local_only:
-        environment = __import__("os").environ.copy()
+        environment = os.environ.copy()
         environment["GRAPHIFY_BACKEND"] = "none"
 
     display = " ".join(["graphify", *arguments])
