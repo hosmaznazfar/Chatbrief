@@ -1,0 +1,56 @@
+# Chatbrief project-local AIWorkFlow checks.
+# Commands are executed as executable + argument arrays; no shell is implied.
+# Review this file before running: pj check.
+schema_version = 1
+
+[project]
+name = "Chatbrief"
+
+[checks]
+fail_fast = true
+
+[[checks.steps]]
+name = "ruff-lint"
+command = "uv"
+args = ["run", "ruff", "check", "src", "tests"]
+required = true
+timeout_seconds = 900
+requires = ["uv"]
+description = "Lint Python source and tests with the repository's configured Ruff rules."
+
+[[checks.steps]]
+name = "ruff-format"
+command = "uv"
+args = ["run", "ruff", "format", "--check", "src", "tests"]
+required = true
+timeout_seconds = 900
+requires = ["uv"]
+description = "Verify formatting without modifying files."
+
+[[checks.steps]]
+name = "pyright"
+command = "uv"
+args = ["run", "pyright"]
+required = true
+timeout_seconds = 900
+requires = ["uv"]
+description = "Run the repository's configured Pyright type checker."
+
+[[checks.steps]]
+name = "pytest"
+command = "uv"
+args = ["run", "pytest", "tests/", "-v"]
+required = true
+timeout_seconds = 1800
+requires = ["uv"]
+description = "Run the Python test suite. Run only after the developer declares the current refactor ready for validation."
+
+[[checks.steps]]
+name = "website-build"
+command = "npm"
+args = ["run", "build"]
+cwd = "website"
+required = false
+timeout_seconds = 1200
+requires = ["node", "npm"]
+description = "Build the Astro website; run npm ci in website/ first. Optional locally, but required by the repository CI workflow."
