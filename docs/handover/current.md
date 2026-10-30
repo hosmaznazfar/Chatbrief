@@ -6,7 +6,7 @@
 
 - Repository: https://github.com/hosmaznazfar/Chatbrief
 - Active branch: refactor/chatbrief-package-layout
-- Latest verified remote commit before this handover update: 88de580c90af48ce31fd3a482669979863f95b35 (removed obsolete Graphify/Codex instructions from the handover).
+- Latest verified remote commit before this workflow update: 79fb0ca53d428cac5f82b76e2b619d6f144a85c6 (updated the new-chat starter to require graph-first inspection, researched decisions, stepwise commits, and final migration/planning updates).
 - This integration was made directly on the remote branch through GitHub. The developer's local branch/HEAD/worktree remains unknown; inspect local status before pulling.
 - Workflow source: https://github.com/hosmaznazfar/AIWorkFlow (the project workflow was adapted to Chatbrief's Python/Astro stack; the Rust implementation was not copied).
 
@@ -127,3 +127,37 @@ git status --short
 ~~~
 
 Review the generated report, visualization, and any hook-produced changes. Commit only reviewed, portable graph artifacts with the source revision they describe. Do not use `git add .` for this cleanup; stage explicit paths after deciding how to handle the unexpected assistant-specific and machine-local files.
+
+
+## Developer workflow contract — updated 2026-10-30
+
+The developer clarified the required working sequence. This is now documented in `docs/AI_WORKFLOW.md`, `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/CHATGPT_NEW_CHAT_STARTER.md`, and `FEATURE_IMPLEMENTATION_CHECKLIST.md`:
+
+1. Inspect the current repository/branch, source, tests, docs, and code relationships using the committed Graphify graph.
+2. If the graph is stale, incomplete, or does not represent current code, ask the developer to run `./pj graph refresh` and `./pj graph diff`. The developer reviews and commits portable graph artifacts; the assistant then inspects the committed graph/source revision.
+3. Before implementation, list material decisions, research current options online where relevant, explain trade-offs, recommend an option, and ask the developer to decide.
+4. Apply approved implementation changes directly to the intended branch in small steps. Review each diff, update directly related docs/tests/ADRs, and commit each step before proceeding when direct Git commits are authorized.
+5. After implementation, finalize the relevant migration/planning Markdown files, perform authorized validation, and update this handover.
+
+### pj command improvements
+
+- Added `./pj graph refresh`: incrementally updates the graph (or builds it if missing), runs Graphify `cluster-only` to generate the report/HTML, then reports artifact status. Default behavior remains code-only/local (`GRAPHIFY_BACKEND=none`); `--semantic` remains opt-in.
+- Added `./pj graph diff`: prints Git status for `graphify-out/` and the tracked graph diff against HEAD. Untracked files are listed by status; after staging only reviewed portable files, inspect them with `git diff --cached -- graphify-out`.
+- Updated `pj graph status` guidance to recommend `./pj graph refresh` when primary graph artifacts are missing.
+- Kept `pj workflow validate` separate: it validates `.pj/workflow.toml`; it is not a feature lifecycle orchestrator. `pj check` remains the configured Python quality-check runner. Graphify remains optional and outside that check pipeline.
+
+### Commits made for this workflow update
+
+- `7f21d47` — add graph refresh/diff commands.
+- `cfeaa21` — define graph-first decision and stepwise commit workflow.
+- `bbae7c4`, `23844e7`, `4ddda65` — align AI guide, checklist, and Graphify docs.
+- `973ff8e`, `f47d161`, `24d4037` — fix CLI output formatting and clarify review/commit guidance.
+- `80ce105`, `7fa17d5` — update project context and new-chat starter.
+- `346d19c`, `42cd96e`, `79fb0ca` — align Git handoff and new-chat instructions.
+
+### Verification status
+
+- GitHub read-back confirmed the updated files and commits on `refactor/chatbrief-package-layout`.
+- The remote `pj` source was inspected after editing, including the new parser/actions and graph refresh/diff implementations.
+- The local `pj` commands have not been executed in the developer's environment from this session. Run `./pj graph refresh --help` is not a supported form; use `./pj graph --help` and `./pj graph refresh`, then `./pj graph diff` to verify locally.
+- No Chatbrief tests or quality checks were run. Continue respecting the developer's instruction to defer the full test suite until the package/platform refactor is declared ready.
