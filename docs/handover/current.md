@@ -6,8 +6,8 @@
 
 - Repository: https://github.com/hosmaznazfar/Chatbrief
 - Active branch: refactor/chatbrief-package-layout
-- Latest verified remote commit from this documentation update: b5f2357e1dbb70408a6d11c4900c4c328d4e0862 (adds Graphify guidance to the implementation checklist).
-- The preceding commits in this update added docs/GRAPHIFY.md, integrated Graphify into AI_README.md and CHATGPT_CONTEXT.md, and updated the new-chat starter.
+- Latest verified remote commit before this handover correction: d80e25e6271b33e6bec90a20ace5c17b3b133436 (the Graphify workflow handover update).
+- The Graphify integration commits on this branch added docs/GRAPHIFY.md and updated AI_README.md, CHATGPT_CONTEXT.md, docs/CHATGPT_NEW_CHAT_STARTER.md, FEATURE_IMPLEMENTATION_CHECKLIST.md, and this handover.
 - The developer's local branch/HEAD/worktree after these remote writes is unknown. Do not assume the local checkout contains these commits.
 - Workflow source: https://github.com/hosmaznazfar/AIWorkFlow (adapted to Chatbrief; do not copy its generic/Rust implementation blindly).
 
@@ -20,6 +20,7 @@ Finish the package-layout and platform-abstraction refactor, then validate it. K
 - Existing AI workflow files are adapted from AIWorkFlow: AI_README.md, CHATGPT_CONTEXT.md, docs/CHATGPT_NEW_CHAT_STARTER.md, docs/handover/current.md, and FEATURE_IMPLEMENTATION_CHECKLIST.md.
 - Added docs/GRAPHIFY.md as the project-specific operational contract for installation, graph generation/refresh, Git tracking, and assistant use.
 - Updated AI_README.md, CHATGPT_CONTEXT.md, docs/CHATGPT_NEW_CHAT_STARTER.md, and FEATURE_IMPLEMENTATION_CHECKLIST.md to tell agents to inspect committed Graphify artifacts and verify graph relationships against source/tests.
+- Read-back verification succeeded for docs/GRAPHIFY.md, AI_README.md, CHATGPT_CONTEXT.md, docs/CHATGPT_NEW_CHAT_STARTER.md, FEATURE_IMPLEMENTATION_CHECKLIST.md, and docs/handover/current.md on the selected branch.
 - Graphify is selected as optional development/AI navigation tooling. Its graph artifacts are intended to be committed to GitHub so ChatGPT using GitHub can inspect the same architecture map.
 - Expected primary artifacts: graphify-out/graph.json, graphify-out/GRAPH_REPORT.md, and graphify-out/graph.html. The current branch had no graphify-out/ artifacts when this integration was inspected; graph generation has not yet been performed or verified.
 - The existing .gitignore did not ignore graphify-out/; do not add it. Review generated files and commit the graph with the source revision it describes.
@@ -76,7 +77,7 @@ The branch contains the src/chatbrief/ package layout and imports rooted at chat
 
 ## Validation status
 
-- The Graphify integration documentation was written and read-back verification is still pending.
+- Graphify integration documentation and cross-references have been read back from GitHub successfully.
 - No Graphify CLI installation, skill registration, graph generation, or graph query was performed in this work segment.
 - No Chatbrief tests, Ruff, Pyright, Pylint, Bandit, Vulture, website build, or other project validation checks have been run in this work segment.
 - Per the developer's instruction, defer the full Chatbrief test suite until the refactor is complete and the developer explicitly authorizes validation.
