@@ -322,9 +322,9 @@ def graph_status(root: Path) -> int:
     if present == len(artifacts):
         print(" Graph       all primary artifacts exist")
     elif present:
-        print(" Graph       incomplete; run ./pj graph build")
+        print(" Graph       incomplete; run ./pj graph refresh")
     else:
-        print(" Graph       not generated; run ./pj graph build")
+        print(" Graph       not generated; run ./pj graph refresh")
 
     git = shutil.which("git")
     if git:
@@ -350,6 +350,39 @@ def graph_status(root: Path) -> int:
         )
         if result.returncode:
             print("status command failed")
+    return 0
+
+
+
+def graph_diff(root: Path) -> int:
+    git = shutil.which("git")
+    if git is None:
+        print("[pj graph diff] git is not installed.", file=sys.stderr)
+        return 1
+
+    print("[pj graph diff] Graphify artifact status")
+    status = subprocess.run(
+        [git, "status", "--short", "--", "graphify-out"],
+        cwd=root,
+        check=False,
+    )
+    if status.returncode:
+        return status.returncode
+
+    print("\\n[pj graph diff] Tracked graph changes against HEAD")
+    diff = subprocess.run(
+        [git, "diff", "HEAD", "--", "graphify-out"],
+        cwd=root,
+        check=False,
+    )
+    if diff.returncode:
+        return diff.returncode
+
+    print(
+        "\\nReview untracked graph files shown by git status separately. "
+        "After staging only approved artifacts, run "
+        "'git diff --cached -- graphify-out' before committing."
+    )
     return 0
 
 
@@ -384,6 +417,23 @@ def graph_command(root: Path, args: argparse.Namespace) -> int:
             return run_graphify(root, ["update", "."], local_only=not args.semantic)
         command = ["extract", ".", *( [] if args.semantic else ["--code-only"] )]
         return run_graphify(root, command, local_only=not args.semantic)
+
+    if action == "refresh":
+        graph_file = root / "graphify-out" / "graph.json"
+        if graph_file.is_file():
+            result = run_graphify(root, ["update", "."], local_only=not args.semantic)
+        else:
+            command = ["extract", ".", *( [] if args.semantic else ["--code-only"] )]
+            result = run_graphify(root, command, local_only=not args.semantic)
+        if result:
+            return result
+        result = run_graphify(root, ["cluster-only", "."], local_only=not args.semantic)
+        if result:
+            return result
+        return graph_status(root)
+
+    if action == "diff":
+        return graph_diff(root)
 
     if action == "query":
         return run_graphify(root, ["query", " ".join(args.question)])
@@ -423,6 +473,9 @@ def build_parser() -> argparse.ArgumentParser:
     update.add_argument("--semantic", action="store_true", help="Allow the configured Graphify backend for changed documents")
     sync = graph_commands.add_parser("sync", help="Build if missing, otherwise update the graph")
     sync.add_argument("--semantic", action="store_true", help="Allow the configured Graphify backend for changed documents")
+    refresh = graph_commands.add_parser("refresh", help="Update/build the graph, generate report and HTML, then show status")
+    refresh.add_argument("--semantic", action="store_true", help="Allow the configured Graphify backend for changed documents")
+    graph_commands.add_parser("diff", help="Show graphify-out Git status and tracked changes against HEAD")
     query = graph_commands.add_parser("query", help="Query the graph with a natural-language question")
     query.add_argument("question", nargs="+")
     path = graph_commands.add_parser("path", help="Find the graph path between two symbols")
