@@ -521,12 +521,13 @@ make format
 This repository includes a lightweight, project-local workflow helper at `./pj`.
 
 - Read [AI_README.md](AI_README.md) for repository-specific AI development rules.
-- Read [CHATGPT_CONTEXT.md](CHATGPT_CONTEXT.md) and [the current handover](docs/handover/current.md) before resuming work in a new chat.
+- Read [CHATGPT_CONTEXT.md](CHATGPT_CONTEXT.md), the [AI workflow](docs/AI_WORKFLOW.md), and [the current handover](docs/handover/current.md) before resuming work in a new chat.
 - Use the [new-chat starter](docs/CHATGPT_NEW_CHAT_STARTER.md) to initialize a session.
 - Track non-trivial work in [FEATURE_IMPLEMENTATION_CHECKLIST.md](FEATURE_IMPLEMENTATION_CHECKLIST.md).
 - Ordered Python checks are configured in `.pj/workflow.toml`.
+- Read the [Graphify guide](docs/GRAPHIFY.md) for the local code graph and Git automation.
 
-The `pj` helper uses only the Python standard library. It does not need Cargo, Node.js, npm, Graphify, or additional Python packages. Python 3.14+ runs the helper; `uv` manages the project environment and executes the configured checks.
+The core `pj` helper uses only the Python standard library. Python 3.14+ runs it; `uv` manages the project environment and executes configured checks. Graphify is an optional standalone CLI used only by the separate `pj graph` commands; it is not an application dependency or a Python check prerequisite.
 
 ```bash
 ./pj --help
@@ -534,9 +535,16 @@ The `pj` helper uses only the Python standard library. It does not need Cargo, N
 ./pj workflow validate
 ./pj check --list
 ./pj check --dry-run
+
+# Optional local Graphify workflow
+./pj graph install
+./pj graph build
+./pj graph sync
+./pj graph status
+./pj graph hooks install
 ```
 
-Run `./pj check` only after the current refactor is complete and ready for validation. It runs Ruff lint, Ruff formatting validation, Pyright, and pytest in order. The test step is intentionally deferred until then.
+The Python check pipeline runs Ruff lint, Ruff formatting validation, Pyright, and pytest in order. Run `./pj check` only after the current refactor is complete and ready for validation. The test step is intentionally deferred until then.
 
 ## ❓ FAQ
 
