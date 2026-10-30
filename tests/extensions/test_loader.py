@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.extensions.loader import load_class
+from chatbrief.extensions.loader import load_class
 
 
 class _SampleClass:
@@ -19,7 +19,7 @@ def test_load_class_valid_builtin():
 def test_load_class_function_not_class():
     # load_class itself is a function — should raise because it's not a type
     with pytest.raises(ValueError, match="not a class"):
-        load_class("src.extensions.loader.load_class")
+        load_class("chatbrief.extensions.loader.load_class")
 
 
 def test_load_class_stdlib_class():

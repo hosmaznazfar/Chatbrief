@@ -5,8 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.message import Message
-from src.chatbrief.platforms import TelegramMessageSource
+import chatbrief.platforms.telegram.telegram_source as telegram_source
+
+from chatbrief.message import Message
+from chatbrief.telegram_source_source import TelegramMessageSource
 
 TEST_MESSAGE_TIME = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 TEST_LOOKBACK_TIME = datetime(2026, 1, 1, 11, 0, tzinfo=timezone.utc)
@@ -21,7 +23,7 @@ async def async_messages(messages):
 @pytest.fixture
 def message_source(sample_config, mock_logger):
     """Create a Telegram message source with a mocked Telegram client."""
-    with patch.object(platforms.telegram.telegram, "TelegramClient") as mock_client:
+    with patch.object(telegram_source, "TelegramClient") as mock_client:
         mock_client.return_value = MagicMock()
         source = TelegramMessageSource(sample_config, mock_logger)
 

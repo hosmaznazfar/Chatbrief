@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from src.utils import (
+from chatbrief.utils import (
     clear_digest_message_ids,
     get_digest_message_ids,
     get_lookback_time,
@@ -131,7 +131,7 @@ def test_save_and_get_digest_message_ids(tmp_path, monkeypatch):
     """Test saving and retrieving message IDs."""
     # Use temp directory for storage
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     user_id = 123456
     message_ids = [1, 2, 3, 4, 5]
@@ -151,7 +151,7 @@ def test_save_and_get_digest_message_ids(tmp_path, monkeypatch):
 def test_get_digest_message_ids_no_file(tmp_path, monkeypatch):
     """Test getting message IDs when file doesn't exist."""
     storage_file = tmp_path / "nonexistent.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     user_id = 123456
     retrieved_ids = get_digest_message_ids(user_id)
@@ -163,7 +163,7 @@ def test_get_digest_message_ids_no_file(tmp_path, monkeypatch):
 def test_get_digest_message_ids_invalid_json(tmp_path, monkeypatch):
     """Test getting message IDs with corrupted JSON file."""
     storage_file = tmp_path / "corrupt.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     # Create corrupted JSON file
     storage_file.write_text("invalid json {{{")
@@ -178,7 +178,7 @@ def test_get_digest_message_ids_invalid_json(tmp_path, monkeypatch):
 def test_clear_digest_message_ids(tmp_path, monkeypatch):
     """Test clearing message IDs."""
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     user_id = 123456
     message_ids = [1, 2, 3]
@@ -198,7 +198,7 @@ def test_clear_digest_message_ids(tmp_path, monkeypatch):
 def test_clear_digest_message_ids_no_file(tmp_path, monkeypatch):
     """Test clearing message IDs when file doesn't exist."""
     storage_file = tmp_path / "nonexistent.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     user_id = 123456
 
@@ -210,7 +210,7 @@ def test_clear_digest_message_ids_no_file(tmp_path, monkeypatch):
 def test_save_digest_message_ids_multiple_users(tmp_path, monkeypatch):
     """Test saving message IDs for multiple users."""
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     user1_id = 111
     user2_id = 222

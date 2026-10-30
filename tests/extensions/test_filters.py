@@ -4,9 +4,9 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.chatbrief.config import ChannelConfig
-from src.extensions.filters import KeywordFilter, MessageFilter, MinLengthFilter, RegexFilter
-from src.message import Message
+from chatbrief.config.models import ChannelConfig
+from chatbrief.extensions.filters import KeywordFilter, MessageFilter, MinLengthFilter, RegexFilter
+from chatbrief.message import Message
 
 
 def _make_message(text: str) -> Message:

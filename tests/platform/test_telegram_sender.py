@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from telegram.error import TelegramError
 
-import platforms.telegram.telegram_sender as telegram_sender
-from platforms.telegram.telegram_sender import TelegramMessageSender
-from src.utils import save_digest_message_ids
+import chatbrief.telegram_source_sender as telegram_sender
+from chatbrief.telegram_source_sender import TelegramMessageSender
+from chatbrief.utils import save_digest_message_ids
 
 
 @pytest.mark.unit
@@ -149,7 +149,7 @@ async def test_cleanup_old_digests_success(sample_config, mock_logger, tmp_path,
 
     # Setup storage
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     # Save some message IDs
     user_id = 123456789
@@ -173,7 +173,7 @@ async def test_cleanup_old_digests_success(sample_config, mock_logger, tmp_path,
 async def test_cleanup_old_digests_no_messages(sample_config, mock_logger, tmp_path, monkeypatch):
     """Test cleanup when no messages exist."""
     storage_file = tmp_path / "nonexistent.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
@@ -246,7 +246,7 @@ async def test_send_channel_messages_with_tracking(
 ):
     """Test sending channel messages with message tracking."""
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     channel_messages = [
         ("Channel 1", "Message 1"),
@@ -278,7 +278,7 @@ async def test_send_channel_messages_with_tracking(
     assert mock_bot.send_message.call_count == 3
 
     # Verify message IDs were saved
-    from src.utils import get_digest_message_ids
+    from chatbrief.utils import get_digest_message_ids
 
     saved_ids = get_digest_message_ids(123456789)
     assert len(saved_ids) == 3
@@ -294,7 +294,7 @@ async def test_send_channel_messages_with_tracking_no_summary(
 ):
     """Test sending channel messages without summary message."""
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     channel_messages = [("Channel 1", "Message 1")]
 
@@ -323,7 +323,7 @@ async def test_orphaned_summary_deleted_when_all_channels_fail(
     """Test that orphaned summary placeholder is deleted when all channel sends fail."""
 
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     channel_messages = [("Channel 1", "Message 1")]
 
@@ -373,7 +373,7 @@ async def test_summary_sent_before_channel_messages(
 ):
     """Test that the summary message is sent FIRST, before any channel messages."""
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     channel_messages = [("Channel 1", "Message 1"), ("Channel 2", "Message 2")]
     summary_message = "Summary text"
@@ -542,7 +542,7 @@ async def test_cleanup_old_digests_default_user_id(
 ):
     """Test cleanup uses configured user ID by default."""
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
@@ -564,7 +564,7 @@ async def test_cleanup_old_digests_message_not_found(
     """Test cleanup treats already-deleted messages as successfully cleaned."""
 
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     save_digest_message_ids([101, 102], 123456789)
 
@@ -590,7 +590,7 @@ async def test_cleanup_old_digests_deletion_failure(
     """Test cleanup handles a deletion failure."""
 
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     save_digest_message_ids([101], 123456789)
 
@@ -617,7 +617,7 @@ async def test_cleanup_old_digests_partial_failure(
     """Test cleanup succeeds partially when some messages are deleted."""
 
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     save_digest_message_ids([101, 102], 123456789)
 
@@ -731,7 +731,7 @@ async def test_send_channel_messages_with_tracking_default_user_id(
 ):
     """Test tracked channel messages use configured user ID by default."""
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()
@@ -772,7 +772,7 @@ async def test_orphaned_summary_delete_failure(sample_config, mock_logger, tmp_p
     """Test failure to delete an orphaned summary placeholder."""
 
     storage_file = tmp_path / "digest_messages.json"
-    monkeypatch.setattr("src.utils.MESSAGE_STORAGE_FILE", str(storage_file))
+    monkeypatch.setattr("chatbrief.utils.MESSAGE_STORAGE_FILE", str(storage_file))
 
     with patch.object(telegram_sender, "Bot") as mock_bot_class:
         mock_bot = MagicMock()

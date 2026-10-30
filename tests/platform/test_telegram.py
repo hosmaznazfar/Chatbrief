@@ -4,10 +4,12 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+import chatbrief.platforms.telegram.telegram_source as telegram_source
 from telethon.errors import ChannelPrivateError, FloodWaitError
 from telethon.tl.types import Document, MessageMediaDocument
 
-from src.chatbrief.platforms import TelegramMessageSource
+from chatbrief.telegram_source_source import TelegramMessageSource
 
 TEST_MESSAGE_TIME = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 TEST_LOOKBACK_TIME = datetime(2026, 1, 1, 11, 0, tzinfo=timezone.utc)
@@ -15,7 +17,7 @@ TEST_LOOKBACK_TIME = datetime(2026, 1, 1, 11, 0, tzinfo=timezone.utc)
 
 def make_source(sample_config, mock_logger):
 
-    with patch.object(platforms.telegram.telegram, "TelegramClient") as mock_client:
+    with patch.object(telegram_source, "TelegramClient") as mock_client:
         mock_client.return_value = MagicMock()
         source = TelegramMessageSource(sample_config, mock_logger)
 
@@ -264,7 +266,7 @@ async def test_generate_message_link_without_entity_info(sample_config, mock_log
 async def test_connect_missing_session(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
-    with patch.object(platforms.telegram.telegram.os.path, "exists", return_value=False):
+    with patch.object(telegram_source.os.path, "exists", return_value=False):
         with pytest.raises(RuntimeError, match="Telegram user session not found"):
             await source.connect()
 
@@ -276,7 +278,7 @@ async def test_connect_unauthorized(sample_config, mock_logger):
     source.client.connect = AsyncMock()
     source.client.is_user_authorized = AsyncMock(return_value=False)
 
-    with patch.object(platforms.telegram.telegram.os.path, "exists", return_value=True):
+    with patch.object(telegram_source.os.path, "exists", return_value=True):
         with pytest.raises(RuntimeError, match="not authorized"):
             await source.connect()
 
@@ -289,7 +291,7 @@ async def test_connect_success(sample_config, mock_logger):
     source.client.is_user_authorized = AsyncMock(return_value=True)
     source.client.get_dialogs = AsyncMock(return_value=[MagicMock(), MagicMock()])
 
-    with patch.object(platforms.telegram.telegram.os.path, "exists", return_value=True):
+    with patch.object(telegram_source.os.path, "exists", return_value=True):
         await source.connect()
 
     source.client.connect.assert_awaited_once()
@@ -306,7 +308,7 @@ async def test_connect_dialog_cache_failure(sample_config, mock_logger):
     source.client.is_user_authorized = AsyncMock(return_value=True)
     source.client.get_dialogs = AsyncMock(side_effect=RuntimeError("dialog cache failed"))
 
-    with patch.object(platforms.telegram.telegram.os.path, "exists", return_value=True):
+    with patch.object(telegram_source.os.path, "exists", return_value=True):
         await source.connect()
 
     source.client.connect.assert_awaited_once()
@@ -357,7 +359,7 @@ async def test_fetch_messages_flood_wait_retry(sample_config, mock_logger):
     )
 
     with patch.object(
-        platforms.telegram.telegram.asyncio, "sleep", new_callable=AsyncMock
+        telegram_source.asyncio, "sleep", new_callable=AsyncMock
     ) as mock_sleep:
         result = await source.fetch_messages(hours=24)
 
@@ -377,7 +379,7 @@ async def test_fetch_messages_flood_wait_retry_failure(sample_config, mock_logge
         side_effect=FloodWaitError(request=MagicMock(), capture=2)
     )
 
-    with patch.object(platforms.telegram.telegram.asyncio, "sleep", new_callable=AsyncMock):
+    with patch.object(telegram_source.asyncio, "sleep", new_callable=AsyncMock):
         result = await source.fetch_messages(hours=24)
 
     assert result == {

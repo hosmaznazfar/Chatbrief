@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.ui_strings import get_ui_strings
+from chatbrief.ui_strings import get_ui_strings
 
 # All keys that every supported language must provide
 REQUIRED_KEYS = [

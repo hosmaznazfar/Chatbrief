@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from src.chatbrief.config import ChannelConfig
-from src.extensions.prompts import DefaultComposer, PromptComposer
+from chatbrief.config.models import ChannelConfig
+from chatbrief.extensions.prompts import DefaultComposer, PromptComposer
 
 BASE = "You are an assistant. Write in {language}."
 LANG = "English"

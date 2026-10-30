@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import platforms.telegram.telegram_bot
-from src.commands.models import CommandResult, CommandStatus
-from src.commands.service import CommandService
-from platforms.telegram.telegram_bot import TelegramBot
+import chatbrief.telegram_source_bot
+from chatbrief.commands.models import CommandResult, CommandStatus
+from chatbrief.commands.service import CommandService
+from chatbrief.telegram_source_bot import TelegramBot
 
 
 @pytest.fixture
@@ -401,7 +401,7 @@ def test_setup_application(sample_config, mock_logger):
 
     mock_app = MagicMock()
 
-    with patch.object(platforms.telegram.telegram_bot.Application, "builder") as mock_builder:
+    with patch.object(telegram_source_bot.Application, "builder") as mock_builder:
         mock_builder.return_value.token.return_value.build.return_value = mock_app
 
         result = handler.setup_application()

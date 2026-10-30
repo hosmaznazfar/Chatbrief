@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.xml_escape import escape_xml_delimiters
+from chatbrief.xml_escape import escape_xml_delimiters
 
 
 @pytest.mark.unit
