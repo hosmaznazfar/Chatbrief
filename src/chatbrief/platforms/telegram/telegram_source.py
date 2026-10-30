@@ -45,7 +45,7 @@ class TelegramMessageSource(MessageSource):
 
         Requires a pre-authenticated session file at sessions/user.session.
         Create one by running:
-            uv run src/chatbrief/platforms/telegram/telegram_source.py
+            uv run python -m chatbrief.platforms.telegram.telegram_source
         """
         session_path = "sessions/user.session"
 
@@ -53,7 +53,7 @@ class TelegramMessageSource(MessageSource):
             raise RuntimeError(
                 f"Telegram user session not found at '{session_path}'. "
                 "Create one by running: "
-                "uv run src/chatbrief/platforms/telegram/telegram_source.py"
+                "uv run python -m chatbrief.platforms.telegram.telegram_source"
             )
 
         await self.client.connect()
@@ -62,7 +62,7 @@ class TelegramMessageSource(MessageSource):
             raise RuntimeError(
                 "Telegram user session exists but is not authorized. "
                 "Re-authenticate by running: "
-                "uv run src/chatbrief/platforms/telegram/telegram_source.py"
+                "uv run python -m chatbrief.platforms.telegram.telegram_source"
             )
 
         self.logger.info("Connected to Telegram User API")
@@ -391,7 +391,7 @@ async def main() -> None:
     """Authenticate and test the message collector.
 
     Run interactively to create sessions/user.session:
-        uv run src/chatbrief/platforms/telegram/telegram_source.py
+        uv run python -m chatbrief.platforms.telegram.telegram_source
     """
     from chatbrief.config.loader import load_config
     from chatbrief.utils import setup_logging
