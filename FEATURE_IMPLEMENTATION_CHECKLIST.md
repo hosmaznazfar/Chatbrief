@@ -5,7 +5,8 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 ## Before implementation
 
 - [ ] Verify repository, intended branch, latest GitHub commit, and available local worktree state.
-- [ ] Read `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/handover/current.md`, README, relevant ADRs/plans, source, and tests.
+- [ ] Read `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/handover/current.md`, `docs/GRAPHIFY.md`, README, relevant ADRs/plans, source, and tests.
+- [ ] Check whether the committed Graphify report/JSON exist on the selected branch; use them to locate relevant relationships and verify findings against source/tests.
 - [ ] Identify existing conventions and architecture boundaries before proposing new abstractions.
 - [ ] Define scope, acceptance criteria, risks, and phases.
 - [ ] Update the relevant plan/docs and obtain approval before application-code implementation.
@@ -17,7 +18,8 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Preserve existing behavior and configuration compatibility unless a change is explicitly approved.
 - [ ] Add or migrate tests for changed behavior; do not delete coverage merely to make imports pass.
 - [ ] Update documentation and this checklist as implementation progresses.
-- [ ] Keep secrets, local sessions, generated caches, and machine-specific files out of Git.
+- [ ] If source relationships changed, refresh Graphify locally and review the generated `graphify-out/` diff before committing it with the matching source revision.
+- [ ] Keep secrets, local sessions, generated caches, and machine-specific files out of Git; Graphify's documented project graph artifacts are intentionally tracked.
 
 ## Validation
 
@@ -26,11 +28,12 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Run Pyright and applicable Pylint/Bandit/Vulture checks.
 - [ ] Run pytest and record the exact result and coverage.
 - [ ] Build the Astro website if website files or shared CI are affected.
-- [ ] Review the complete diff, CI results, generated artifacts, and whitespace.
+- [ ] Review the complete diff, CI results, generated Graphify artifacts, and whitespace.
 - [ ] Distinguish passed, failed, skipped, and not-run checks.
 
 ## Handover
 
 - [ ] Update `docs/handover/current.md` with verified branch/commit and completed work.
+- [ ] Record Graphify artifact availability and freshness only when verified.
 - [ ] Record actual validation output, deferred checks, blockers, and exact next steps.
 - [ ] Ask before staging, committing, pushing, merging, deploying, publishing, or migrating.
