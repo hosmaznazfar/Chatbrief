@@ -396,20 +396,24 @@ Messages (total: {actual_count}):
         return "\n".join(renumbered)
 
 
-async def main():
-    """Test summarizer."""
+async def main() -> None:
+    """Run the summarizer against messages collected from the configured platform."""
     from chatbrief.config.loader import load_config
-    from chatbrief.platforms.factory import create_message_source
+    from chatbrief.platforms.builder import PlatformBuilder
     from chatbrief.utils import setup_logging
 
     config = load_config()
     logger = setup_logging(config.log_level)
 
     # Collect messages
-    source = create_message_source(config, logger)
+    platform_builder = PlatformBuilder(config, logger)
+    source, _sender = platform_builder.create_services()
+
     await source.connect()
-    messages = await source.fetch_messages(hours=24)
-    await source.disconnect()
+    try:
+        messages = await source.fetch_messages(hours=24)
+    finally:
+        await source.disconnect()
 
     # Summarize
     summarizer = Summarizer(config, logger)

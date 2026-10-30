@@ -1,5 +1,5 @@
 """
-Telegram implementation of the platform-neutral message sender."
+Telegram implementation of the platform-neutral message sender.
 """
 
 import asyncio
@@ -10,15 +10,15 @@ from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
 
+from chatbrief.config.models import Config
+from chatbrief.formatter import DigestFormatter
+from chatbrief.platforms.base import MessageSender
 from chatbrief.utils import (
     clear_digest_message_ids,
     get_digest_message_ids,
     save_digest_message_ids,
     split_message,
 )
-from chatbrief.config.models import Config
-from chatbrief.formatter import DigestFormatter
-from chatbrief.platforms.base import MessageSender
 
 
 class TelegramMessageSender(MessageSender):
