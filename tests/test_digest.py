@@ -624,6 +624,61 @@ async def test_collect_channel_messages_falls_back_to_live_source(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
+async def test_collect_channel_messages_falls_back_when_storage_is_empty(
+    sample_config, mock_logger, sample_messages
+):
+    source = _make_source(sample_messages)
+    sample_config.storage = StorageConfig(enabled=True, backend="sqlite", path=":memory:")
+    backend = MagicMock()
+    backend.query_messages = AsyncMock(return_value=[])
+    backend.close = AsyncMock()
+
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=backend,
+    ):
+        messages, origin = await collect_channel_messages(
+            sample_config, mock_logger, source, "Test Channel"
+        )
+
+    assert origin == "live"
+    assert messages == sample_messages
+    backend.close.assert_awaited_once()
+    source.disconnect.assert_awaited_once()
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_collect_channel_messages_falls_back_when_storage_query_fails(
+    sample_config, mock_logger, sample_messages
+):
+    source = _make_source(sample_messages)
+    sample_config.storage = StorageConfig(enabled=True, backend="sqlite", path=":memory:")
+    backend = MagicMock()
+    backend.query_messages = AsyncMock(side_effect=RuntimeError("read failed"))
+    backend.close = AsyncMock()
+
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=backend,
+    ):
+        messages, origin = await collect_channel_messages(
+            sample_config, mock_logger, source, "Test Channel"
+        )
+
+    assert origin == "live"
+    assert messages == sample_messages
+    backend.close.assert_awaited_once()
+    source.disconnect.assert_awaited_once()
+    mock_logger.error.assert_called()
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_collect_channel_messages_storage_failure_falls_back_to_live(
     sample_config, mock_logger, sample_messages
 ):
