@@ -141,6 +141,12 @@ def doctor(root: Path) -> int:
         )
         healthy = False
 
+    graphify = shutil.which("graphify")
+    if graphify:
+        print(f" Graphify   available (optional): {graphify}")
+    else:
+        print(" Graphify   not installed (optional; run ./pj graph install)")
+
     config_path = root / CONFIG
     if not config_path.is_file():
         print(f" config    not initialized ({CONFIG}; run ./pj init)")
@@ -250,10 +256,152 @@ def run_checks(root: Path, config: dict, *, dry_run: bool) -> int:
     return 1 if required_failure else 0
 
 
+
+def run_graphify(root: Path, arguments: list[str], *, local_only: bool = False) -> int:
+    executable = shutil.which("graphify")
+    if executable is None:
+        print(
+            "[pj graph] Graphify is not installed. Run './pj graph install' "
+            "or 'uv tool install graphifyy'.",
+            file=sys.stderr,
+        )
+        return 1
+
+    environment = None
+    if local_only:
+        environment = __import__("os").environ.copy()
+        environment["GRAPHIFY_BACKEND"] = "none"
+
+    display = " ".join(["graphify", *arguments])
+    print(f"[pj graph] {display}", flush=True)
+    try:
+        result = subprocess.run(
+            [executable, *arguments],
+            cwd=root,
+            env=environment,
+            check=False,
+        )
+    except OSError as exc:
+        print(f"[pj graph] could not start Graphify: {exc}", file=sys.stderr)
+        return 1
+    return result.returncode
+
+
+def graph_status(root: Path) -> int:
+    print(f"[pj graph status] {root}")
+    executable = shutil.which("graphify")
+    if executable is None:
+        print(" Graphify  not installed (optional; run ./pj graph install)")
+    else:
+        try:
+            version = subprocess.run(
+                [executable, "--version"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=10,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            print(f" Graphify  available but version check failed: {exc}")
+        else:
+            detail = (version.stdout or version.stderr).strip()
+            print(f" Graphify  {detail or 'available'}")
+
+    output = root / "graphify-out"
+    artifacts = ("graph.json", "GRAPH_REPORT.md", "graph.html")
+    present = 0
+    for name in artifacts:
+        path = output / name
+        if path.is_file():
+            print(f" {name:<16} present")
+            present += 1
+        else:
+            print(f" {name:<16} missing")
+    if present == len(artifacts):
+        print(" Graph       all primary artifacts exist")
+    elif present:
+        print(" Graph       incomplete; run ./pj graph build")
+    else:
+        print(" Graph       not generated; run ./pj graph build")
+
+    git = shutil.which("git")
+    if git:
+        result = subprocess.run(
+            [git, "status", "--short", "--", "graphify-out"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            state = result.stdout.strip()
+            print(f" Git graph  {state if state else 'no graphify-out changes'}")
+        else:
+            print(" Git graph  could not inspect status")
+
+    if executable:
+        print(" Git hooks  ", end="")
+        result = subprocess.run(
+            [executable, "hook", "status"],
+            cwd=root,
+            check=False,
+        )
+        if result.returncode:
+            print("status command failed")
+    return 0
+
+
+def graph_command(root: Path, args: argparse.Namespace) -> int:
+    action = args.graph_command
+
+    if action == "install":
+        uv = shutil.which("uv")
+        if uv is None:
+            print("[pj graph] uv is required to install Graphify: https://docs.astral.sh/uv/", file=sys.stderr)
+            return 1
+        print("[pj graph] Installing the standalone Graphify CLI (no AI-editor integration).")
+        result = subprocess.run([uv, "tool", "install", "graphifyy"], cwd=root, check=False)
+        return result.returncode
+
+    if action == "status":
+        return graph_status(root)
+
+    if action == "build":
+        command = ["extract", ".", *( [] if args.semantic else ["--code-only"] )]
+        return run_graphify(root, command, local_only=not args.semantic)
+
+    if action == "update":
+        return run_graphify(root, ["update", "."], local_only=not args.semantic)
+
+    if action == "sync":
+        graph_file = root / "graphify-out" / "graph.json"
+        if graph_file.is_file():
+            return run_graphify(root, ["update", "."], local_only=not args.semantic)
+        command = ["extract", ".", *( [] if args.semantic else ["--code-only"] )]
+        return run_graphify(root, command, local_only=not args.semantic)
+
+    if action == "query":
+        return run_graphify(root, ["query", " ".join(args.question)])
+
+    if action == "path":
+        return run_graphify(root, ["path", args.source, args.target])
+
+    if action == "explain":
+        return run_graphify(root, ["explain", " ".join(args.concept)])
+
+    if action == "watch":
+        return run_graphify(root, ["watch", "."])
+
+    if action == "hooks":
+        return run_graphify(root, ["hook", args.hook_action])
+
+    return 1
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pj",
-        description="Chatbrief Python project checks (Python standard library + uv).",
+        description="Chatbrief workflow: Python checks and local Graphify automation (standard library + uv).",
     )
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("init", help="Create or validate the project workflow config")
@@ -261,6 +409,26 @@ def build_parser() -> argparse.ArgumentParser:
     check = commands.add_parser("check", help="List or run configured checks in order")
     check.add_argument("--list", action="store_true", help="List configured checks")
     check.add_argument("--dry-run", action="store_true", help="Print commands without running them")
+    graph = commands.add_parser("graph", help="Build, query, and automate the shared Graphify code graph")
+    graph_commands = graph.add_subparsers(dest="graph_command", required=True)
+    graph_commands.add_parser("install", help="Install the standalone Graphify CLI with uv")
+    graph_commands.add_parser("status", help="Inspect graph artifacts, Git changes, and Graphify hooks")
+    build = graph_commands.add_parser("build", help="Build the local code graph (no API/backend by default)")
+    build.add_argument("--semantic", action="store_true", help="Include semantic extraction using the configured Graphify backend")
+    update = graph_commands.add_parser("update", help="Incrementally update the graph after local changes or a pull")
+    update.add_argument("--semantic", action="store_true", help="Allow the configured Graphify backend for changed documents")
+    sync = graph_commands.add_parser("sync", help="Build if missing, otherwise update the graph")
+    sync.add_argument("--semantic", action="store_true", help="Allow the configured Graphify backend for changed documents")
+    query = graph_commands.add_parser("query", help="Query the graph with a natural-language question")
+    query.add_argument("question", nargs="+")
+    path = graph_commands.add_parser("path", help="Find the graph path between two symbols")
+    path.add_argument("source")
+    path.add_argument("target")
+    explain = graph_commands.add_parser("explain", help="Explain a symbol and its graph connections")
+    explain.add_argument("concept", nargs="+")
+    graph_commands.add_parser("watch", help="Watch files and refresh the graph (requires Graphify's watch extra)")
+    hooks = graph_commands.add_parser("hooks", help="Manage Graphify's local Git hooks and graph merge driver")
+    hooks.add_argument("hook_action", choices=("install", "status", "uninstall"))
     workflow = commands.add_parser("workflow", help="Workflow configuration operations")
     workflow.add_subparsers(dest="workflow_command", required=True).add_parser(
         "validate", help="Validate .pj/workflow.toml"
@@ -277,6 +445,8 @@ def main() -> int:
             return 0
         if args.command == "doctor":
             return doctor(root)
+        if args.command == "graph":
+            return graph_command(root, args)
         if args.command == "workflow":
             config = load_config(root)
             count = len(config["checks"].get("steps", []))
