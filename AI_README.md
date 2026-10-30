@@ -83,6 +83,12 @@ These are assistant workflow conventions, not native ChatGPT slash-command regis
 - Respect the existing ADRs and plans. If a new decision conflicts with them, explain the trade-off and update/add an ADR rather than silently changing direction.
 - Avoid speculative abstractions. Add a protocol/model only when it expresses a real domain contract or removes a concrete coupling.
 
+## Current implementation status
+
+The current branch has migrated tests to `chatbrief.*`, moved legacy core behavior tests into `tests/test_digest.py`, removed the obsolete platform factory, and made `PlatformBuilder`/root `main.py` the platform composition path. `TelegramBot` requires an injected `CommandService`; the service receives `MessageSource` and `MessageSender` dependencies. Coverage configuration targets the `chatbrief` package. The completed extensibility and storage plans are archived under `docs/plans/completed/`.
+
+Bale remains unimplemented. The current implementation supports Telegram only.
+
 ## Validation commands
 
 Install/synchronize the locked Python environment:
@@ -120,7 +126,7 @@ npm run build --prefix website
 
 Do not claim any command ran unless its output is available. The existing CI workflow is authoritative for CI commands; check it before changing this list.
 
-**Current refactor constraint:** the package-layout and platform-abstraction refactor is still in progress. Do not run the full test suite or declare the refactor complete until the developer explicitly says implementation is ready for validation. The historical baseline of 471 passed / 7 skipped and 80.28% coverage belongs to the pre-refactor state; it is not evidence that this branch currently passes.
+**Current refactor state (2026-10-30):** the package-layout and platform-abstraction implementation migration is ready for validation on `refactor/chatbrief-package-layout`. The full test suite and quality checks have not been run. Do not run them until the developer explicitly authorizes validation. The historical baseline of 471 passed / 7 skipped and 80.28% coverage belongs to the pre-refactor state; it is not evidence that this branch currently passes.
 
 ## Project workflow helper
 

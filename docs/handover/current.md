@@ -28,7 +28,7 @@ The project also includes SQLite/PostgreSQL storage, extension hooks for filters
 
 ## Package/platform refactor status
 
-<badge label="Implementation migration ready for validation" color="success" />
+**Status: implementation migration ready for validation.**
 
 The code and test migration work on this branch is complete. Validation is deliberately still pending.
 
