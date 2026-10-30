@@ -101,3 +101,29 @@ The branch contains the src/chatbrief/ package layout and imports rooted at chat
 7. After every git pull/merge, run ./pj graph sync; before source commits, run ./pj graph sync and review graph changes.
 8. Continue the approved package/platform refactor without running the full Chatbrief test suite prematurely.
 9. Once the developer declares the refactor complete, run the configured Python checks and record their actual output.
+
+
+## Local Graphify bootstrap — developer-reported state (2026-10-30)
+
+The developer supplied terminal output confirming the following local operations on `refactor/chatbrief-package-layout`:
+
+- Installed Graphify CLI is available at `/home/hmnf/.local/bin/graphify`; reported version: `0.9.95`.
+- `./pj doctor` succeeded and reported Python 3.14.8, uv available, and a valid workflow config with four checks. Graphify is correctly treated as optional.
+- `./pj graph hooks install` installed the post-commit, post-checkout, post-merge, and post-rewrite hooks and registered the `graphify` merge driver. A second install/status confirmed these were already installed.
+- `./pj graph sync` created the code-only graph. The subsequent `./pj graph build` incrementally scanned 85 unchanged code files and wrote a graph with 1,911 nodes and 4,260 edges.
+- `./pj graph status` reports `graph.json` present, but `GRAPH_REPORT.md` and `graph.html` missing; the graph is therefore incomplete. Graphify's output explicitly recommends `graphify cluster-only <project-root>`. Run `graphify cluster-only .` from the repository root, then verify `./pj graph status` again.
+- The post-commit hook launched a background rebuild with log at `/home/hmnf/.cache/graphify-rebuild.log`. Its completion/result has not been supplied; inspect the log and Git status before the next push.
+- The developer committed and pushed commit `7047c4a` (`apply latest changes`) to this branch. This is developer-reported terminal evidence; re-check GitHub HEAD before relying on it.
+- The `git add .` commit also included `.codex/hooks.json`, `AGENTS.md`, `graphify-out/.graphify_analysis.json`, and `graphify-out/.graphify_root`. These were not part of the intended shareable artifact list. The inspected `.codex/hooks.json` invokes Graphify from a Codex Bash hook; `AGENTS.md` contains assistant/skill-specific instructions; `.graphify_root` contains an absolute local path. Review whether these should be removed from the shared branch and add appropriate ignore rules for machine-local/internal Graphify files. Do not silently add further assistant-specific integrations; the intended design remains local Graphify CLI + pj + Git hooks.
+- No Chatbrief tests or quality checks were run in the supplied output. Continue deferring the full test suite until the developer declares the package/platform refactor ready for validation.
+
+### Immediate Graphify follow-up
+
+~~~bash
+graphify cluster-only .
+./pj graph status
+tail -n 100 ~/.cache/graphify-rebuild.log
+git status --short
+~~~
+
+Review the generated report, visualization, and any hook-produced changes. Commit only reviewed, portable graph artifacts with the source revision they describe. Do not use `git add .` for this cleanup; stage explicit paths after deciding how to handle the unexpected assistant-specific and machine-local files.
