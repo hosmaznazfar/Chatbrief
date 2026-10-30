@@ -6,7 +6,7 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 
 - [ ] Verify repository, intended branch, latest GitHub commit, and available local worktree state.
 - [ ] Read `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/AI_WORKFLOW.md`, `docs/handover/current.md`, `docs/GRAPHIFY.md`, README, relevant ADRs/plans, source, and tests.
-- [ ] Inspect the committed graph on the exact branch/revision. If missing, stale, or incomplete, ask the developer to run `./pj graph refresh` and `./pj graph diff`, review and commit portable graph artifacts, then inspect the graph commit on GitHub.
+- [ ] Inspect the initial source/graph context, then ask the developer to run `./pj graph refresh` and `./pj graph diff` for this task; review and commit any changed portable artifacts, then inspect the refreshed graph on GitHub.
 - [ ] Trace graph findings against source, tests, configuration, and ADRs; identify existing conventions and architecture boundaries.
 - [ ] List material design/implementation decisions. Research current external options online where relevant, cite evidence, compare trade-offs, recommend an option, and ask the developer to choose.
 - [ ] Agree on scope, acceptance criteria, non-goals, risks, and implementation steps before changing application code.
