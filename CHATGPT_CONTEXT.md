@@ -65,6 +65,14 @@ Use `uv` and the committed lockfile. Configured tools include Ruff, Pyright, Pyl
 
 Do not add Graphify as a mandatory dependency. If available, use it only as a navigation aid and verify every claim against source/tests.
 
+## Project-local workflow
+
+- `./pj` is a Python standard-library helper; it does not need a compiler or third-party Python package.
+- The only workflow runtime/tool prerequisites are Python 3.14+ and `uv`.
+- `.pj/workflow.toml` defines Ruff lint, Ruff format check, Pyright, and pytest, all executed through `uv run`.
+- The separate Astro website is not part of the Python `pj` workflow.
+- Do not add Node/npm, Rust/Cargo, Graphify, or other language toolchains to `pj` unless the developer explicitly changes the project requirements.
+
 ## Safety
 
 No automatic staging, committing, pushing, merging, deployment, publishing, or migrations. Ask before application-code changes when the task is exploratory or feature-oriented. For approved implementation, work in small reviewable phases and keep docs/checklist/handover aligned. Do not run tests before the current refactor is complete unless the developer changes that instruction.
