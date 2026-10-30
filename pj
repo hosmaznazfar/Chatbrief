@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 import subprocess
 import sys
@@ -11,6 +10,7 @@ import tomllib
 from pathlib import Path
 
 CONFIG = Path(".pj/workflow.toml")
+MINIMUM_PYTHON = (3, 14)
 
 
 def project_root() -> Path:
@@ -31,104 +31,192 @@ def load_config(root: Path) -> dict:
 
 
 def validate(config: dict, root: Path) -> None:
-    if config.get("schema_version") != 1:
-        raise ValueError("Unsupported workflow schema_version; expected 1.")
-    checks = config.get("checks", {})
-    if not isinstance(checks.get("steps", []), list):
+    if not isinstance(config, dict):
+        raise ValueError("Workflow configuration must be a TOML table.")
+
+    schema_version = config.get("schema_version")
+    if type(schema_version) is not int or schema_version != 1:
+        raise ValueError("Unsupported workflow schema_version; expected integer 1.")
+
+    project = config.get("project", {})
+    if not isinstance(project, dict):
+        raise ValueError("project must be a table.")
+    project_name = project.get("name")
+    if project_name is not None and (
+        not isinstance(project_name, str) or not project_name.strip()
+    ):
+        raise ValueError("project.name must be a non-empty string.")
+
+    checks = config.get("checks")
+    if not isinstance(checks, dict):
+        raise ValueError("checks must be a table.")
+    fail_fast = checks.get("fail_fast", True)
+    if not isinstance(fail_fast, bool):
+        raise ValueError("checks.fail_fast must be a boolean.")
+
+    steps = checks.get("steps", [])
+    if not isinstance(steps, list):
         raise ValueError("checks.steps must be an array of tables.")
+
+    project_directory = root.resolve()
     names: set[str] = set()
-    for index, step in enumerate(checks.get("steps", []), 1):
+
+    for index, step in enumerate(steps, 1):
         if not isinstance(step, dict):
             raise ValueError(f"Check {index} must be a table.")
-        name, command = step.get("name"), step.get("command")
-        args = step.get("args", [])
+
+        name = step.get("name")
+        command = step.get("command")
         if not isinstance(name, str) or not name.strip():
             raise ValueError(f"Check {index} needs a non-empty name.")
+        name = name.strip()
         if name in names:
             raise ValueError(f"Duplicate check name: {name}")
         names.add(name)
+
         if not isinstance(command, str) or not command.strip():
-            raise ValueError(f"Check '{name}' needs a command.")
+            raise ValueError(f"Check '{name}' needs a non-empty command.")
+
+        args = step.get("args", [])
         if not isinstance(args, list) or not all(isinstance(arg, str) for arg in args):
             raise ValueError(f"Check '{name}' args must be an array of strings.")
-        cwd = step.get("cwd")
-        if cwd is not None:
-            path = Path(cwd)
-            if path.is_absolute() or ".." in path.parts:
-                raise ValueError(f"Check '{name}' cwd must stay inside the project.")
-            if not (root / path).is_dir():
-                raise ValueError(f"Check '{name}' cwd does not exist: {cwd}")
+
+        cwd = step.get("cwd", ".")
+        if not isinstance(cwd, str) or not cwd.strip():
+            raise ValueError(f"Check '{name}' cwd must be a non-empty relative path.")
+        cwd_path = Path(cwd)
+        if cwd_path.is_absolute():
+            raise ValueError(f"Check '{name}' cwd must stay inside the project.")
+        try:
+            resolved_cwd = (project_directory / cwd_path).resolve()
+            resolved_cwd.relative_to(project_directory)
+        except (OSError, ValueError) as exc:
+            raise ValueError(
+                f"Check '{name}' cwd must resolve inside the project: {cwd}"
+            ) from exc
+        if not resolved_cwd.is_dir():
+            raise ValueError(f"Check '{name}' cwd does not exist or is not a directory: {cwd}")
+
         timeout = step.get("timeout_seconds")
-        if timeout is not None and (not isinstance(timeout, int) or timeout <= 0):
+        if timeout is not None and (type(timeout) is not int or timeout <= 0):
             raise ValueError(f"Check '{name}' timeout_seconds must be a positive integer.")
+
         requires = step.get("requires", [])
-        if not isinstance(requires, list) or not all(isinstance(item, str) for item in requires):
-            raise ValueError(f"Check '{name}' requires must be an array of executable names.")
+        if not isinstance(requires, list) or not all(
+            isinstance(item, str) and item.strip() for item in requires
+        ):
+            raise ValueError(
+                f"Check '{name}' requires must be an array of non-empty executable names."
+            )
+
+        required = step.get("required", True)
+        if not isinstance(required, bool):
+            raise ValueError(f"Check '{name}' required must be a boolean.")
+
+        description = step.get("description")
+        if description is not None and not isinstance(description, str):
+            raise ValueError(f"Check '{name}' description must be a string.")
 
 
-def doctor(root: Path) -> None:
+def doctor(root: Path) -> int:
     print(f"[pj doctor] {root}")
-    print(f" Python    {sys.version.split()[0]} (current interpreter)")
+    healthy = True
+
+    python_version = sys.version_info[:2]
+    python_text = ".".join(map(str, sys.version_info[:3]))
+    if python_version >= MINIMUM_PYTHON:
+        print(f" Python    {python_text} (supported; requires >=3.14)")
+    else:
+        print(f" Python    {python_text} (unsupported; requires >=3.14)")
+        healthy = False
+
     uv = shutil.which("uv")
-    print(f" uv        {'available: ' + uv if uv else 'not found'}")
-    if not uv:
+    if uv:
+        print(f" uv        available: {uv}")
+    else:
+        print(" uv        not found (required)")
         print(" guidance  install uv: https://docs.astral.sh/uv/getting-started/installation/")
-    config = root / CONFIG
-    print(f" config    {CONFIG if config.is_file() else 'not initialized'}")
+        healthy = False
+
+    config_path = root / CONFIG
+    if not config_path.is_file():
+        print(f" config    not initialized ({CONFIG}; run ./pj init)")
+        healthy = False
+    else:
+        try:
+            config = load_config(root)
+        except (OSError, ValueError) as exc:
+            print(f" config    invalid: {exc}")
+            healthy = False
+        else:
+            count = len(config["checks"].get("steps", []))
+            print(f" config    valid ({count} checks)")
+            if not count:
+                print(" guidance  no checks configured; edit .pj/workflow.toml")
+
+    return 0 if healthy else 1
 
 
 def init(root: Path) -> None:
     path = root / CONFIG
     if path.exists():
         config = load_config(root)
-        print(f"[pj init] Existing config valid; preserving it ({len(config['checks'].get('steps', []))} checks).")
-    else:
-        if not (root / "pyproject.toml").is_file():
-            raise ValueError("This helper is configured for Python projects with pyproject.toml.")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            '# Chatbrief project-local checks. Commands run without a shell.\n'
-            'schema_version = 1\n\n'
-            '[project]\nname = "Chatbrief"\n\n'
-            '[checks]\nfail_fast = true\n',
-            encoding="utf-8",
-        )
-        print(f"[pj init] Created {CONFIG}; add project checks before running ./pj check.")
-    doctor(root)
+        count = len(config["checks"].get("steps", []))
+        print(f"[pj init] Existing config valid; preserving it ({count} checks).")
+        return
+
+    if not (root / "pyproject.toml").is_file():
+        raise ValueError("This helper is configured for Python projects with pyproject.toml.")
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "# Chatbrief project-local checks. Commands run without a shell.\n"
+        "schema_version = 1\n\n"
+        "[project]\nname = \"Chatbrief\"\n\n"
+        "[checks]\nfail_fast = true\n",
+        encoding="utf-8",
+    )
+    print(f"[pj init] Created {CONFIG}. Add project checks before running ./pj check.")
 
 
 def list_checks(config: dict) -> None:
-    steps = config.get("checks", {}).get("steps", [])
-    if not steps:
-        print("No checks configured.")
-    for index, step in enumerate(steps, 1):
-        print(f"{index}. {step['name']}: {step['command']} {' '.join(step.get('args', []))}".rstrip())
-
-
-def run_checks(root: Path, config: dict, *, dry_run: bool) -> None:
-    checks = config.get("checks", {})
-    steps = checks.get("steps", [])
+    steps = config["checks"].get("steps", [])
     if not steps:
         print("No checks configured.")
         return
-    failed = False
+    for index, step in enumerate(steps, 1):
+        command = " ".join([step["command"], *step.get("args", [])])
+        print(f"{index}. {step['name']}: {command}")
+
+
+def run_checks(root: Path, config: dict, *, dry_run: bool) -> int:
+    checks = config["checks"]
+    steps = checks.get("steps", [])
+    if not steps:
+        print("No checks configured.")
+        return 0
+
+    required_failure = False
     for step in steps:
+        name = step["name"]
         command = step["command"]
         args = step.get("args", [])
-        cwd = root / step.get("cwd", ".")
+        cwd = (root / step.get("cwd", ".")).resolve()
         display = " ".join([command, *args])
+
         if dry_run:
             print(f"[dry-run] ({cwd}) {display}")
             continue
+
         missing = [item for item in step.get("requires", []) if shutil.which(item) is None]
         if missing:
-            print(f"SKIP {step['name']}: missing {', '.join(missing)}")
-            failed = bool(step.get("required", True))
+            print(f"SKIP {name}: missing {', '.join(missing)}")
+            step_failed = True
         elif shutil.which(command) is None:
-            print(f"FAIL {step['name']}: executable '{command}' not found")
-            failed = bool(step.get("required", True))
+            print(f"FAIL {name}: executable '{command}' not found")
+            step_failed = True
         else:
-            print(f"\n[pj check] {step['name']}: {display}", flush=True)
+            print(f"\n[pj check] {name}: {display}", flush=True)
             try:
                 result = subprocess.run(
                     [command, *args],
@@ -136,17 +224,24 @@ def run_checks(root: Path, config: dict, *, dry_run: bool) -> None:
                     check=False,
                     timeout=step.get("timeout_seconds"),
                 )
-                passed = result.returncode == 0
             except subprocess.TimeoutExpired:
-                print(f"FAIL {step['name']}: timed out")
-                passed = False
-            print(f"{'PASS' if passed else 'FAIL'} {step['name']}")
-            if not passed:
-                failed = bool(step.get("required", True))
-        if failed and checks.get("fail_fast", True):
+                print(f"FAIL {name}: timed out after {step['timeout_seconds']} seconds")
+                step_failed = True
+            except OSError as exc:
+                print(f"FAIL {name}: could not start command: {exc}")
+                step_failed = True
+            else:
+                step_failed = result.returncode != 0
+                print(f"{'FAIL' if step_failed else 'PASS'} {name}")
+                if step_failed:
+                    print(f"       exit status: {result.returncode}")
+
+        if step_failed and step.get("required", True):
+            required_failure = True
+        if step_failed and checks.get("fail_fast", True):
             break
-    if failed:
-        raise SystemExit(1)
+
+    return 1 if required_failure else 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -173,21 +268,24 @@ def main() -> int:
     try:
         if args.command == "init":
             init(root)
-        elif args.command == "doctor":
-            doctor(root)
-        elif args.command == "workflow":
+            return 0
+        if args.command == "doctor":
+            return doctor(root)
+        if args.command == "workflow":
             config = load_config(root)
-            print(f"Workflow configuration valid ({len(config.get('checks', {}).get('steps', []))} checks).")
-        elif args.command == "check":
+            count = len(config["checks"].get("steps", []))
+            print(f"Workflow configuration valid ({count} checks).")
+            return 0
+        if args.command == "check":
             config = load_config(root)
             if args.list:
                 list_checks(config)
-            else:
-                run_checks(root, config, dry_run=args.dry_run)
-        return 0
+                return 0
+            return run_checks(root, config, dry_run=args.dry_run)
     except (OSError, ValueError) as exc:
         print(f"[pj] error: {exc}", file=sys.stderr)
         return 1
+    return 0
 
 
 if __name__ == "__main__":
