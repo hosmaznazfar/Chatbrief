@@ -30,6 +30,7 @@ def _load_base_template(path: str) -> str:
 
 
 _DEFAULT_TEMPLATE_PATH = str(Path(__file__).parent / "prompts" / "base_summary.txt")
+_PACKAGE_DEFAULT_TEMPLATE_PATH = "src/chatbrief/prompts/base_summary.txt"
 _LEGACY_DEFAULT_TEMPLATE_PATH = "src/prompts/base_summary.txt"
 
 
@@ -70,6 +71,7 @@ class Summarizer:
         # Resolve template path; use absolute bundled default when config holds the sentinel value
         is_default_template = config.prompts.base_template in {
             _DEFAULT_TEMPLATE_PATH,
+            _PACKAGE_DEFAULT_TEMPLATE_PATH,
             _LEGACY_DEFAULT_TEMPLATE_PATH,
         }
         template_path = (
