@@ -16,12 +16,17 @@ def english_config(sample_config):
     return sample_config
 
 
+def _make_command_service(config, logger):
+    """Create a command service with injected platform-neutral dependencies."""
+    return CommandService(config, logger, MagicMock(), MagicMock())
+
+
 @pytest.mark.unit
 def test_is_authorized(sample_config, mock_logger):
     """CommandService authorizes the configured target user."""
     sample_config.settings.target_user_id = 123
 
-    service = CommandService(sample_config, mock_logger)
+    service = _make_command_service(sample_config, mock_logger)
 
     assert service.is_authorized(123)
     assert not service.is_authorized(456)
@@ -32,7 +37,7 @@ def test_unauthorized_command_returns_unauthorized_result(sample_config, mock_lo
     """Unauthorized users receive an unauthorized command result."""
     sample_config.settings.target_user_id = 123
 
-    service = CommandService(sample_config, mock_logger)
+    service = _make_command_service(sample_config, mock_logger)
 
     result = service.status(456)
 
@@ -51,7 +56,7 @@ async def test_digest_success(english_config, mock_logger):
     """digest returns a successful result when generation succeeds."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     with patch.object(
         chatbrief.commands.service,
@@ -70,7 +75,7 @@ async def test_digest_failure(english_config, mock_logger):
     """digest returns an error result when generation fails."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     with patch.object(
         chatbrief.commands.service,
@@ -89,7 +94,7 @@ async def test_digest_exception(english_config, mock_logger):
     """digest returns an error result when generation raises."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     with patch.object(
         chatbrief.commands.service,
@@ -115,7 +120,7 @@ async def test_digest_rate_limited(english_config, mock_logger):
     """Rapid successive digest commands are rate limited."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     with patch.object(
         chatbrief.commands.service,
@@ -135,7 +140,7 @@ def test_status_returns_success(english_config, mock_logger):
     """status returns the configured application status."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     result = service.status(123)
 
@@ -150,7 +155,7 @@ def test_help_returns_success(english_config, mock_logger):
     """help returns localized help text."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     result = service.help(123)
 
@@ -166,17 +171,13 @@ async def test_cleanup_success(english_config, mock_logger):
     """cleanup returns success when old digests are removed."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     mock_sender = MagicMock()
     mock_sender.cleanup_old_digests = AsyncMock(return_value=True)
+    service.sender = mock_sender
 
-    with patch.object(
-        chatbrief.commands.service,
-        "create_message_sender",
-        return_value=mock_sender,
-    ):
-        result = await service.cleanup(123)
+    result = await service.cleanup(123)
 
     assert result.status is CommandStatus.SUCCESS
     assert result.message == service._ui["cleanup_done"]
@@ -189,17 +190,13 @@ async def test_cleanup_failure(english_config, mock_logger):
     """cleanup returns an error result when cleanup is unsuccessful."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     mock_sender = MagicMock()
     mock_sender.cleanup_old_digests = AsyncMock(return_value=False)
+    service.sender = mock_sender
 
-    with patch.object(
-        chatbrief.commands.service,
-        "create_message_sender",
-        return_value=mock_sender,
-    ):
-        result = await service.cleanup(123)
+    result = await service.cleanup(123)
 
     assert result.status is CommandStatus.ERROR
     assert result.message == service._ui["cleanup_partial"]
@@ -211,18 +208,14 @@ async def test_cleanup_rate_limited(english_config, mock_logger):
     """Rapid successive cleanup commands are rate limited."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     mock_sender = MagicMock()
     mock_sender.cleanup_old_digests = AsyncMock(return_value=True)
+    service.sender = mock_sender
 
-    with patch.object(
-        chatbrief.commands.service,
-        "create_message_sender",
-        return_value=mock_sender,
-    ):
-        first = await service.cleanup(123)
-        second = await service.cleanup(123)
+    first = await service.cleanup(123)
+    second = await service.cleanup(123)
 
     assert first.status is CommandStatus.SUCCESS
     assert second.status is CommandStatus.RATE_LIMITED
@@ -235,7 +228,7 @@ async def test_rate_limit_resets_after_cooldown(english_config, mock_logger):
     """A command is allowed again after the rate-limit cooldown."""
     english_config.settings.target_user_id = 123
 
-    service = CommandService(english_config, mock_logger)
+    service = _make_command_service(english_config, mock_logger)
 
     with (
         patch.object(
