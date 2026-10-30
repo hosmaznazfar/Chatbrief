@@ -10,7 +10,7 @@ from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 import aiohttp
-import httpx
+import httpx2
 from openai import AsyncOpenAI
 from openai import BadRequestError as OpenAIBadRequestError
 
@@ -64,7 +64,7 @@ class OpenAIProvider(AIProvider):
     def __init__(self, api_key: str, logger: logging.Logger, timeout: int = 60):
         self.client = AsyncOpenAI(
             api_key=api_key,
-            timeout=httpx.Timeout(timeout, connect=min(10.0, float(timeout))),
+            timeout=httpx2.Timeout(timeout, connect=min(10.0, float(timeout))),
         )
         self.logger = logger
 
