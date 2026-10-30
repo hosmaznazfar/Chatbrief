@@ -9,7 +9,7 @@ import chatbrief.platforms.telegram.telegram_source as telegram_source
 from telethon.errors import ChannelPrivateError, FloodWaitError
 from telethon.tl.types import Document, MessageMediaDocument
 
-from chatbrief.telegram_source_source import TelegramMessageSource
+from chatbrief.platforms.telegram.telegram_source import TelegramMessageSource
 
 TEST_MESSAGE_TIME = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 TEST_LOOKBACK_TIME = datetime(2026, 1, 1, 11, 0, tzinfo=timezone.utc)
