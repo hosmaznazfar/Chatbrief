@@ -39,4 +39,4 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Update `docs/handover/current.md` with verified branch/commit and completed work.
 - [ ] Record Graphify artifact availability and freshness only when verified.
 - [ ] Record actual validation output, deferred checks, blockers, and exact next steps.
-- [ ] Ask before staging, committing, pushing, merging, deploying, publishing, or migrating.
+- [ ] Commit each reviewed implementation step when the task authorizes direct Git commits; ask before pushing, merging, deploying, publishing, or running migrations.
