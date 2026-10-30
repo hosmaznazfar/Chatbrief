@@ -8,6 +8,7 @@ from typing import Optional
 from chatbrief.config.models import Config
 from chatbrief.digest.builder import build_digest_parts, join_parts
 from chatbrief.digest.cache import write_last_digest
+from chatbrief.digest.validators import validate_hours
 from chatbrief.platforms.base import MessageSender, MessageSource
 
 
@@ -20,6 +21,7 @@ async def generate_and_send_digest(
     user_id: Optional[int] = None,
 ) -> bool:
     """Generate and send digest using the provided platform services."""
+    validate_hours(hours)
 
     try:
         built = await build_digest_parts(
