@@ -1,6 +1,5 @@
-# Chatbrief project-local AIWorkFlow checks.
-# Commands are executed as executable + argument arrays; no shell is implied.
-# Review this file before running: pj check.
+# Chatbrief's project-local Python checks.
+# Runtime prerequisites: Python 3.14+ and uv. No shell is used.
 schema_version = 1
 
 [project]
@@ -43,14 +42,4 @@ args = ["run", "pytest", "tests/", "-v"]
 required = true
 timeout_seconds = 1800
 requires = ["uv"]
-description = "Run the Python test suite. Run only after the developer declares the current refactor ready for validation."
-
-[[checks.steps]]
-name = "website-build"
-command = "npm"
-args = ["run", "build"]
-cwd = "website"
-required = false
-timeout_seconds = 1200
-requires = ["node", "npm"]
-description = "Build the Astro website; run npm ci in website/ first. Optional locally, but required by the repository CI workflow."
+description = "Run the Python test suite only after the developer declares the current refactor ready for validation."
