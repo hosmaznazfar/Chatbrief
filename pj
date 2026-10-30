@@ -1,37 +1,194 @@
-#!/bin/sh
-set -eu
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-if [ -x "$ROOT/pj-core/target/release/pj" ]; then
-  exec "$ROOT/pj-core/target/release/pj" "$@"
-fi
-if ! command -v cargo >/dev/null 2>&1; then
-  echo "[pj] Rust/Cargo is required for the source build."
-  echo "[pj] Official installer: https://www.rust-lang.org/tools/install"
-  if [ ! -t 0 ] || [ ! -t 1 ]; then
-    echo "[pj] Non-interactive session; install Rust/Cargo and retry." >&2
-    exit 127
-  fi
-  printf "Install Rust using the official rustup installer now? [y/N] "
-  IFS= read -r answer
-  case "$answer" in
-    y|Y|yes|YES)
-      if ! command -v curl >/dev/null 2>&1; then
-        echo "[pj] curl is required to download the official installer." >&2
-        exit 127
-      fi
-      installer=$(mktemp)
-      trap 'rm -f "$installer"' EXIT HUP INT TERM
-      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o "$installer"
-      sh "$installer" -y
-      rm -f "$installer"
-      trap - EXIT HUP INT TERM
-      PATH="$HOME/.cargo/bin:$PATH"
-      export PATH
-      ;;
-    *)
-      echo "[pj] Install Rust/Cargo from https://www.rust-lang.org/tools/install and retry." >&2
-      exit 127
-      ;;
-  esac
-fi
-exec cargo run --quiet --manifest-path "$ROOT/pj-core/Cargo.toml" -- "$@"
+#!/usr/bin/env python3
+"""Chatbrief's project-local workflow helper (Python standard library only)."""
+from __future__ import annotations
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+import tomllib
+from pathlib import Path
+
+CONFIG = Path(".pj/workflow.toml")
+
+
+def project_root() -> Path:
+    return Path(__file__).resolve().parent
+
+
+def load_config(root: Path) -> dict:
+    path = root / CONFIG
+    try:
+        with path.open("rb") as stream:
+            config = tomllib.load(stream)
+    except FileNotFoundError as exc:
+        raise ValueError(f"Missing {CONFIG}; run ./pj init first.") from exc
+    except tomllib.TOMLDecodeError as exc:
+        raise ValueError(f"Invalid TOML in {CONFIG}: {exc}") from exc
+    validate(config, root)
+    return config
+
+
+def validate(config: dict, root: Path) -> None:
+    if config.get("schema_version") != 1:
+        raise ValueError("Unsupported workflow schema_version; expected 1.")
+    checks = config.get("checks", {})
+    if not isinstance(checks.get("steps", []), list):
+        raise ValueError("checks.steps must be an array of tables.")
+    names: set[str] = set()
+    for index, step in enumerate(checks.get("steps", []), 1):
+        if not isinstance(step, dict):
+            raise ValueError(f"Check {index} must be a table.")
+        name, command = step.get("name"), step.get("command")
+        args = step.get("args", [])
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError(f"Check {index} needs a non-empty name.")
+        if name in names:
+            raise ValueError(f"Duplicate check name: {name}")
+        names.add(name)
+        if not isinstance(command, str) or not command.strip():
+            raise ValueError(f"Check '{name}' needs a command.")
+        if not isinstance(args, list) or not all(isinstance(arg, str) for arg in args):
+            raise ValueError(f"Check '{name}' args must be an array of strings.")
+        cwd = step.get("cwd")
+        if cwd is not None:
+            path = Path(cwd)
+            if path.is_absolute() or ".." in path.parts:
+                raise ValueError(f"Check '{name}' cwd must stay inside the project.")
+            if not (root / path).is_dir():
+                raise ValueError(f"Check '{name}' cwd does not exist: {cwd}")
+        timeout = step.get("timeout_seconds")
+        if timeout is not None and (not isinstance(timeout, int) or timeout <= 0):
+            raise ValueError(f"Check '{name}' timeout_seconds must be a positive integer.")
+        requires = step.get("requires", [])
+        if not isinstance(requires, list) or not all(isinstance(item, str) for item in requires):
+            raise ValueError(f"Check '{name}' requires must be an array of executable names.")
+
+
+def doctor(root: Path) -> None:
+    print(f"[pj doctor] {root}")
+    print(f" Python    {sys.version.split()[0]} (current interpreter)")
+    uv = shutil.which("uv")
+    print(f" uv        {'available: ' + uv if uv else 'not found'}")
+    if not uv:
+        print(" guidance  install uv: https://docs.astral.sh/uv/getting-started/installation/")
+    config = root / CONFIG
+    print(f" config    {CONFIG if config.is_file() else 'not initialized'}")
+
+
+def init(root: Path) -> None:
+    path = root / CONFIG
+    if path.exists():
+        config = load_config(root)
+        print(f"[pj init] Existing config valid; preserving it ({len(config['checks'].get('steps', []))} checks).")
+    else:
+        if not (root / "pyproject.toml").is_file():
+            raise ValueError("This helper is configured for Python projects with pyproject.toml.")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            '# Chatbrief project-local checks. Commands run without a shell.\n'
+            'schema_version = 1\n\n'
+            '[project]\nname = "Chatbrief"\n\n'
+            '[checks]\nfail_fast = true\n',
+            encoding="utf-8",
+        )
+        print(f"[pj init] Created {CONFIG}; add project checks before running ./pj check.")
+    doctor(root)
+
+
+def list_checks(config: dict) -> None:
+    steps = config.get("checks", {}).get("steps", [])
+    if not steps:
+        print("No checks configured.")
+    for index, step in enumerate(steps, 1):
+        print(f"{index}. {step['name']}: {step['command']} {' '.join(step.get('args', []))}".rstrip())
+
+
+def run_checks(root: Path, config: dict, *, dry_run: bool) -> None:
+    checks = config.get("checks", {})
+    steps = checks.get("steps", [])
+    if not steps:
+        print("No checks configured.")
+        return
+    failed = False
+    for step in steps:
+        command = step["command"]
+        args = step.get("args", [])
+        cwd = root / step.get("cwd", ".")
+        display = " ".join([command, *args])
+        if dry_run:
+            print(f"[dry-run] ({cwd}) {display}")
+            continue
+        missing = [item for item in step.get("requires", []) if shutil.which(item) is None]
+        if missing:
+            print(f"SKIP {step['name']}: missing {', '.join(missing)}")
+            failed = bool(step.get("required", True))
+        elif shutil.which(command) is None:
+            print(f"FAIL {step['name']}: executable '{command}' not found")
+            failed = bool(step.get("required", True))
+        else:
+            print(f"\n[pj check] {step['name']}: {display}", flush=True)
+            try:
+                result = subprocess.run(
+                    [command, *args],
+                    cwd=cwd,
+                    check=False,
+                    timeout=step.get("timeout_seconds"),
+                )
+                passed = result.returncode == 0
+            except subprocess.TimeoutExpired:
+                print(f"FAIL {step['name']}: timed out")
+                passed = False
+            print(f"{'PASS' if passed else 'FAIL'} {step['name']}")
+            if not passed:
+                failed = bool(step.get("required", True))
+        if failed and checks.get("fail_fast", True):
+            break
+    if failed:
+        raise SystemExit(1)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="pj",
+        description="Chatbrief Python project checks (Python standard library + uv).",
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("init", help="Create or validate the project workflow config")
+    commands.add_parser("doctor", help="Check Chatbrief's Python and uv prerequisites")
+    check = commands.add_parser("check", help="List or run configured checks in order")
+    check.add_argument("--list", action="store_true", help="List configured checks")
+    check.add_argument("--dry-run", action="store_true", help="Print commands without running them")
+    workflow = commands.add_parser("workflow", help="Workflow configuration operations")
+    workflow.add_subparsers(dest="workflow_command", required=True).add_parser(
+        "validate", help="Validate .pj/workflow.toml"
+    )
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    root = project_root()
+    try:
+        if args.command == "init":
+            init(root)
+        elif args.command == "doctor":
+            doctor(root)
+        elif args.command == "workflow":
+            config = load_config(root)
+            print(f"Workflow configuration valid ({len(config.get('checks', {}).get('steps', []))} checks).")
+        elif args.command == "check":
+            config = load_config(root)
+            if args.list:
+                list_checks(config)
+            else:
+                run_checks(root, config, dry_run=args.dry_run)
+        return 0
+    except (OSError, ValueError) as exc:
+        print(f"[pj] error: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
