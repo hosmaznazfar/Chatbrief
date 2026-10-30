@@ -518,17 +518,15 @@ make format
 
 ## AI-assisted development workflow
 
-This repository includes a project-local workflow based on [AIWorkFlow](https://github.com/hosmaznazfar/AIWorkFlow).
+This repository includes a lightweight, project-local workflow helper at `./pj`.
 
 - Read [AI_README.md](AI_README.md) for repository-specific AI development rules.
 - Read [CHATGPT_CONTEXT.md](CHATGPT_CONTEXT.md) and [the current handover](docs/handover/current.md) before resuming work in a new chat.
 - Use the [new-chat starter](docs/CHATGPT_NEW_CHAT_STARTER.md) to initialize a session.
 - Track non-trivial work in [FEATURE_IMPLEMENTATION_CHECKLIST.md](FEATURE_IMPLEMENTATION_CHECKLIST.md).
-- Ordered project checks are configured in `.pj/workflow.toml`.
+- Ordered Python checks are configured in `.pj/workflow.toml`.
 
-The local `pj` CLI provides `init`, `doctor`, `workflow validate`, and ordered `check` commands. The launcher builds the Rust CLI from source with Cargo when no release binary is present; no prebuilt release binary is currently bundled. The first build therefore requires Rust/Cargo and access to download crates.
-
-Useful commands:
+The `pj` helper uses only the Python standard library. It does not need Cargo, Node.js, npm, Graphify, or additional Python packages. Python 3.14+ runs the helper; `uv` manages the project environment and executes the configured checks.
 
 ```bash
 ./pj --help
@@ -538,9 +536,7 @@ Useful commands:
 ./pj check --dry-run
 ```
 
-After the package/platform refactor is complete and ready for validation, run `./pj check` to execute the configured checks. The website build step is optional locally and requires `npm ci` in `website/` first. Do not run the Python test step before the refactor is declared ready.
-
-Graphify is optional. It is not required for normal development and is not installed automatically. The CLI may offer an explicit install prompt during `./pj init`; review the prompt and the project diff before accepting.
+Run `./pj check` only after the current refactor is complete and ready for validation. It runs Ruff lint, Ruff formatting validation, Pyright, and pytest in order. The test step is intentionally deferred until then.
 
 ## ❓ FAQ
 
