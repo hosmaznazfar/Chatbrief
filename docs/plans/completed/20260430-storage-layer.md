@@ -91,7 +91,7 @@ collect → **save to DB** → summarize → format → send
   - Validates `url` is non-empty when `backend == "postgres"` **and** `enabled is True` (raises `ValueError`)
   - Validates `path` is a non-empty string for sqlite
 - [x] Add `storage: StorageConfig = field(default_factory=StorageConfig)` to `Config` dataclass
-- [ ] Call `_parse_storage_config(yaml_config)` in `load_config()` and pass result to `Config(..., storage=storage_config)`
+- [x] Call `_parse_storage_config(yaml_config)` in `load_config()` and pass result to `Config(..., storage=storage_config)`
 - [x] Write tests for `_parse_storage_config`:
   - Missing `storage:` block → returns defaults (enabled=False, backend="sqlite")
   - `backend: "postgres"` with `enabled: true` and empty `url` → `ValueError`
@@ -200,7 +200,7 @@ Wire at the `_collect_messages()` level — this is the single collection chokep
   ```
 
   Storage failures are logged but **do not abort digest generation**.
-- [ ] Update all callers of `_collect_messages()` to pass `config.storage`
+- [x] Update all callers of `_collect_messages()` to pass `config.storage`
 - [x] Write tests for `_collect_messages` wiring (use `AsyncMock`/`MagicMock`):
   - `storage.enabled=False` → `create_storage` not called (or returns None, no save)
   - `storage.enabled=True` → `save_messages` called with flat message list
@@ -259,7 +259,7 @@ Wire at the `_collect_messages()` level — this is the single collection chokep
 - [x] Mirror same 3 SQLiteBackend save tests using the env-var URL
 - [x] Add `close()` idempotent / safe-when-uninitialized test for `PostgresBackend`
 - [x] Add `create_storage` test: `backend="postgres"` with empty url + `enabled=True` → `ValueError` raised by `_parse_storage_config` (test via config loader, not factory directly)
-- [ ] If CI has no `TELEBRIEF_TEST_PG_URL`, add `# pragma: no cover` to `PostgresBackend.save_messages` body to prevent coverage drop below 49% threshold
+- [x] If CI has no `TELEBRIEF_TEST_PG_URL`, add `# pragma: no cover` to `PostgresBackend.save_messages` body to prevent coverage drop below 49% threshold
 - [ ] Run tests — must pass before Task 6
 
 ### Task 6: Verify acceptance criteria
