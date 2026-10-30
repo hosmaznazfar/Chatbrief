@@ -1,4 +1,4 @@
-# Makefile for Telebrief
+# Makefile for Chatbrief
 
 .PHONY: help install install-dev test lint format clean run
 
