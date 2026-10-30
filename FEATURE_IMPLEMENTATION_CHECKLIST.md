@@ -5,7 +5,7 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 ## Before implementation
 
 - [ ] Verify repository, intended branch, latest GitHub commit, and available local worktree state.
-- [ ] Read `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/handover/current.md`, `docs/GRAPHIFY.md`, README, relevant ADRs/plans, source, and tests.
+- [ ] Read `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/AI_WORKFLOW.md`, `docs/handover/current.md`, `docs/GRAPHIFY.md`, README, relevant ADRs/plans, source, and tests.
 - [ ] Check whether the committed Graphify report/JSON exist on the selected branch; use them to locate relevant relationships and verify findings against source/tests.
 - [ ] Identify existing conventions and architecture boundaries before proposing new abstractions.
 - [ ] Define scope, acceptance criteria, risks, and phases.
@@ -18,7 +18,8 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Preserve existing behavior and configuration compatibility unless a change is explicitly approved.
 - [ ] Add or migrate tests for changed behavior; do not delete coverage merely to make imports pass.
 - [ ] Update documentation and this checklist as implementation progresses.
-- [ ] If source relationships changed, refresh Graphify locally and review the generated `graphify-out/` diff before committing it with the matching source revision.
+- [ ] If source relationships changed, run `./pj graph sync` locally and review the generated `graphify-out/` diff before committing it with the matching source revision.
+- [ ] Confirm Graphify Git hooks are installed when automatic post-commit/branch-switch refresh is desired (`./pj graph hooks status`).
 - [ ] Keep secrets, local sessions, generated caches, and machine-specific files out of Git; Graphify's documented project graph artifacts are intentionally tracked.
 
 ## Validation
