@@ -145,7 +145,7 @@ def test_status_returns_success(english_config, mock_logger):
     result = service.status(123)
 
     assert result.status is CommandStatus.SUCCESS
-    assert "Telebrief Status" in result.message
+    assert "Chatbrief Status" in result.message
     assert "Provider" in result.message
     assert "Model" in result.message
 
