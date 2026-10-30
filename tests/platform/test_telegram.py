@@ -164,7 +164,7 @@ async def test_get_sender_name_first_and_last_name(sample_config, mock_logger):
 async def test_get_sender_name_first_name_only(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
-    sender = MagicMock()
+    sender = MagicMock(spec=tl_types.User)
     sender.first_name = "John"
     sender.last_name = None
 
