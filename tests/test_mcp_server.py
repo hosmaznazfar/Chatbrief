@@ -1,6 +1,6 @@
 """Tests for the MCP server module."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from mcp.server.mcpserver.exceptions import ToolError
@@ -14,8 +14,13 @@ def _text(result) -> str:
 
 
 @pytest.fixture
-def server(sample_config, mock_logger):
-    return build_server(sample_config, mock_logger)
+def message_source():
+    return MagicMock()
+
+
+@pytest.fixture
+def server(sample_config, mock_logger, message_source):
+    return build_server(sample_config, mock_logger, message_source)
 
 
 @pytest.mark.unit
@@ -31,7 +36,7 @@ async def test_registers_all_tools(server):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_get_digest_returns_built_digest(server, sample_config, mock_logger):
+async def test_get_digest_returns_built_digest(server, sample_config, mock_logger, message_source):
     """get_digest passes the lookback window through and returns the digest text."""
     with patch("chatbrief.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
         mock_build.return_value = "Header\n\nGroup msg"
@@ -39,19 +44,19 @@ async def test_get_digest_returns_built_digest(server, sample_config, mock_logge
         result = await server.call_tool("get_digest", {"hours": 12})
 
         assert _text(result) == "Header\n\nGroup msg"
-        mock_build.assert_called_once_with(sample_config, mock_logger, 12)
+        mock_build.assert_called_once_with(sample_config, mock_logger, message_source, 12)
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_get_digest_defaults_to_24_hours(server, sample_config, mock_logger):
+async def test_get_digest_defaults_to_24_hours(server, sample_config, mock_logger, message_source):
     """Calling get_digest without arguments uses a 24 hour window."""
     with patch("chatbrief.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
         mock_build.return_value = "digest"
 
         await server.call_tool("get_digest", {})
 
-        mock_build.assert_called_once_with(sample_config, mock_logger, 24)
+        mock_build.assert_called_once_with(sample_config, mock_logger, message_source, 24)
 
 
 @pytest.mark.unit
@@ -110,7 +115,7 @@ async def test_get_last_digest_includes_age(server):
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_channel_messages_renders_messages(
-    server, sample_config, mock_logger, sample_messages
+    server, sample_config, mock_logger, message_source, sample_messages
 ):
     """Each message is rendered with its time, sender, text and link under a source header."""
     with patch("chatbrief.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
@@ -125,19 +130,25 @@ async def test_get_channel_messages_renders_messages(
         assert "[2025-12-14T10:00:00+00:00] User1" in text
         assert "Test message 1" in text
         assert "https://t.me/test/1" in text
-        mock_collect.assert_called_once_with(sample_config, mock_logger, "Test Channel", 12, 50)
+        mock_collect.assert_called_once_with(
+            sample_config, mock_logger, message_source, "Test Channel", 12, 50
+        )
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_get_channel_messages_defaults(server, sample_config, mock_logger, sample_messages):
+async def test_get_channel_messages_defaults(
+    server, sample_config, mock_logger, message_source, sample_messages
+):
     """Calling without a window uses 24 hours and 200 messages."""
     with patch("chatbrief.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
         mock_collect.return_value = (sample_messages, "telegram")
 
         await server.call_tool("get_channel_messages", {"channel": "Test Channel"})
 
-        mock_collect.assert_called_once_with(sample_config, mock_logger, "Test Channel", 24, 200)
+        mock_collect.assert_called_once_with(
+            sample_config, mock_logger, message_source, "Test Channel", 24, 200
+        )
 
 
 @pytest.mark.unit
@@ -188,7 +199,7 @@ def test_warns_when_bound_to_public_interface(sample_config, mock_logger):
     """Binding beyond loopback warns, since the server has no authentication."""
     sample_config.mcp.host = "0.0.0.0"
 
-    build_server(sample_config, mock_logger)
+    build_server(sample_config, mock_logger, MagicMock())
 
     mock_logger.warning.assert_called_once()
     assert "authentication" in mock_logger.warning.call_args[0][0]
@@ -199,6 +210,6 @@ def test_no_warning_on_loopback(sample_config, mock_logger):
     """The default loopback bind is silent."""
     sample_config.mcp.host = "127.0.0.1"
 
-    build_server(sample_config, mock_logger)
+    build_server(sample_config, mock_logger, MagicMock())
 
     mock_logger.warning.assert_not_called()
