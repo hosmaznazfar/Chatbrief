@@ -36,7 +36,9 @@ async def test_registers_all_tools(server):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_get_digest_returns_built_digest(server, sample_config, mock_logger, message_source):
+async def test_get_digest_returns_built_digest(
+    server, sample_config, mock_logger, message_source
+):
     """get_digest passes the lookback window through and returns the digest text."""
     with patch("chatbrief.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
         mock_build.return_value = "Header\n\nGroup msg"
@@ -49,7 +51,9 @@ async def test_get_digest_returns_built_digest(server, sample_config, mock_logge
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_get_digest_defaults_to_24_hours(server, sample_config, mock_logger, message_source):
+async def test_get_digest_defaults_to_24_hours(
+    server, sample_config, mock_logger, message_source
+):
     """Calling get_digest without arguments uses a 24 hour window."""
     with patch("chatbrief.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
         mock_build.return_value = "digest"
