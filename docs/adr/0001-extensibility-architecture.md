@@ -10,7 +10,7 @@
 
 ## Context
 
-Telebrief is a Telegram digest generator. As of the storage-layer release (PR #26), the codebase
+Chatbrief is a Telegram digest generator. As of the storage-layer release (PR #26), the codebase
 has a `StorageBackend` Protocol (SQLite + Postgres), an `AIProvider` factory, and per-channel
 `lookback_hours`/`prompt_extra` configuration. Five extension points are missing:
 
@@ -65,7 +65,7 @@ settings:
       prompt_extra: "Focus on remote positions."
 
   filters:
-    - class_path: src.extensions.filters.KeywordFilter
+    - class_path: chatbrief.extensions.filters.KeywordFilter
       config:
         include: ["job", "remote"]
         exclude: ["nsfw"]
@@ -110,7 +110,7 @@ behaviour. Rejected because:
 A central event bus dispatches `message_collected`, `before_summarize`, etc., and plugins
 subscribe. Rejected because:
 
-- Overkill for the current scope — Telebrief has a simple linear pipeline.
+- Overkill for the current scope — Chatbrief has a simple linear pipeline.
 - Event order and error isolation semantics add complexity without benefit.
 - Harder to test than direct Protocol composition.
 - Adds a dependency or requires a custom implementation.
