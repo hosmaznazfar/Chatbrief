@@ -6,7 +6,7 @@
 
 - Repository: https://github.com/hosmaznazfar/Chatbrief
 - Intended branch: `refactor/chatbrief-package-layout`
-- Latest verified branch commit before this handover update: `9b52feaab1fc4766021f660b59ab50018970c22b` (marks the root `pj` launcher executable).
+- Latest verified branch commit before this handover update: `14f5e69ee67c34cd3375b619ad0f3f9903d56aae` (documents the local CLI and its implementation limits).
 - Local branch, HEAD, and uncommitted changes: unknown; the developer must provide local `git status` when relevant.
 - Workflow source: https://github.com/hosmaznazfar/AIWorkFlow
 
@@ -22,7 +22,7 @@ Finish the package-layout and platform-abstraction refactor, then validate it. I
 - Added `FEATURE_IMPLEMENTATION_CHECKLIST.md`.
 - Added `docs/handover/current.md` and updated it with this integration state.
 - Added `.pj/workflow.toml` with ordered Ruff, formatting, Pyright, pytest, and optional Astro website build steps. The Python test step is explicitly deferred until the developer declares the refactor ready.
-- Added the AIWorkFlow Rust CLI source under `pj-core/` and root `pj` launcher. The launcher is stored with executable mode `100755`.
+- Added the AIWorkFlow Rust CLI source under `pj-core/` and root `pj` launcher. The launcher is stored with executable mode `100755`; the README and AI guide document its Cargo prerequisite and command limits.
 - Added `.github/workflows/pj-core.yml` for launcher/bootstrap checks, rustfmt, Rust unit tests, and Clippy.
 - Added a workflow documentation section to the existing README.
 - Preserved existing architecture docs, plans, manifests, lockfiles, Makefile, application source, and CI workflow.
