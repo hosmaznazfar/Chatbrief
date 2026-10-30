@@ -13,8 +13,9 @@ At the start of a new session, verify the repository and branch, then read:
 2. `docs/handover/current.md`
 3. `FEATURE_IMPLEMENTATION_CHECKLIST.md`
 4. `README.md`
-5. `docs/GRAPHIFY.md`
-6. Relevant ADRs in `docs/adr/`, plans in `docs/plans/`, and the current source/tests.
+5. `docs/AI_WORKFLOW.md`
+6. `docs/GRAPHIFY.md`
+7. Relevant ADRs in `docs/adr/`, plans in `docs/plans/`, and the current source/tests.
 
 The handover is a snapshot, not proof of current state. GitHub does not expose the developer's local uncommitted work.
 
@@ -60,36 +61,37 @@ Known remaining work from the last project review:
 
 Treat these as investigation targets, not assertions that no newer changes exist. Verify current source before acting.
 
-## Graphify — shared code knowledge graph
+## Graphify — local CLI, pj automation, and Git-shared graph
 
-Graphify is the selected optional code-graph tool for Chatbrief's GitHub-based AI workflow. The purpose is to commit the generated graph alongside source so ChatGPT and other agents inspecting GitHub can read the same architectural map.
+Graphify is the selected optional code-graph tool. It runs locally as a standalone CLI; no Codex/editor skill, MCP server, or assistant-specific integration is part of this workflow.
 
-- Operational instructions: `docs/GRAPHIFY.md`.
-- Commit the primary outputs `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html` with the source revision they describe.
-- Do not ignore `graphify-out/`; the generated graph is intentionally shared through Git.
-- Local optional install: `uv tool install graphifyy`; Codex skill registration: `graphify codex install`.
-- In Codex, first build with `$graphify .`, then refresh changed files with `$graphify . --update`.
-- Graphify is not an application dependency, must not enter `pyproject.toml`/ `uv.lock`, Docker, or `.pj/workflow.toml`, and is not required for normal development.
-- For ChatGPT using GitHub, read the committed report and relevant graph JSON from the selected branch. ChatGPT does not automatically have access to a developer's local Graphify process or MCP server.
-- Treat graph relationships as navigation/impact-analysis evidence. Verify important paths against current source, tests, and ADRs; inferred/ambiguous edges are not facts.
-- If artifacts are absent or stale, state that clearly and trace source directly. Do not claim graph refresh/query unless it actually occurred.
-
-Graph generation is not yet verified on this branch. Do not claim that `graphify-out/` exists or is current until the artifacts are present on GitHub and read back.
+- Operational guide: docs/GRAPHIFY.md.
+- Full AI workflow adapted from AIWorkFlow: docs/AI_WORKFLOW.md.
+- Install the standalone CLI with ./pj graph install.
+- Build the initial code-only graph with ./pj graph build.
+- Refresh after source changes with ./pj graph update; after pull/merge use ./pj graph sync.
+- Query locally with ./pj graph query "question", ./pj graph path "A" "B", and ./pj graph explain "symbol".
+- Install/status/uninstall Graphify's local Git automation through ./pj graph hooks install|status|uninstall.
+- Commit graphify-out/graph.json, graphify-out/GRAPH_REPORT.md, and graphify-out/graph.html with the source revision they describe. Keep local interpreter metadata, cache, and cost files ignored.
+- The default pj graph build/update operations use GRAPHIFY_BACKEND=none for local code-only extraction. Semantic document extraction is optional and requires an explicitly configured backend via --semantic.
+- Graphify is not an application dependency and is not part of .pj/workflow.toml. It must not enter pyproject.toml, uv.lock, Docker, or application startup.
+- ChatGPT using GitHub reads the committed report/graph artifacts on the selected branch and verifies relationships against source, tests, and ADRs. It cannot run the developer's local CLI or see uncommitted changes.
+- Graph generation has not been verified until artifacts exist on GitHub and have been read back. Do not claim local refresh/query unless actual command output is supplied.
 
 ## Tooling and commands
 
 Use `uv` and the committed lockfile. Configured tools include Ruff, Pyright, Pylint, Bandit, Vulture, pytest, pytest-cov, pytest-asyncio, and pre-commit. Website dependencies are managed independently with npm and `website/package-lock.json`.
 
-Do not add Graphify to `pj`: the project-local check workflow remains Python-only and Graphify is an optional AI navigation integration.
+Do not add Graphify to the Python check pipeline: .pj/workflow.toml remains Python-only. Graphify is available through its separate optional pj graph command group.
 
 ## Project-local workflow
 
 - `./pj` is a Python standard-library helper; it does not need a compiler or third-party Python package.
-- The only workflow runtime/tool prerequisites are Python 3.14+ and `uv`.
+- The Python workflow prerequisites are Python 3.14+ and `uv`. Graphify is an optional separately installed CLI.
 - `./pj doctor` checks the Python version, `uv` availability, and workflow configuration validity; it returns non-zero when a required prerequisite or configuration is missing/invalid.
 - `.pj/workflow.toml` defines Ruff lint, Ruff format check, Pyright, and pytest, all executed through `uv run`.
 - The separate Astro website is not part of the Python `pj` workflow.
-- Do not add Node/npm, Rust/Cargo, Graphify, or other language toolchains to `pj` unless the developer explicitly changes the project requirements.
+- Do not add Node/npm, Rust/Cargo, or Graphify to the Python check pipeline. The optional Graphify CLI is managed separately through pj graph commands.
 
 ## Safety
 
