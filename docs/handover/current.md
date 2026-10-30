@@ -6,7 +6,7 @@
 
 - Repository: https://github.com/hosmaznazfar/Chatbrief
 - Active branch: refactor/chatbrief-package-layout
-- Latest verified remote commit before this workflow update: 79fb0ca53d428cac5f82b76e2b619d6f144a85c6 (updated the new-chat starter to require graph-first inspection, researched decisions, stepwise commits, and final migration/planning updates).
+- Latest workflow-update commit: 50b474be360fcb5282746773b772b95adea69ca3 (corrected local verification instructions after the `pj` and documentation updates).
 - This integration was made directly on the remote branch through GitHub. The developer's local branch/HEAD/worktree remains unknown; inspect local status before pulling.
 - Workflow source: https://github.com/hosmaznazfar/AIWorkFlow (the project workflow was adapted to Chatbrief's Python/Astro stack; the Rust implementation was not copied).
 
@@ -154,6 +154,7 @@ The developer clarified the required working sequence. This is now documented in
 - `973ff8e`, `f47d161`, `24d4037` — fix CLI output formatting and clarify review/commit guidance.
 - `80ce105`, `7fa17d5` — update project context and new-chat starter.
 - `346d19c`, `42cd96e`, `79fb0ca` — align Git handoff and new-chat instructions.
+- `975e56c`, `50b474b` — clarify `pj workflow` versus `pj graph` responsibilities and correct local verification instructions.
 
 ### Verification status
 
