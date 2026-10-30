@@ -294,7 +294,7 @@ def parse_prompts_config(yaml_config: dict) -> PromptsConfig:
     if not isinstance(raw, dict):
         raise ValueError(f"'prompts' must be a mapping, got {type(raw).__name__}")
 
-    base_template = raw.get("base_template", "src/prompts/base_summary.txt")
+    base_template = raw.get("base_template", "src/chatbrief/prompts/base_summary.txt")
     if not isinstance(base_template, str) or not base_template.strip():
         raise ValueError("prompts.base_template must be a non-empty string")
     base_template = base_template.strip()

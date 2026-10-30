@@ -941,7 +941,7 @@ def test_prompts_config_strips_whitespace(tmp_path, mock_env_vars):
         "  composer: '  chatbrief.extensions.prompts.DefaultComposer  '\n"
     )
     config = load_config(str(p))
-    assert config.prompts.base_template == "src/prompts/base_summary.txt"
+    assert config.prompts.base_template == "src/chatbrief/prompts/base_summary.txt"
     assert config.prompts.composer == "chatbrief.extensions.prompts.DefaultComposer"
 
 

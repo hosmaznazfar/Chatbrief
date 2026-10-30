@@ -30,6 +30,7 @@ def _load_base_template(path: str) -> str:
 
 
 _DEFAULT_TEMPLATE_PATH = str(Path(__file__).parent / "prompts" / "base_summary.txt")
+_LEGACY_DEFAULT_TEMPLATE_PATH = "src/prompts/base_summary.txt"
 
 
 def __getattr__(name: str) -> str:
@@ -69,7 +70,8 @@ class Summarizer:
         # Resolve template path; use absolute bundled default when config holds the sentinel value
         template_path = (
             _DEFAULT_TEMPLATE_PATH
-            if config.prompts.base_template == "src/prompts/base_summary.txt"
+            if config.prompts.base_template
+            in {_DEFAULT_TEMPLATE_PATH, _LEGACY_DEFAULT_TEMPLATE_PATH}
             else config.prompts.base_template
         )
         base_template = _load_base_template(template_path)

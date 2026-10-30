@@ -43,7 +43,7 @@ class DigestGroupConfig:
 class PromptsConfig:
     """Configuration for prompt template and composer."""
 
-    base_template: str = "src/prompts/base_summary.txt"
+    base_template: str = "src/chatbrief/prompts/base_summary.txt"
     composer: str = ""  # empty = DefaultComposer; otherwise dotted class path
 
 

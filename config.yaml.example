@@ -123,7 +123,7 @@ settings:
 # base_template: path to the system prompt template file ({language} is substituted at runtime)
 # composer: dotted path to a custom PromptComposer class; empty = built-in DefaultComposer
 # prompts:
-#   base_template: src/prompts/base_summary.txt
+#   base_template: src/chatbrief/prompts/base_summary.txt
 #   composer: ""
 
 # Storage — persist raw messages for history / external LLM workflows
