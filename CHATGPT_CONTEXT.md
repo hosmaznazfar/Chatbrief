@@ -69,6 +69,7 @@ Do not add Graphify as a mandatory dependency. If available, use it only as a na
 
 - `./pj` is a Python standard-library helper; it does not need a compiler or third-party Python package.
 - The only workflow runtime/tool prerequisites are Python 3.14+ and `uv`.
+- `./pj doctor` checks the Python version, `uv` availability, and workflow configuration validity; it returns non-zero when a required prerequisite or configuration is missing/invalid.
 - `.pj/workflow.toml` defines Ruff lint, Ruff format check, Pyright, and pytest, all executed through `uv run`.
 - The separate Astro website is not part of the Python `pj` workflow.
 - Do not add Node/npm, Rust/Cargo, Graphify, or other language toolchains to `pj` unless the developer explicitly changes the project requirements.
