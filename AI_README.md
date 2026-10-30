@@ -141,3 +141,30 @@ Read-only commands:
 ## End-of-session handover
 
 Update `docs/handover/current.md` when meaningful work is completed. Record the exact repository/branch/commit if verified, decisions, files changed, checks actually run, checks deliberately deferred, graph artifact availability/freshness, blockers, and the next concrete action. Do not invent local state or test results.
+
+
+## Graphify artifact completion and hook verification
+
+The current `pj graph build` and `pj graph sync` commands perform code extraction. Graphify may finish that step with only `graphify-out/graph.json` and its internal analysis state, and print a recommendation to run `cluster-only`. That means the graph can exist while `pj graph status` still reports it as incomplete because the human-readable report and visualization have not been generated.
+
+From the repository root, complete the graph artifacts explicitly:
+
+```bash
+./pj graph build
+graphify cluster-only .
+./pj graph status
+```
+
+After source changes or a pull/merge, use:
+
+```bash
+./pj graph sync
+graphify cluster-only .
+./pj graph status
+```
+
+Confirm that `graphify-out/GRAPH_REPORT.md` and `graphify-out/graph.html` exist before treating the shared graph as complete. Review all generated files before staging; the portable graph/report/visualization and manifest are candidates for Git, while internal analysis files, absolute-path markers, caches, and machine-local state must not be committed unless their portability has been verified.
+
+Graphify's post-commit hook can launch a background rebuild. Check its completion and `git status --short` afterward. If tracked graph artifacts changed, inspect the diff, commit the reviewed graph update with the matching source revision, and only then push. Hooks never replace explicit review.
+
+Do not add assistant-specific integrations as part of this project's Graphify workflow. In particular, review any newly generated `.codex/` configuration or agent-instruction files rather than assuming they are required; the intended integration is the local Graphify CLI, `pj`, and Git hooks only.
