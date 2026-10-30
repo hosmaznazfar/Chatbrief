@@ -272,7 +272,12 @@ async def test_collect_messages_without_storage_returns_filtered_messages(
     source = _make_source(sample_messages)
     sample_config.storage = StorageConfig(enabled=False)
 
-    with patch.object(digest_collector, "create_storage", new_callable=AsyncMock, return_value=None):
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
         result = await collect_messages(sample_config, mock_logger, source, hours=24)
 
     assert result == {"Test Channel": sample_messages}
@@ -291,7 +296,12 @@ async def test_collect_messages_saves_flat_filtered_messages(
     backend.save_messages = AsyncMock(return_value=len(sample_messages))
     backend.close = AsyncMock()
 
-    with patch.object(digest_collector, "create_storage", new_callable=AsyncMock, return_value=backend):
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=backend,
+    ):
         result = await collect_messages(sample_config, mock_logger, source, hours=24)
 
     assert result == {"Test Channel": sample_messages}
@@ -306,7 +316,10 @@ async def test_collect_messages_storage_initialization_failure_is_non_fatal(
 ):
     source = _make_source(sample_messages)
     with patch.object(
-        digest_collector, "create_storage", new_callable=AsyncMock, side_effect=RuntimeError("db down")
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("db down"),
     ):
         result = await collect_messages(sample_config, mock_logger, source, hours=24)
 
@@ -325,7 +338,12 @@ async def test_collect_messages_storage_write_and_close_failures_are_non_fatal(
     backend.save_messages = AsyncMock(side_effect=RuntimeError("write failed"))
     backend.close = AsyncMock(side_effect=RuntimeError("close failed"))
 
-    with patch.object(digest_collector, "create_storage", new_callable=AsyncMock, return_value=backend):
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=backend,
+    ):
         result = await collect_messages(sample_config, mock_logger, source, hours=24)
 
     assert result == {"Test Channel": sample_messages}
@@ -350,7 +368,12 @@ async def test_collect_messages_applies_filters_before_storage(
     backend.save_messages = AsyncMock(return_value=0)
     backend.close = AsyncMock()
 
-    with patch.object(digest_collector, "create_storage", new_callable=AsyncMock, return_value=backend):
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=backend,
+    ):
         result = await collect_messages(sample_config, mock_logger, source, hours=24)
 
     assert result == {"Test Channel": []}
@@ -359,7 +382,9 @@ async def test_collect_messages_applies_filters_before_storage(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_apply_filters_empty_specs_preserve_messages(sample_config, mock_logger, sample_messages):
+async def test_apply_filters_empty_specs_preserve_messages(
+    sample_config, mock_logger, sample_messages
+):
     sample_config.settings.filters = []
     channel = ChannelConfig(id="@test", name="Test Channel")
 
@@ -394,9 +419,33 @@ async def test_filter_chain_applies_in_order(sample_config, mock_logger):
     from chatbrief.message import Message
 
     messages = [
-        Message("hello job", "user", datetime(2025, 1, 1, tzinfo=timezone.utc), "#", "Test", False, ""),
-        Message("job at company", "user", datetime(2025, 1, 1, tzinfo=timezone.utc), "#", "Test", False, ""),
-        Message("hello world", "user", datetime(2025, 1, 1, tzinfo=timezone.utc), "#", "Test", False, ""),
+        Message(
+            "hello job",
+            "user",
+            datetime(2025, 1, 1, tzinfo=timezone.utc),
+            "#",
+            "Test",
+            False,
+            "",
+        ),
+        Message(
+            "job at company",
+            "user",
+            datetime(2025, 1, 1, tzinfo=timezone.utc),
+            "#",
+            "Test",
+            False,
+            "",
+        ),
+        Message(
+            "hello world",
+            "user",
+            datetime(2025, 1, 1, tzinfo=timezone.utc),
+            "#",
+            "Test",
+            False,
+            "",
+        ),
     ]
     sample_config.settings.filters = [
         FilterSpec("chatbrief.extensions.filters.KeywordFilter", {"include": ["job"]}),
@@ -414,6 +463,7 @@ async def test_filter_chain_applies_in_order(sample_config, mock_logger):
 async def test_unresolvable_filter_is_logged_and_skipped(
     sample_config, mock_logger, sample_messages
 ):
+    sample_config.settings.filters = [FilterSpec("missing.filter", {})]
     channel = ChannelConfig(id="@test", name="Test Channel")
     with patch.object(digest_collector, "load_class", side_effect=ImportError("missing filter")):
         result = await _apply_filters(channel, sample_messages, sample_config, mock_logger)
@@ -484,7 +534,12 @@ async def test_collect_channel_messages_prefers_storage(
     backend.query_messages = AsyncMock(return_value=list(reversed(sample_messages)))
     backend.close = AsyncMock()
 
-    with patch.object(digest_collector, "create_storage", new_callable=AsyncMock, return_value=backend):
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=backend,
+    ):
         messages, origin = await collect_channel_messages(
             sample_config, mock_logger, source, "Test Channel", hours=12, limit=50
         )
@@ -504,7 +559,12 @@ async def test_collect_channel_messages_falls_back_to_live_source(
     source = _make_source(sample_messages)
     sample_config.storage = StorageConfig(enabled=False)
 
-    with patch.object(digest_collector, "create_storage", new_callable=AsyncMock, return_value=None):
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
         messages, origin = await collect_channel_messages(
             sample_config, mock_logger, source, "@test_channel", hours=6
         )
@@ -525,7 +585,10 @@ async def test_collect_channel_messages_storage_failure_falls_back_to_live(
     sample_config.storage = StorageConfig(enabled=True, backend="sqlite", path=":memory:")
 
     with patch.object(
-        digest_collector, "create_storage", new_callable=AsyncMock, side_effect=RuntimeError("db down")
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        side_effect=RuntimeError("db down"),
     ):
         messages, origin = await collect_channel_messages(
             sample_config, mock_logger, source, "Test Channel"
@@ -544,7 +607,12 @@ async def test_collect_channel_messages_keeps_newest_within_limit(
 ):
     source = _make_source(sample_messages)
     source.fetch_channel_messages.return_value = sample_messages
-    with patch.object(digest_collector, "create_storage", new_callable=AsyncMock, return_value=None):
+    with patch.object(
+        digest_collector,
+        "create_storage",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
         messages, _ = await collect_channel_messages(
             sample_config, mock_logger, source, "Test Channel", limit=1
         )
