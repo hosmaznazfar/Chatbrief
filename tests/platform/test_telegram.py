@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from telethon.errors import ChannelPrivateError, FloodWaitError
+from telethon.tl import types as tl_types
 from telethon.tl.types import Document, MessageMediaDocument
 
 import chatbrief.platforms.telegram.telegram_source as telegram_source
@@ -149,7 +150,7 @@ def test_get_document_media_type_non_document(sample_config, mock_logger):
 async def test_get_sender_name_first_and_last_name(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
-    sender = MagicMock()
+    sender = MagicMock(spec=tl_types.User)
     sender.first_name = "John"
     sender.last_name = "Doe"
 
@@ -177,7 +178,7 @@ async def test_get_sender_name_first_name_only(sample_config, mock_logger):
 async def test_get_sender_name_title(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
-    sender = MagicMock(spec=["title"])
+    sender = MagicMock(spec=tl_types.Channel)
     sender.title = "Test Channel"
 
     message = MagicMock()
@@ -231,34 +232,31 @@ async def test_get_sender_name_error(sample_config, mock_logger):
     assert await source._get_sender_name(message) == "Unknown"
 
 
-@pytest.mark.asyncio
-async def test_generate_message_link_public_channel(sample_config, mock_logger):
+def test_generate_message_link_public_channel(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
     entity = MagicMock()
     entity.username = "testchannel"
 
-    assert await source._generate_message_link(entity, 123) == ("https://t.me/testchannel/123")
+    assert source._generate_message_link(entity, 123) == "https://t.me/testchannel/123"
 
 
-@pytest.mark.asyncio
-async def test_generate_message_link_private_channel(sample_config, mock_logger):
+def test_generate_message_link_private_channel(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
     entity = MagicMock()
     entity.username = None
     entity.id = -1001234567890
 
-    assert await source._generate_message_link(entity, 456) == ("https://t.me/c/1234567890/456")
+    assert source._generate_message_link(entity, 456) == "https://t.me/c/1234567890/456"
 
 
-@pytest.mark.asyncio
-async def test_generate_message_link_without_entity_info(sample_config, mock_logger):
+def test_generate_message_link_without_entity_info(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
     entity = MagicMock(spec=[])
 
-    assert await source._generate_message_link(entity, 789) == "#"
+    assert source._generate_message_link(entity, 789) == "#"
 
 
 @pytest.mark.asyncio
@@ -320,11 +318,11 @@ async def test_connect_dialog_cache_failure(sample_config, mock_logger):
 async def test_disconnect(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
-    source.client.disconnect = MagicMock()
+    source.client.disconnect = AsyncMock()
 
     await source.disconnect()
 
-    source.client.disconnect.assert_called_once_with()
+    source.client.disconnect.assert_awaited_once_with()
     mock_logger.info.assert_called_with("Disconnected from Telegram")
 
 
@@ -509,11 +507,10 @@ def test_get_media_type_other(sample_config, mock_logger):
     assert source._get_media_type(message) == source._ui["media_other"]
 
 
-@pytest.mark.asyncio
-async def test_generate_message_link_error(sample_config, mock_logger):
+def test_generate_message_link_error(sample_config, mock_logger):
     source = make_source(sample_config, mock_logger)
 
     entity = MagicMock()
     type(entity).username = property(lambda self: (_ for _ in ()).throw(RuntimeError("error")))
 
-    assert await source._generate_message_link(entity, 123) == "#"
+    assert source._generate_message_link(entity, 123) == "#"
