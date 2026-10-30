@@ -224,3 +224,8 @@ CLAUDE.md
 
 # Serena
 .serena/
+# Graphify: keep the shared graph/report/viz in Git; exclude machine-local state.
+graphify-out/cost.json
+graphify-out/.graphify_python
+graphify-out/.cloud-cta-shown
+graphify-out/cache/
