@@ -534,7 +534,7 @@ A: Yes! Add group chat IDs to `config.yaml` the same way as channels.
 A: Set `digest_mode: "digest"` in `config.yaml` and define your `digest_groups`. Each group has a `name` and `description` that guides the AI classification. An implicit "Other" group catches anything that doesn't match.
 
 **Q: Can I customize the digest format?**
-A: Yes! Edit `src/formatter.py` to change Markdown structure, emojis, and sections.
+A: Yes! Edit `src/chatbrief/formatter.py` to change Markdown structure, emojis, and sections.
 
 **Q: How much does it cost to run?**
 A: With OpenAI GPT-5-nano: ~$0.30/month. With Ollama: free (runs locally). Anthropic pricing varies by model.

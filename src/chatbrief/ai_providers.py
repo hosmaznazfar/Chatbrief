@@ -6,7 +6,7 @@ Supports OpenAI, Ollama, and Anthropic providers.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any
 from urllib.parse import urlparse, urlunparse
 
 import aiohttp
@@ -35,12 +35,12 @@ class AIProvider(ABC):
 
     @abstractmethod
     async def chat_completion(  # pylint: disable=too-many-positional-arguments
-        self,
-        messages: List[Dict[str, str]],
-        model: str,
-        temperature: float,
-        max_tokens: int,
-        reasoning_effort: str | None = None,
+            self,
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,
     ) -> str:
         """
         Generate a chat completion.
@@ -69,14 +69,14 @@ class OpenAIProvider(AIProvider):
         self.logger = logger
 
     async def chat_completion(  # pylint: disable=too-many-positional-arguments
-        self,
-        messages: List[Dict[str, str]],
-        model: str,
-        temperature: float,
-        max_tokens: int,
-        reasoning_effort: str | None = None,
+            self,
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,
     ) -> str:
-        create_kwargs: Dict[str, Any] = {
+        create_kwargs: dict[str, Any] = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
@@ -135,10 +135,10 @@ class OpenAIProvider(AIProvider):
         return text
 
     async def _handle_bad_request(
-        self,
-        create_kwargs: Dict[str, Any],
-        original_exc: OpenAIBadRequestError,
-        reasoning_effort: str | None,
+            self,
+            create_kwargs: dict[str, Any],
+            original_exc: OpenAIBadRequestError,
+            reasoning_effort: str | None,
     ):
         """Handle a BadRequestError by retrying with stripped parameters."""
         if reasoning_effort is not None:
@@ -170,15 +170,15 @@ class OllamaProvider(AIProvider):
         self.timeout = aiohttp.ClientTimeout(total=timeout)
 
     async def chat_completion(  # pylint: disable=too-many-positional-arguments
-        self,
-        messages: List[Dict[str, str]],
-        model: str,
-        temperature: float,
-        max_tokens: int,
-        reasoning_effort: str | None = None,  # noqa: ARG002 — accepted, not used by Ollama
+            self,
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,  # noqa: ARG002 — accepted, not used by Ollama
     ) -> str:
         url = f"{self.base_url}/api/chat"
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "model": model,
             "messages": messages,
             "stream": False,
@@ -252,12 +252,12 @@ class AnthropicProvider(AIProvider):
         self.timeout = aiohttp.ClientTimeout(total=timeout)
 
     async def chat_completion(  # pylint: disable=too-many-positional-arguments
-        self,
-        messages: List[Dict[str, str]],
-        model: str,
-        temperature: float,
-        max_tokens: int,
-        reasoning_effort: str | None = None,  # noqa: ARG002 — accepted, not used by Anthropic
+            self,
+            messages: list[dict[str, str]],
+            model: str,
+            temperature: float,
+            max_tokens: int,
+            reasoning_effort: str | None = None,  # noqa: ARG002 — accepted, not used by Anthropic
     ) -> str:
         # Extract system message and user messages
         system_text = ""
@@ -274,7 +274,7 @@ class AnthropicProvider(AIProvider):
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         }
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "model": model,
             "max_tokens": max_tokens,
             "messages": api_messages,
@@ -326,13 +326,13 @@ class AnthropicProvider(AIProvider):
 
 
 def create_provider(
-    provider_name: str,
-    logger: logging.Logger,
-    *,
-    openai_api_key: str = "",
-    anthropic_api_key: str = "",
-    ollama_base_url: str = "http://localhost:11434",
-    api_timeout: int = 60,
+        provider_name: str,
+        logger: logging.Logger,
+        *,
+        openai_api_key: str = "",
+        anthropic_api_key: str = "",
+        ollama_base_url: str = "http://localhost:11434",
+        api_timeout: int = 60,
 ) -> AIProvider:
     """
     Factory function to create an AI provider.

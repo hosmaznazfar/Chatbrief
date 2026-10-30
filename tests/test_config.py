@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from src.config.loader import load_config
-from src.config.models import DigestGroupConfig, FilterSpec, McpConfig, PromptsConfig, StorageConfig
+from src.chatbrief.config.loader import load_config
+from src.chatbrief.config import DigestGroupConfig, FilterSpec, McpConfig, PromptsConfig, StorageConfig
 
 
 @pytest.mark.unit
@@ -76,9 +76,9 @@ settings:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     # Mock load_dotenv to prevent loading from .env file
-    import src.config.loader
+    import src.chatbrief.config.loader
 
-    with patch.object(src.config.loader, "load_dotenv"):
+    with patch.object(src.chatbrief.config.loader, "load_dotenv"):
         with pytest.raises(ValueError, match="Missing required environment variables"):
             load_config(str(config_file))
 
@@ -138,9 +138,9 @@ settings:
     config_file = tmp_path / "config.yaml"
     config_file.write_text(config_content)
 
-    import src.config.loader
+    import src.chatbrief.config.loader
 
-    with patch.object(src.config.loader, "load_dotenv"):
+    with patch.object(src.chatbrief.config.loader, "load_dotenv"):
         config = load_config(str(config_file))
 
     assert config.settings.ai_provider == "ollama"
@@ -168,9 +168,9 @@ settings:
     config_file = tmp_path / "config.yaml"
     config_file.write_text(config_content)
 
-    import src.config.loader
+    import src.chatbrief.config.loader
 
-    with patch.object(src.config.loader, "load_dotenv"):
+    with patch.object(src.chatbrief.config.loader, "load_dotenv"):
         with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
             load_config(str(config_file))
 

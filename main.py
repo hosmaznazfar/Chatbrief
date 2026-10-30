@@ -12,17 +12,15 @@ import sys
 from contextlib import suppress
 from typing import Any
 
-from src.commands.service import CommandService
-from src.config.loader import load_config
-from src.config.models import Config, Platform
-from src.mcp_server import build_server
-from src.platforms.base import Bot, MessageSender, MessageSource
-from src.platforms.builder import PlatformBuilder
-from src.platforms.telegram.telegram_bot import TelegramBot
-from src.platforms.telegram.telegram_sender import TelegramMessageSender
-from src.platforms.telegram.telegram_source import TelegramMessageSource
-from src.scheduler import DigestScheduler
-from src.utils import setup_logging
+
+from chatbrief.commands.service import CommandService
+from chatbrief.config.loader import load_config
+from chatbrief.config.models import Config
+from chatbrief.mcp_server import build_server
+from chatbrief.platforms.base import Bot, MessageSender, MessageSource
+from chatbrief.platforms.builder import PlatformBuilder
+from chatbrief.scheduler import DigestScheduler
+from chatbrief.utils import setup_logging
 
 
 class ChatbriefApp:

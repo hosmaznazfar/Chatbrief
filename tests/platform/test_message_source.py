@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.message import Message
-from src.platforms.telegram import TelegramMessageSource
+from src.chatbrief.platforms import TelegramMessageSource
 
 TEST_MESSAGE_TIME = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 TEST_LOOKBACK_TIME = datetime(2026, 1, 1, 11, 0, tzinfo=timezone.utc)

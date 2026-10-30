@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.config.models import DigestGroupConfig
+from src.chatbrief.config import DigestGroupConfig
 from src.grouper import (
     DigestGrouper,
     ExtractedBullet,

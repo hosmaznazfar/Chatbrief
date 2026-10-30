@@ -21,12 +21,12 @@ import json
 import logging
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Optional
 
-from src.ai_providers import AIProvider, create_provider
-from src.config.models import Config, DigestGroupConfig
-from src.ui_strings import get_ui_strings
-from src.xml_escape import escape_xml_delimiters
+from chatbrief.ai_providers import AIProvider, create_provider
+from chatbrief.config.models import Config, DigestGroupConfig
+from chatbrief.ui_strings import get_ui_strings
+from chatbrief.xml_escape import escape_xml_delimiters
 
 _EXTRACTOR_CONCURRENCY = 10
 
@@ -105,7 +105,7 @@ def _qg_has_concrete_entity(point: str) -> bool:
     )
 
 
-def _quality_gate_filter(bullets: List["ExtractedBullet"]) -> List["ExtractedBullet"]:
+def _quality_gate_filter(bullets: list["ExtractedBullet"]) -> list["ExtractedBullet"]:
     """Deterministic QUALITY GATE — drop low-signal bullets before dedup/classification.
 
     Architect's call: don't trust the LLM to follow negative rules at low temperature.
@@ -117,7 +117,7 @@ def _quality_gate_filter(bullets: List["ExtractedBullet"]) -> List["ExtractedBul
     - Short bullets (<30 chars) lacking any concrete entity (digits, @, URL, proper name)
     - Speculation/hedging without a concrete entity to anchor it
     """
-    survivors: List[ExtractedBullet] = []
+    survivors: list[ExtractedBullet] = []
     for b in bullets:
         text = b.point.strip()
         if not text:
@@ -151,14 +151,14 @@ class GroupedPoint:
     source_url: str = ""  # channel base URL (e.g. https://t.me/channel)
 
 
-def _dedup_extracted(bullets: List["ExtractedBullet"]) -> List["ExtractedBullet"]:
+def _dedup_extracted(bullets: list["ExtractedBullet"]) -> list["ExtractedBullet"]:
     """Deterministic chokepoint: merge bullets with same normalized point text.
 
     When two channels report the same story, their bullets normalize to the
     same key. We keep the longest variant of the point text and join their
     source channel names into a comma-separated list.
     """
-    by_key: Dict[str, ExtractedBullet] = {}
+    by_key: dict[str, ExtractedBullet] = {}
     for b in bullets:
         key = _normalize_point(b.point)
         if not key:
@@ -205,7 +205,7 @@ class DigestGrouper:
         # so it needs a higher token budget than a single channel summary.
         self.max_tokens = config.settings.max_tokens_per_summary * 3
 
-    def _build_group_definitions(self) -> List[DigestGroupConfig]:
+    def _build_group_definitions(self) -> list[DigestGroupConfig]:
         """Return group definitions including implicit 'Other' if not user-defined."""
         groups = list(self.config.settings.digest_groups)
         other_name = self._ui["group_other"]
@@ -260,7 +260,7 @@ class DigestGrouper:
         ]
 
     def _build_classifier_prompt(
-        self, bullets: List[ExtractedBullet], groups: List[DigestGroupConfig]
+            self, bullets: list[ExtractedBullet], groups: list[DigestGroupConfig]
     ) -> list[dict[str, str]]:
         """Pass 2b prompt: classify pre-extracted, dedup'd bullets into groups."""
         group_list = "\n".join(f'- "{g.name}": {g.description}' for g in groups)
@@ -300,8 +300,8 @@ class DigestGrouper:
         ]
 
     async def _extract_bullets_from_channel(
-        self, channel_name: str, summary: str, source_url: str
-    ) -> List[ExtractedBullet]:
+            self, channel_name: str, summary: str, source_url: str
+    ) -> list[ExtractedBullet]:
         """Pass 2a per-channel: AI call returning extracted bullets for one channel."""
         if not _strip_channel_summary_noise(summary).strip():
             return []
@@ -315,8 +315,8 @@ class DigestGrouper:
         return self._parse_extracted_response(response, channel_name, source_url)
 
     def _parse_extracted_response(
-        self, response: str, channel_name: str, source_url: str
-    ) -> List[ExtractedBullet]:
+            self, response: str, channel_name: str, source_url: str
+    ) -> list[ExtractedBullet]:
         """Parse extractor JSON array into ExtractedBullet objects."""
         cleaned = re.sub(r"^```(?:json)?\s*\n?", "", response.strip())
         cleaned = re.sub(r"\n?```\s*$", "", cleaned)
@@ -328,7 +328,7 @@ class DigestGrouper:
         if not isinstance(data, list):
             self.logger.warning("Extractor for %s returned non-list", channel_name)
             return []
-        result: List[ExtractedBullet] = []
+        result: list[ExtractedBullet] = []
         for item in data:
             if isinstance(item, dict) and "point" in item:
                 result.append(
@@ -341,14 +341,14 @@ class DigestGrouper:
         return result
 
     async def _extract_all_bullets(
-        self,
-        channel_summaries: Dict[str, str],
-        channel_urls: Dict[str, str],
-    ) -> List[ExtractedBullet]:
+            self,
+            channel_summaries: dict[str, str],
+            channel_urls: dict[str, str],
+    ) -> list[ExtractedBullet]:
         """Run Pass 2a in parallel across channels, bounded by a semaphore."""
         sem = asyncio.Semaphore(_EXTRACTOR_CONCURRENCY)
 
-        async def _run(name: str, summary: str) -> List[ExtractedBullet]:
+        async def _run(name: str, summary: str) -> list[ExtractedBullet]:
             async with sem:
                 return await self._extract_bullets_from_channel(
                     channel_name=name,
@@ -361,7 +361,7 @@ class DigestGrouper:
             *(_run(name, channel_summaries[name]) for name in names),
             return_exceptions=True,
         )
-        bullets: List[ExtractedBullet] = []
+        bullets: list[ExtractedBullet] = []
         for name, res in zip(names, results):
             if isinstance(res, BaseException):
                 self.logger.error("Extractor failed for %s: %s", name, res)
@@ -370,10 +370,10 @@ class DigestGrouper:
         return bullets
 
     async def _classify_bullets(
-        self,
-        bullets: List[ExtractedBullet],
-        groups: List[DigestGroupConfig],
-    ) -> Dict[str, List[GroupedPoint]]:
+            self,
+            bullets: list[ExtractedBullet],
+            groups: list[DigestGroupConfig],
+    ) -> dict[str, list[GroupedPoint]]:
         """Pass 2b: single AI call to classify pre-extracted bullets into groups."""
         if not bullets:
             return {}
@@ -389,17 +389,17 @@ class DigestGrouper:
         return self._parse_grouped_response(response, valid_group_names, urls)
 
     def _collect_group_points(
-        self,
-        target_name: str,
-        points: list,
-        urls: Dict[str, str],
-        seen_keys: set[tuple[str, str, str]],
-    ) -> tuple[List[GroupedPoint], int, int]:
+            self,
+            target_name: str,
+            points: list,
+            urls: dict[str, str],
+            seen_keys: set[tuple[str, str, str]],
+    ) -> tuple[list[GroupedPoint], int, int]:
         """Build GroupedPoint list for a single group, dropping malformed + duplicates.
 
         Returns (grouped, malformed_skipped, dedup_dropped).
         """
-        grouped: List[GroupedPoint] = []
+        grouped: list[GroupedPoint] = []
         malformed_skipped = 0
         dedup_dropped = 0
         for item in points:
@@ -423,11 +423,11 @@ class DigestGrouper:
         return grouped, malformed_skipped, dedup_dropped
 
     def _parse_grouped_response(
-        self,
-        response: str,
-        valid_group_names: set[str],
-        channel_urls: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, List[GroupedPoint]]:
+            self,
+            response: str,
+            valid_group_names: set[str],
+            channel_urls: Optional[dict[str, str]] = None,
+    ) -> dict[str, list[GroupedPoint]]:
         """Parse AI JSON response into grouped points.
 
         Strips markdown code fences before parsing. Returns empty dict on
@@ -445,7 +445,7 @@ class DigestGrouper:
             if not isinstance(data, dict):
                 raise ValueError("Expected JSON object at top level")
 
-            result: Dict[str, List[GroupedPoint]] = {}
+            result: dict[str, list[GroupedPoint]] = {}
             canonical = {n.lower(): n for n in valid_group_names}
             seen_keys: set[tuple[str, str, str]] = set()
             urls = channel_urls or {}
@@ -480,9 +480,9 @@ class DigestGrouper:
             return {}
 
     def _warn_missing_channels(
-        self,
-        result: Dict[str, List[GroupedPoint]],
-        input_channels: set[str],
+            self,
+            result: dict[str, list[GroupedPoint]],
+            input_channels: set[str],
     ) -> None:
         """Log a warning if any input channel produced no bullets in the final output."""
         output_sources: set[str] = set()
@@ -500,10 +500,10 @@ class DigestGrouper:
             )
 
     async def group_summaries(
-        self,
-        channel_summaries: Dict[str, str],
-        channel_urls: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, List[GroupedPoint]]:
+            self,
+            channel_summaries: dict[str, str],
+            channel_urls: Optional[dict[str, str]] = None,
+    ) -> dict[str, list[GroupedPoint]]:
         """Two-pass grouping: parallel extract → dedup chokepoint → classify.
 
         Args:
@@ -565,10 +565,10 @@ class DigestGrouper:
         return result
 
     def _build_fallback_group(
-        self,
-        channel_summaries: Dict[str, str],
-        channel_urls: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, List[GroupedPoint]]:
+            self,
+            channel_summaries: dict[str, str],
+            channel_urls: Optional[dict[str, str]] = None,
+    ) -> dict[str, list[GroupedPoint]]:
         """Build a single 'Other' group from all channel summaries as fallback."""
         urls = channel_urls or {}
         other_name = self._ui["group_other"]

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.config.models import ChannelConfig, Config, Settings
+from src.chatbrief.config import ChannelConfig, Config, Settings
 
 
 @pytest.fixture

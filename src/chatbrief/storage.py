@@ -9,56 +9,131 @@ from typing import TYPE_CHECKING, Any, Protocol
 if TYPE_CHECKING:
     import aiosqlite as _aiosqlite
 
-    from src.config.models import StorageConfig
-    from src.message import Message
+    from chatbrief.config.models import StorageConfig
+    from chatbrief.message import Message
 
 _CREATE_SQLITE_TABLE = """
-CREATE TABLE IF NOT EXISTS messages (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    channel_name TEXT    NOT NULL,
-    sender       TEXT    NOT NULL,
-    text         TEXT    NOT NULL,
-    timestamp    TEXT    NOT NULL,
-    link         TEXT    NOT NULL,
-    has_media    INTEGER NOT NULL DEFAULT 0,
-    media_type   TEXT    NOT NULL DEFAULT '',
-    collected_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
-)
-"""
+                       CREATE TABLE IF NOT EXISTS messages
+                       (
+                           id
+                           INTEGER
+                           PRIMARY
+                           KEY
+                           AUTOINCREMENT,
+                           channel_name
+                           TEXT
+                           NOT
+                           NULL,
+                           sender
+                           TEXT
+                           NOT
+                           NULL,
+                           text
+                           TEXT
+                           NOT
+                           NULL,
+                           timestamp
+                           TEXT
+                           NOT
+                           NULL,
+                           link
+                           TEXT
+                           NOT
+                           NULL,
+                           has_media
+                           INTEGER
+                           NOT
+                           NULL
+                           DEFAULT
+                           0,
+                           media_type
+                           TEXT
+                           NOT
+                           NULL
+                           DEFAULT
+                           '',
+                           collected_at
+                           TEXT
+                           NOT
+                           NULL
+                           DEFAULT (
+                           strftime
+                       (
+                           '%Y-%m-%dT%H:%M:%SZ',
+                           'now'
+                       ))
+                           ) \
+                       """
 
 _CREATE_SQLITE_INDEX = """
-CREATE INDEX IF NOT EXISTS idx_messages_channel_timestamp
-    ON messages(channel_name, timestamp)
-"""
+                       CREATE INDEX IF NOT EXISTS idx_messages_channel_timestamp
+                           ON messages(channel_name, timestamp) \
+                       """
 
 _CREATE_PG_TABLE = """
-CREATE TABLE IF NOT EXISTS messages (
-    id           BIGSERIAL PRIMARY KEY,
-    channel_name TEXT        NOT NULL,
-    sender       TEXT        NOT NULL,
-    text         TEXT        NOT NULL,
-    timestamp    TIMESTAMPTZ NOT NULL,
-    link         TEXT        NOT NULL,
-    has_media    BOOLEAN     NOT NULL DEFAULT FALSE,
-    media_type   TEXT        NOT NULL DEFAULT '',
-    collected_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-)
-"""
+                   CREATE TABLE IF NOT EXISTS messages
+                   (
+                       id
+                       BIGSERIAL
+                       PRIMARY
+                       KEY,
+                       channel_name
+                       TEXT
+                       NOT
+                       NULL,
+                       sender
+                       TEXT
+                       NOT
+                       NULL,
+                       text
+                       TEXT
+                       NOT
+                       NULL,
+                       timestamp
+                       TIMESTAMPTZ
+                       NOT
+                       NULL,
+                       link
+                       TEXT
+                       NOT
+                       NULL,
+                       has_media
+                       BOOLEAN
+                       NOT
+                       NULL
+                       DEFAULT
+                       FALSE,
+                       media_type
+                       TEXT
+                       NOT
+                       NULL
+                       DEFAULT
+                       '',
+                       collected_at
+                       TIMESTAMPTZ
+                       NOT
+                       NULL
+                       DEFAULT
+                       NOW
+                   (
+                   )
+                       ) \
+                   """
 
 _CREATE_PG_INDEX = """
-CREATE INDEX IF NOT EXISTS idx_messages_channel_timestamp
-    ON messages(channel_name, timestamp)
-"""
+                   CREATE INDEX IF NOT EXISTS idx_messages_channel_timestamp
+                       ON messages(channel_name, timestamp) \
+                   """
 
 _SQLITE_INSERT = """
-INSERT INTO messages (channel_name, sender, text, timestamp, link, has_media, media_type)
-VALUES (?, ?, ?, ?, ?, ?, ?)
-"""
+                 INSERT INTO messages (channel_name, sender, text, timestamp, link, has_media, media_type)
+                 VALUES (?, ?, ?, ?, ?, ?, ?) \
+                 """
 
 _PG_INSERT = """
-INSERT INTO messages (channel_name, sender, text, timestamp, link, has_media, media_type)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-"""
+             INSERT INTO messages (channel_name, sender, text, timestamp, link, has_media, media_type)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) \
+             """
 
 _QUERY_BASE = (
     "SELECT channel_name, sender, text, timestamp, link, has_media, media_type FROM messages"
@@ -79,11 +154,11 @@ class StorageBackend(Protocol):
     async def close(self) -> None: ...  # noqa: E704
 
     async def query_messages(  # noqa: E704
-        self,
-        channel_name: str | None = None,
-        since: datetime | None = None,
-        until: datetime | None = None,
-        limit: int = 1000,
+            self,
+            channel_name: str | None = None,
+            since: datetime | None = None,
+            until: datetime | None = None,
+            limit: int = 1000,
     ) -> list[Message]: ...
 
 
@@ -132,13 +207,13 @@ class SQLiteBackend:
         return len(messages)
 
     async def query_messages(
-        self,
-        channel_name: str | None = None,
-        since: datetime | None = None,
-        until: datetime | None = None,
-        limit: int = 1000,
+            self,
+            channel_name: str | None = None,
+            since: datetime | None = None,
+            until: datetime | None = None,
+            limit: int = 1000,
     ) -> list[Message]:
-        from src.message import Message as Msg
+        from chatbrief.message import Message as Msg
 
         if self._conn is None:
             raise RuntimeError("SQLiteBackend not initialized; call initialize() first")
@@ -230,13 +305,13 @@ class PostgresBackend:  # pragma: no cover
         return len(messages)
 
     async def query_messages(
-        self,
-        channel_name: str | None = None,
-        since: datetime | None = None,
-        until: datetime | None = None,
-        limit: int = 1000,
+            self,
+            channel_name: str | None = None,
+            since: datetime | None = None,
+            until: datetime | None = None,
+            limit: int = 1000,
     ) -> list[Message]:
-        from src.message import Message as Msg
+        from chatbrief.message import Message as Msg
 
         if self._pool is None:
             raise RuntimeError("PostgresBackend not initialized; call initialize() first")

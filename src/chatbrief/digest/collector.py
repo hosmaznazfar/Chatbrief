@@ -3,15 +3,14 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from src.config.models import ChannelConfig, Config
-from src.constants import MAX_CHANNEL_MESSAGES
-from src.extensions.loader import load_class
-from src.message import Message
-from src.platforms.base import MessageSource
-from src.storage import create_storage
-
-from .state import digest_lock
-from .validators import validate_hours
+from chatbrief.config.models import ChannelConfig, Config
+from chatbrief.constants import MAX_CHANNEL_MESSAGES
+from chatbrief.digest.state import digest_lock
+from chatbrief.digest.validators import validate_hours
+from chatbrief.extensions.loader import load_class
+from chatbrief.message import Message
+from chatbrief.platforms.base import MessageSource
+from chatbrief.storage import create_storage
 
 
 async def _save_to_storage(

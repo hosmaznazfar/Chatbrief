@@ -2,13 +2,13 @@
 
 import logging
 
-from src.commands.service import CommandService
-from src.config.models import Config, Platform
-from src.platforms.base import Bot, MessageSender, MessageSource
-from src.platforms.telegram.telegram_bot import TelegramBot
-from src.platforms.telegram.telegram_sender import TelegramMessageSender
-from src.platforms.telegram.telegram_source import TelegramMessageSource
-from src.scheduler import DigestScheduler
+from chatbrief.commands.service import CommandService
+from chatbrief.config.models import Config, Platform
+from chatbrief.platforms.base import Bot, MessageSender, MessageSource
+from chatbrief.platforms.telegram.telegram_bot import TelegramBot
+from chatbrief.platforms.telegram.telegram_sender import TelegramMessageSender
+from chatbrief.platforms.telegram.telegram_source import TelegramMessageSource
+from chatbrief.scheduler import DigestScheduler
 
 
 class PlatformBuilder:

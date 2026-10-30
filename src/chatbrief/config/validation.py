@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from src.constants import PROVIDER_DEFAULT_MODELS, SUPPORTED_LANGUAGES, SUPPORTED_PROVIDERS
+from chatbrief.constants import PROVIDER_DEFAULT_MODELS, SUPPORTED_LANGUAGES, SUPPORTED_PROVIDERS
 
 from .models import (
     ChannelConfig,
@@ -89,7 +89,7 @@ def parse_digest_settings(
         )
 
     if digest_mode == "digest" and not digest_groups:
-        logger = logging.getLogger("telebrief")
+        logger = logging.getLogger("chatbrief")
         logger.warning(
             "digest mode enabled but no digest_groups configured — all content will go to 'Other'"
         )
@@ -323,7 +323,7 @@ def validate_channel_groups(
     Raises:
         ValueError: listing all channels with invalid group references.
     """
-    from src.ui_strings import get_ui_strings
+    from chatbrief.ui_strings import get_ui_strings
 
     ui = get_ui_strings(output_language)
     localized_other = ui.get("group_other", "Other")

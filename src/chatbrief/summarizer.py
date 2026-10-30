@@ -5,14 +5,14 @@ AI-powered summarizer using pluggable providers with configurable output languag
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
-from src.ai_providers import AIProvider, TokenBudgetExhaustedError, create_provider
-from src.config.models import ChannelConfig, Config, DigestGroupConfig
-from src.extensions.loader import load_class
-from src.extensions.prompts import DefaultComposer, PromptComposer
-from src.message import Message
-from src.xml_escape import escape_xml_delimiters
+from chatbrief.ai_providers import AIProvider, TokenBudgetExhaustedError, create_provider
+from chatbrief.config.models import ChannelConfig, Config, DigestGroupConfig
+from chatbrief.extensions.loader import load_class
+from chatbrief.extensions.prompts import DefaultComposer, PromptComposer
+from chatbrief.message import Message
+from chatbrief.xml_escape import escape_xml_delimiters
 
 ERROR_SUMMARY_PREFIX = "Error processing channel"
 MAX_SUMMARY_CHARS = 3500
@@ -94,7 +94,7 @@ class Summarizer:
                     f"Original error: {exc}"
                 ) from exc
             if not isinstance(self._composer, PromptComposer) or not callable(
-                getattr(self._composer, "compose", None)
+                    getattr(self._composer, "compose", None)
             ):
                 raise TypeError(
                     f"Custom composer {config.prompts.composer!r} does not implement "
@@ -103,7 +103,7 @@ class Summarizer:
         else:
             self._composer = DefaultComposer(base_template, self.output_language)
 
-    async def summarize_all(self, messages_by_channel: Dict[str, List[Message]]) -> Dict[str, Any]:
+    async def summarize_all(self, messages_by_channel: dict[str, list[Message]]) -> dict[str, Any]:
         """
         Generate complete digest with per-channel summaries.
 
@@ -129,8 +129,8 @@ class Summarizer:
         return {"channel_summaries": channel_summaries, "overview": ""}
 
     async def _summarize_per_channel(
-        self, messages_by_channel: Dict[str, List[Message]]
-    ) -> Dict[str, str]:
+            self, messages_by_channel: dict[str, list[Message]]
+    ) -> dict[str, str]:
         """
         Generate summary for each channel.
 
@@ -153,7 +153,7 @@ class Summarizer:
 
         return summaries
 
-    async def _summarize_channel(self, channel_name: str, messages: List[Message]) -> str:
+    async def _summarize_channel(self, channel_name: str, messages: list[Message]) -> str:
         """
         Generate summary for a single channel.
 
@@ -267,7 +267,7 @@ Messages (total: {actual_count}):
             raise
 
     async def _enforce_length_limit(
-        self, channel_name: str, summary: str, chat_messages: list
+            self, channel_name: str, summary: str, chat_messages: list
     ) -> str:
         """Request shorter summary if over limit, truncate as last resort."""
         if len(summary) <= MAX_SUMMARY_CHARS:
@@ -338,7 +338,7 @@ Messages (total: {actual_count}):
         # No sentence boundary found — hard truncate
         return truncated
 
-    def _format_messages_for_prompt(self, messages: List[Message], max_chars: int = 8000) -> str:
+    def _format_messages_for_prompt(self, messages: list[Message], max_chars: int = 8000) -> str:
         """
         Format messages for inclusion in prompt, keeping the most recent ones within budget.
 
@@ -365,7 +365,7 @@ Messages (total: {actual_count}):
 
         # Select most recent messages that fit within the character budget.
         # Always include at least one message (the most recent).
-        selected: List[str] = []
+        selected: list[str] = []
         total = 0
         for line in reversed(formatted):
             added_len = len(line) + (1 if selected else 0)  # +1 for the \n separator
@@ -398,9 +398,9 @@ Messages (total: {actual_count}):
 
 async def main():
     """Test summarizer."""
-    from src.config.loader import load_config
-    from src.platforms.factory import create_message_source
-    from src.utils import setup_logging
+    from chatbrief.config.loader import load_config
+    from chatbrief.platforms.factory import create_message_source
+    from chatbrief.utils import setup_logging
 
     config = load_config()
     logger = setup_logging(config.log_level)

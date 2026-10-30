@@ -9,22 +9,22 @@ from typing import Optional
 from telegram import BotCommand, Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-from src.commands.models import CommandStatus
-from src.commands.service import CommandService
-from src.config.models import Config
-from src.scheduler import DigestScheduler
-from src.ui_strings import get_ui_strings
+from chatbrief.commands.models import CommandStatus
+from chatbrief.commands.service import CommandService
+from chatbrief.config.models import Config
+from chatbrief.scheduler import DigestScheduler
+from chatbrief.ui_strings import get_ui_strings
 
 
 class TelegramBot:
     """Telegram implementation of the bot interface."""
 
     def __init__(
-        self,
-        config: Config,
-        logger: logging.Logger,
-        scheduler: Optional[DigestScheduler] = None,
-        command_service: CommandService | None = None,
+            self,
+            config: Config,
+            logger: logging.Logger,
+            scheduler: Optional[DigestScheduler] = None,
+            command_service: CommandService | None = None,
     ):
         """
         Initialize the Telegram command handler.
@@ -87,9 +87,9 @@ class TelegramBot:
             self.logger.error(f"Failed to set up bot menu: {e}")
 
     async def handle_digest(
-        self,
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
+            self,
+            update: Update,
+            context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Handle /digest command.
@@ -118,9 +118,9 @@ class TelegramBot:
             await update.message.reply_text(result.message)
 
     async def handle_cleanup(
-        self,
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
+            self,
+            update: Update,
+            context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Handle /cleanup command.
@@ -146,9 +146,9 @@ class TelegramBot:
         await update.message.reply_text(result.message)
 
     async def handle_status(
-        self,
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
+            self,
+            update: Update,
+            context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Handle /status command.
@@ -167,9 +167,9 @@ class TelegramBot:
         )
 
     async def handle_help(
-        self,
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
+            self,
+            update: Update,
+            context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Handle /help and /start commands.
@@ -216,8 +216,8 @@ class TelegramBot:
 
 async def main() -> None:
     """Test bot commands."""
-    from src.config.loader import load_config
-    from src.utils import setup_logging
+    from chatbrief.config.loader import load_config
+    from chatbrief.utils import setup_logging
 
     config = load_config()
     logger = setup_logging(config.log_level)

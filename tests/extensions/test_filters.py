@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.config.models import ChannelConfig
+from src.chatbrief.config import ChannelConfig
 from src.extensions.filters import KeywordFilter, MessageFilter, MinLengthFilter, RegexFilter
 from src.message import Message
 

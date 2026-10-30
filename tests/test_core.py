@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 import src.core
-from src.config.models import ChannelConfig, FilterSpec, StorageConfig
+from src.chatbrief.config import ChannelConfig, FilterSpec, StorageConfig
 from src.core import (
     _apply_filters,
     _collect_messages,

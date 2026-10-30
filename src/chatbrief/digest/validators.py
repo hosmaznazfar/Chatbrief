@@ -1,4 +1,4 @@
-from src.constants import MAX_DIGEST_HOURS
+from chatbrief.constants import MAX_DIGEST_HOURS
 
 
 def validate_hours(hours: int) -> None:

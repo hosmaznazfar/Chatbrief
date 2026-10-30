@@ -1,5 +1,5 @@
 """
-Configuration loader for Telebrief.
+Configuration loader for Chatbrief.
 Loads settings from config.yaml and environment variables.
 """
 

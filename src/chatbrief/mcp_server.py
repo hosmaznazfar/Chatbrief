@@ -11,14 +11,14 @@ import logging
 
 from mcp.server import MCPServer
 
-from platforms.base import MessageSource
-from src.config.models import Config
-from src.constants import MAX_CHANNEL_MESSAGES, MAX_DIGEST_HOURS
-from src.digest.cache import read_last_digest
-from src.digest.collector import collect_channel_messages
-from src.digest.service import build_digest
-from src.digest.validators import validate_hours
-from src.message import Message
+from chatbrief.config.models import Config
+from chatbrief.constants import MAX_CHANNEL_MESSAGES, MAX_DIGEST_HOURS
+from chatbrief.digest.cache import read_last_digest
+from chatbrief.digest.collector import collect_channel_messages
+from chatbrief.digest.service import build_digest
+from chatbrief.digest.validators import validate_hours
+from chatbrief.message import Message
+from chatbrief.platforms.base import MessageSource
 
 
 def _is_loopback(host: str) -> bool:
@@ -41,9 +41,9 @@ def _format_messages(channel: str, messages: list[Message], source: str, hours: 
 
 
 def build_server(
-    config: Config,
-    logger: logging.Logger,
-    source: MessageSource,
+        config: Config,
+        logger: logging.Logger,
+        source: MessageSource,
 ) -> MCPServer:
     """Build the MCP server exposing the digest tools.
 

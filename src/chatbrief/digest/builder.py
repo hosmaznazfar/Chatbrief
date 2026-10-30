@@ -2,17 +2,16 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from src.config.models import Config
-from src.formatter import DigestFormatter
-from src.grouper import DigestGrouper
-from src.platforms.base import MessageSource
-from src.summarizer import ERROR_SUMMARY_PREFIX, Summarizer
-from src.ui_strings import get_ui_strings
-from src.utils import split_message
-
-from .collector import collect_messages
-from .state import digest_lock
-from .validators import validate_hours
+from chatbrief.config.models import Config
+from chatbrief.digest.collector import collect_messages
+from chatbrief.digest.state import digest_lock
+from chatbrief.digest.validators import validate_hours
+from chatbrief.formatter import DigestFormatter
+from chatbrief.grouper import DigestGrouper
+from chatbrief.platforms.base import MessageSource
+from chatbrief.summarizer import ERROR_SUMMARY_PREFIX, Summarizer
+from chatbrief.ui_strings import get_ui_strings
+from chatbrief.utils import split_message
 
 
 async def _summarize_channels(

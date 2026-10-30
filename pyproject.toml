@@ -1,7 +1,7 @@
 [project]
-name = "chatbief"
+name = "chatbrief"
 version = "0.1.0"
-description = "Automated Telegram Digest Generator powered by AI"
+description = "Automated Multi Platform Digest Generator powered by AI"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -32,7 +32,7 @@ dev = [
     "types-pyyaml>=6.0.0",
     "vulture>=2.7",
     "ruff>=0.16.6",
-    "pyright==1.1.413",
+    "pyright==1.1.414",
     "bandit>=1.9.4",
 ]
 
@@ -47,7 +47,7 @@ select = [
     "W",
     "F",
     "I",
-    "C901"
+    "C901",
 ]
 ignore = [
     "E501",
@@ -69,7 +69,7 @@ disable = [
 max-line-length = 100
 
 [tool.coverage.run]
-source = ["src"]
+source = ["chatbrief"]
 omit = [
     "tests/*",
     "*/__init__.py",
@@ -92,6 +92,14 @@ exclude_lines = [
 requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
+where = ["src"]
+include = ["chatbrief*"]
+
+[tool.setuptools.package-data]
+chatbrief = [
+    "prompts/*.txt",
+]

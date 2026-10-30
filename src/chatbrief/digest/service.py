@@ -5,11 +5,10 @@ Digest service API.
 import logging
 from typing import Optional
 
-from src.config.models import Config
-from src.platforms.base import MessageSender, MessageSource
-
-from .builder import build_digest_parts, join_parts
-from .cache import write_last_digest
+from chatbrief.config.models import Config
+from chatbrief.digest.builder import build_digest_parts, join_parts
+from chatbrief.digest.cache import write_last_digest
+from chatbrief.platforms.base import MessageSender, MessageSource
 
 
 async def generate_and_send_digest(

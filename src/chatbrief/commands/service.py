@@ -3,11 +3,11 @@
 import logging
 import time
 
-from src.config.models import Config
-from src.digest.service import generate_and_send_digest
-from src.platforms.base import MessageSender, MessageSource
-from src.scheduler import DigestScheduler
-from src.ui_strings import get_ui_strings
+from chatbrief.config.models import Config
+from chatbrief.digest.service import generate_and_send_digest
+from chatbrief.platforms.base import MessageSender, MessageSource
+from chatbrief.scheduler import DigestScheduler
+from chatbrief.ui_strings import get_ui_strings
 
 from .models import CommandResult, CommandStatus
 

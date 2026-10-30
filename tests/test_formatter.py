@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.formatter import DigestFormatter
+from src.chatbrief.formatter import DigestFormatter
 from src.grouper import GroupedPoint
 
 

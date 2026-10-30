@@ -3,8 +3,8 @@
 from datetime import datetime
 from typing import Protocol
 
-from src.config.models import ChannelConfig
-from src.message import Message
+from chatbrief.config.models import ChannelConfig
+from chatbrief.message import Message
 
 
 class MessageSource(Protocol):

@@ -7,7 +7,6 @@ import logging
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import List
 
 
 def setup_logging(log_level: str = "INFO") -> logging.Logger:
@@ -21,7 +20,7 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
         Configured logger instance
     """
     # Create logs directory if it doesn't exist
-    os.makedirs("logs", exist_ok=True)
+    os.makedirs("../../logs", exist_ok=True)
 
     # Configure logging format
     log_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
@@ -42,7 +41,7 @@ def setup_logging(log_level: str = "INFO") -> logging.Logger:
     logger.addHandler(console_handler)
 
     # File handler
-    log_file = "logs/telebrief.log"
+    log_file = "../../logs/telebrief.log"
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(getattr(logging, log_level.upper()))
     file_formatter = logging.Formatter(log_format, date_format)
@@ -72,7 +71,7 @@ def split_message(text: str, max_length: int = 4000) -> list[str]:
     Args:
         text: Text to split
         max_length: Maximum length per message
-
+list
     Returns:
         List of message parts
     """
@@ -115,7 +114,7 @@ def split_message(text: str, max_length: int = 4000) -> list[str]:
 MESSAGE_STORAGE_FILE = "data/digest_messages.json"
 
 
-def save_digest_message_ids(message_ids: List[int], user_id: int) -> None:
+def save_digest_message_ids(message_ids: list[int], user_id: int) -> None:
     """
     Save message IDs of sent digest messages for later cleanup.
 
@@ -148,7 +147,7 @@ def save_digest_message_ids(message_ids: List[int], user_id: int) -> None:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def get_digest_message_ids(user_id: int) -> List[int]:
+def get_digest_message_ids(user_id: int) -> list[int]:
     """
     Get stored message IDs for cleanup.
 
@@ -169,7 +168,7 @@ def get_digest_message_ids(user_id: int) -> List[int]:
 
         user_key = str(user_id)
         if user_key in data:
-            message_ids: List[int] = data[user_key].get("message_ids", [])
+            message_ids: list[int] = data[user_key].get("message_ids", [])
             return message_ids
 
     except json.JSONDecodeError, IOError, KeyError:

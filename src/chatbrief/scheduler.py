@@ -7,20 +7,20 @@ import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from src.config.models import Config
-from src.digest.service import generate_and_send_digest
-from src.platforms.base import MessageSender, MessageSource
+from chatbrief.config.models import Config
+from chatbrief.digest.service import generate_and_send_digest
+from chatbrief.platforms.base import MessageSender, MessageSource
 
 
 class DigestScheduler:
     """Schedules daily digest generation."""
 
     def __init__(
-        self,
-        config: Config,
-        logger: logging.Logger,
-        source: MessageSource,
-        sender: MessageSender,
+            self,
+            config: Config,
+            logger: logging.Logger,
+            source: MessageSource,
+            sender: MessageSender,
     ):
         """
         Initialize scheduler.

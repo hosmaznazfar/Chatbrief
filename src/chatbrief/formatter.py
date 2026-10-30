@@ -4,13 +4,13 @@ Markdown formatter for digest output.
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from typing import Optional
 
-from src.config.models import Config
-from src.grouper import GroupedPoint
-from src.message import Message
-from src.summarizer import ERROR_SUMMARY_PREFIX
-from src.ui_strings import get_month_names, get_ui_strings
+from chatbrief.config.models import Config
+from chatbrief.grouper import GroupedPoint
+from chatbrief.message import Message
+from chatbrief.summarizer import ERROR_SUMMARY_PREFIX
+from chatbrief.ui_strings import get_month_names, get_ui_strings
 
 
 class DigestFormatter:
@@ -42,10 +42,10 @@ class DigestFormatter:
         return f"{dt.day:02d} {month_name} {dt.year}"
 
     def _create_channel_section(
-        self,
-        channel_name: str,
-        summary: str,
-        channel_url: Optional[str] = None,
+            self,
+            channel_name: str,
+            summary: str,
+            channel_url: Optional[str] = None,
     ) -> str:
         """
         Create section for a single channel.
@@ -70,12 +70,12 @@ class DigestFormatter:
         return "\n".join(section_parts)
 
     def create_digest(
-        self,
-        overview: str,
-        channel_summaries: Dict[str, str],
-        messages_by_channel: Dict[str, List[Message]],
-        hours: int = 24,
-        channel_urls: Optional[Dict[str, str]] = None,
+            self,
+            overview: str,
+            channel_summaries: dict[str, str],
+            messages_by_channel: dict[str, list[Message]],
+            hours: int = 24,
+            channel_urls: Optional[dict[str, str]] = None,
     ) -> str:
         """
         Create formatted digest.
@@ -169,37 +169,37 @@ class DigestFormatter:
 
         # Tech/Dev
         if any(
-            word in name_lower
-            for word in [
-                "tech",
-                "dev",
-                "code",
-                "программ",
-                "разработ",
-                "فناوری",
-                "تکنولوژی",
-                "برنامه‌نویسی",
-                "برنامه نویسی",
-                "توسعه",
-            ]
+                word in name_lower
+                for word in [
+                    "tech",
+                    "dev",
+                    "code",
+                    "программ",
+                    "разработ",
+                    "فناوری",
+                    "تکنولوژی",
+                    "برنامه‌نویسی",
+                    "برنامه نویسی",
+                    "توسعه",
+                ]
         ):
             return "💻"
 
         # Crypto/Finance
         elif any(
-            word in name_lower
-            for word in [
-                "crypto",
-                "bitcoin",
-                "финанс",
-                "крипто",
-                "ارز",
-                "کریپتو",
-                "بیت‌کوین",
-                "بیت کوین",
-                "مالی",
-                "اقتصاد",
-            ]
+                word in name_lower
+                for word in [
+                    "crypto",
+                    "bitcoin",
+                    "финанс",
+                    "крипто",
+                    "ارز",
+                    "کریپتو",
+                    "بیت‌کوین",
+                    "بیت کوین",
+                    "مالی",
+                    "اقتصاد",
+                ]
         ):
             return "💰"
 
@@ -209,72 +209,72 @@ class DigestFormatter:
 
         # Business
         elif any(
-            word in name_lower
-            for word in [
-                "business",
-                "бизнес",
-                "startup",
-                "کسب‌وکار",
-                "کسب و کار",
-                "استارتاپ",
-                "تجارت",
-            ]
+                word in name_lower
+                for word in [
+                    "business",
+                    "бизнес",
+                    "startup",
+                    "کسب‌وکار",
+                    "کسب و کار",
+                    "استارتاپ",
+                    "تجارت",
+                ]
         ):
             return "💼"
 
         # Science
         elif any(
-            word in name_lower
-            for word in [
-                "science",
-                "research",
-                "наук",
-                "علم",
-                "علوم",
-                "پژوهش",
-                "تحقیق",
-            ]
+                word in name_lower
+                for word in [
+                    "science",
+                    "research",
+                    "наук",
+                    "علم",
+                    "علوم",
+                    "پژوهش",
+                    "تحقیق",
+                ]
         ):
             return "🔬"
 
         # AI/ML
         elif any(
-            word in name_lower
-            for word in [
-                "ai",
-                "ml",
-                "artificial",
-                "ии",
-                "искусственн",
-                "هوش مصنوعی",
-                "یادگیری ماشین",
-                "یادگیری ماشینی",
-            ]
+                word in name_lower
+                for word in [
+                    "ai",
+                    "ml",
+                    "artificial",
+                    "ии",
+                    "искусственн",
+                    "هوش مصنوعی",
+                    "یادگیری ماشین",
+                    "یادگیری ماشینی",
+                ]
         ):
             return "🤖"
 
         # Design
         elif any(
-            word in name_lower
-            for word in [
-                "design",
-                "дизайн",
-                "ui",
-                "ux",
-                "طراحی",
-            ]
+                word in name_lower
+                for word in [
+                    "design",
+                    "дизайн",
+                    "ui",
+                    "ux",
+                    "طراحی",
+                ]
         ):
             return "🎨"
 
         # Marketing
         elif any(
-            word in name_lower
-            for word in [
-                "marketing",
-                "маркетинг",
-                "smm",
-                "بازاریابی",
-            ]
+                word in name_lower
+                for word in [
+                    "marketing",
+                    "маркетинг",
+                    "smm",
+                    "بازاریابی",
+                ]
         ):
             return "📈"
 
@@ -283,12 +283,12 @@ class DigestFormatter:
             return "📺"
 
     def format_channel_message(
-        self,
-        channel_name: str,
-        summary: str,
-        messages: List[Message],
-        hours: int = 24,
-        channel_url: Optional[str] = None,
+            self,
+            channel_name: str,
+            summary: str,
+            messages: list[Message],
+            hours: int = 24,
+            channel_url: Optional[str] = None,
     ) -> str:
         """
         Format a single channel's summary as a standalone message.
@@ -348,7 +348,7 @@ class DigestFormatter:
         return message
 
     def format_summary_message(
-        self, total_channels: int, total_messages: int, hours: int = 24
+            self, total_channels: int, total_messages: int, hours: int = 24
     ) -> str:
         """
         Format a summary message for the digest header.
@@ -390,7 +390,7 @@ class DigestFormatter:
         return mapping.get(name_lower, "📌")
 
     def format_group_message(
-        self, group_name: str, points: List[GroupedPoint], hours: int = 24
+            self, group_name: str, points: list[GroupedPoint], hours: int = 24
     ) -> str:
         """Format a single topic group as a Telegram message.
 
@@ -436,7 +436,7 @@ class DigestFormatter:
         return "\n".join(parts)
 
     def format_group_summary_message(
-        self, group_names: List[str], total_points: int, hours: int = 24
+            self, group_names: list[str], total_points: int, hours: int = 24
     ) -> str:
         """Format a summary header message listing active groups.
 
@@ -464,7 +464,7 @@ class DigestFormatter:
         )
         return message
 
-    def _create_statistics(self, messages_by_channel: Dict[str, List[Message]], hours: int) -> str:
+    def _create_statistics(self, messages_by_channel: dict[str, list[Message]], hours: int) -> str:
         """
         Create statistics footer.
 
@@ -501,8 +501,8 @@ class DigestFormatter:
 
 def main():
     """Test formatter."""
-    from src.config.loader import load_config
-    from src.utils import setup_logging
+    from chatbrief.config.loader import load_config
+    from chatbrief.utils import setup_logging
 
     config = load_config()
     logger = setup_logging(config.log_level)
