@@ -5,7 +5,7 @@ This is the operational guide for AI-assisted work in Chatbrief. Project facts b
 ## Start every session with repository verification
 
 1. Confirm repository `hosmaznazfar/Chatbrief`, intended branch, and current GitHub HEAD.
-2. Read `CHATGPT_CONTEXT.md`, `docs/handover/current.md`, `FEATURE_IMPLEMENTATION_CHECKLIST.md`, the root `README.md`, relevant ADRs/plans, and the source/tests related to the task.
+2. Read `CHATGPT_CONTEXT.md`, `docs/AI_WORKFLOW.md`, `docs/handover/current.md`, `FEATURE_IMPLEMENTATION_CHECKLIST.md`, the root `README.md`, relevant ADRs/plans, and the source/tests related to the task.
 3. Read [`docs/GRAPHIFY.md`](docs/GRAPHIFY.md) for the shared code-graph workflow. Check the graph artifacts on the exact branch/commit being inspected.
 4. Reconcile the handover with current source. GitHub state does not reveal the developer's local uncommitted work; ask for local `git status` when it matters.
 5. Inspect the current implementation and existing conventions before proposing changes. Do not infer that a planned feature or architecture is already implemented.
@@ -26,16 +26,20 @@ Do not add dependencies or change package managers just to fit the workflow. Gra
 
 ## Graph-assisted development (Graphify)
 
-Chatbrief uses Graphify's generated graph as a **Git-tracked architecture artifact** so that both local coding assistants and ChatGPT working through GitHub can inspect code relationships.
+Chatbrief uses the standalone Graphify CLI locally. Its generated graph artifacts are committed to GitHub so ChatGPT can inspect the same architecture map alongside source code.
 
-- Read [`docs/GRAPHIFY.md`](docs/GRAPHIFY.md) for installation, generation, refresh, Git, and assistant procedures.
-- The primary committed artifacts are `graphify-out/graph.json`, `graphify-out/GRAPH_REPORT.md`, and `graphify-out/graph.html`.
-- Do not add `graphify-out/` to `.gitignore`; review and commit generated graph updates with the source revision they describe.
-- Install Graphify locally with `uv tool install graphifyy`; register Codex with `graphify codex install` when needed. This is optional developer tooling and must not be added to `pyproject.toml`, `uv.lock`, Docker, application runtime, or `.pj/workflow.toml`.
-- In Codex, build with `$graphify .` and refresh with `$graphify . --update`.
-- For ChatGPT sessions using GitHub, inspect the committed graph report and relevant graph JSON on the selected branch. Do not claim access to a local filesystem or MCP server that is not available in the current session.
-- Use graph relationships to guide exploration and impact analysis, then verify them against current source, tests, and ADRs. Extracted edges are stronger evidence than inferred/ambiguous edges, but source remains authoritative.
-- If the graph is missing or stale, report that explicitly and trace source directly. Do not treat a stale graph as current architecture.
+- Follow [docs/GRAPHIFY.md](docs/GRAPHIFY.md) for the local CLI, pj automation, Git hooks, privacy, and commit workflow.
+- Follow [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md) for the complete project AI workflow adapted from AIWorkFlow.
+- No Codex integration, editor skill, MCP server, or assistant-specific Graphify installation is required.
+- Install the standalone CLI with **./pj graph install**.
+- Build/update/synchronize locally with **./pj graph build**, **./pj graph update**, and **./pj graph sync**.
+- Query locally with **./pj graph query "question"**, **./pj graph path "A" "B"**, and **./pj graph explain "symbol"**.
+- Install Graphify's local Git automation with **./pj graph hooks install**; inspect it with **./pj graph hooks status**.
+- Commit **graphify-out/graph.json**, **graphify-out/GRAPH_REPORT.md**, and **graphify-out/graph.html** with the source revision they describe. Keep known machine-local state ignored.
+- The default pj graph build/update operations are code-only and set **GRAPHIFY_BACKEND=none**; semantic document extraction is opt-in with **--semantic**.
+- For ChatGPT sessions using GitHub, read the committed report and relevant graph JSON on the selected branch. The assistant cannot run the developer's local CLI or inspect uncommitted files.
+- Use graph relationships to guide exploration and impact analysis, then verify them against current source, tests, and ADRs. Inferred/ambiguous edges are leads, not facts.
+- If the graph is missing or may be stale, state that explicitly and trace the source directly.
 
 ## Chat workflow conventions
 
@@ -106,7 +110,7 @@ Do not claim any command ran unless its output is available. The existing CI wor
 
 ## Project workflow helper
 
-The root `./pj` is a Python 3.14+ script implemented with the Python standard library only. It does not require Cargo, Rust, Node.js, npm, Graphify, or third-party Python packages.
+The root `./pj` is a Python 3.14+ script implemented with the Python standard library only. It does not require Cargo, Rust, Node.js, npm, or third-party Python packages. Graphify is an optional external CLI used by the separate pj graph command group.
 
 Runtime/tool requirements:
 - Python 3.14+ to execute `pj`.
@@ -122,7 +126,7 @@ Read-only commands:
 ./pj check --dry-run
 ```
 
-`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The workflow is deliberately Python-only; the separate Astro website is not part of `pj` checks. Graphify remains a separate optional AI navigation tool and is not a `pj` prerequisite.
+`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The quality-check workflow remains Python-only; the separate Astro website is not part of pj checks. Graphify is not a check prerequisite: its independent pj graph commands are optional local graph operations.
 
 ## Git and change safety
 
