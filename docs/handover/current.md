@@ -6,7 +6,7 @@
 
 - Repository: https://github.com/hosmaznazfar/Chatbrief
 - Active branch: refactor/chatbrief-package-layout
-- Latest verified remote commit before this handover update: e4a58928a83c5f9f4c6db5b3f0f67a77880bfd9a (README documents the AI workflow and local Graphify commands).
+- Latest verified remote commit before this handover update: 88de580c90af48ce31fd3a482669979863f95b35 (removed obsolete Graphify/Codex instructions from the handover).
 - This integration was made directly on the remote branch through GitHub. The developer's local branch/HEAD/worktree remains unknown; inspect local status before pulling.
 - Workflow source: https://github.com/hosmaznazfar/AIWorkFlow (the project workflow was adapted to Chatbrief's Python/Astro stack; the Rust implementation was not copied).
 
@@ -84,7 +84,7 @@ The branch contains the src/chatbrief/ package layout and imports rooted at chat
 
 ## Validation status
 
-- Read-back verification of the latest pj and documentation changes is pending.
+- Read-back verification succeeded for pj, docs/GRAPHIFY.md, docs/AI_WORKFLOW.md, AI_README.md, CHATGPT_CONTEXT.md, docs/CHATGPT_NEW_CHAT_STARTER.md, FEATURE_IMPLEMENTATION_CHECKLIST.md, README.md, docs/handover/current.md, .gitignore, and .pj/workflow.toml.
 - No local Graphify installation, graph generation, query, or Git hook installation was performed.
 - No Chatbrief tests, Ruff, Pyright, Pylint, Bandit, Vulture, or website build were run. Do not infer runtime correctness from GitHub file writes.
 - Per the developer's instruction, defer the full Chatbrief test suite until the refactor is complete and the developer explicitly authorizes validation.
