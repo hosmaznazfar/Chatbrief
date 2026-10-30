@@ -146,7 +146,7 @@ Read-only commands:
 
 - Inspect before editing. Preserve user changes and unrelated project conventions.
 - Keep changes scoped to the requested task and branch.
-- Do not stage, commit, push, merge, deploy, publish, or run migrations unless explicitly approved.
+- For an authorized feature/fix task, commit each reviewed implementation step and its related documentation directly to the intended branch. Ask before pushing, merging, deploying, publishing, or running migrations. When the local Graphify CLI is unavailable to the assistant, ask the developer to refresh, review, and commit graph artifacts locally.
 - Do not overwrite existing docs/config wholesale; make focused updates and preserve project-specific content.
 - Never put credentials, tokens, private session files, or real local config in tracked files.
 - Distinguish verified GitHub state from unknown local worktree state.
