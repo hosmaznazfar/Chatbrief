@@ -26,9 +26,9 @@ Do not add dependencies or change package managers just to fit the workflow. Gra
 
 ## Required feature/fix workflow
 
-For every feature request, bug fix, or codebase investigation, follow the ordered workflow in [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md): inspect the current branch and code relationships; request a local graph refresh when needed; inspect the committed graph update; research material decision options and ask the developer to choose; then implement approved work in small reviewed commits. Update related documentation alongside each step. After implementation is complete, finalize the migration and planning Markdown files and update the handover.
+For every feature request, bug fix, or codebase investigation, follow the ordered workflow in [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md): inspect the current branch and code relationships; request a local graph refresh at the start of each non-trivial task; inspect the committed graph update (or confirm there was no graph diff); research material decision options and ask the developer to choose; then implement approved work in small reviewed commits. Update related documentation alongside each step. After implementation is complete, finalize the migration and planning Markdown files and update the handover.
 
-When local Graphify execution is unavailable to the assistant, ask the developer to run these commands and commit the reviewed graph artifacts before continuing:
+For each non-trivial feature, fix, or code review, ask the developer to run these commands after the initial source inspection. The developer commits any reviewed graph changes before the assistant proceeds to decisions:
 
 ```bash
 ./pj graph refresh
@@ -61,7 +61,7 @@ These are assistant workflow conventions, not native ChatGPT slash-command regis
 
 - `/help`: explain the available workflows and safety rules.
 - `/status`: inspect branch, GitHub HEAD, local worktree (only when local output is available), graph artifact availability/freshness, and validation state.
-- `/feature <goal>`: inspect graph/source/docs/tests; request a graph refresh and graph-artifact commit if needed; research material options and ask the developer to decide; then implement approved steps as focused commits, update related docs, and finalize migration/planning files after implementation.
+- `/feature <goal>`: inspect graph/source/docs/tests; request a graph refresh and review graph changes (commit only if artifacts changed); research material options and ask the developer to decide; then implement approved steps as focused commits, update related docs, and finalize migration/planning files after implementation.
 - `/fix <problem>`: trace graph and source to establish root cause; research material fix options and ask the developer to decide; then implement approved changes in reviewed, focused commits.
 - `/trace <area>`: use committed Graphify artifacts when available to follow imports/calls/dependencies, then verify every relevant relationship against actual source and tests.
 - `/review`: inspect the complete diff for architecture, correctness, security, data integrity, localization, tests, and whether graph artifacts need updating.
