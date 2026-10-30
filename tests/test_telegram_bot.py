@@ -31,8 +31,21 @@ def _make_command_service() -> MagicMock:
     service.check_access.return_value = None
     service.digest = AsyncMock()
     service.cleanup = AsyncMock()
-    service.status = MagicMock()
-    service.help = MagicMock()
+    service.status = MagicMock(
+        return_value=CommandResult(
+            status=CommandStatus.SUCCESS,
+            message=(
+                "Telebrief Status\\nProvider\\nModel\\nEnabled\\n"
+                "Commands:\\nAutomatic mode:\\nFeatures:"
+            ),
+        )
+    )
+    service.help = MagicMock(
+        return_value=CommandResult(
+            status=CommandStatus.SUCCESS,
+            message="Commands:\\nAutomatic mode:\\nFeatures:",
+        )
+    )
     return service
 
 
@@ -742,7 +755,12 @@ async def test_handle_help_unauthorized(sample_config, mock_logger):
     """handle_help silently ignores unauthorized users."""
     sample_config.settings.target_user_id = 123
 
-    handler = TelegramBot(sample_config, mock_logger, _make_command_service())
+    service = _make_command_service()
+    service.help.return_value = CommandResult(
+        status=CommandStatus.UNAUTHORIZED,
+        message="",
+    )
+    handler = TelegramBot(sample_config, mock_logger, service)
     update = _make_update(456)
 
     await handler.handle_help(update, MagicMock())
