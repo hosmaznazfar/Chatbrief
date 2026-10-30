@@ -1,3 +1,5 @@
+> **Archived implementation record (2026-10-30).** The implementation described here is present in the current `src/chatbrief/` package and corresponding tests. Original `src.*` paths, Telebrief branding, and legacy tool commands are retained as historical design context. Implementation tasks are marked complete where verified in source; validation commands remain unchecked because the current package/platform refactor has not yet been authorized for full validation.
+
 # Storage Layer: SQLite (default) + Postgres (advanced)
 
 ## Overview
@@ -71,7 +73,7 @@ collect → **save to DB** → summarize → format → send
 **Files:**
 - Modify: `src/config_loader.py`
 
-- [ ] Add `StorageConfig` dataclass after `DigestGroupConfig`:
+- [x] Add `StorageConfig` dataclass after `DigestGroupConfig`:
 
   ```python
   @dataclass
@@ -82,15 +84,15 @@ collect → **save to DB** → summarize → format → send
       url: str = ""  # postgres only
   ```
 
-- [ ] Add `_parse_storage_config(yaml_config: dict) -> StorageConfig` helper that:
+- [x] Add `_parse_storage_config(yaml_config: dict) -> StorageConfig` helper that:
   - Reads optional top-level `storage:` block (missing = all defaults)
   - Validates each field with `isinstance` checks matching `_parse_channel_entry` style
   - Validates `backend` is `"sqlite"` or `"postgres"` (raises `ValueError` otherwise)
   - Validates `url` is non-empty when `backend == "postgres"` **and** `enabled is True` (raises `ValueError`)
   - Validates `path` is a non-empty string for sqlite
-- [ ] Add `storage: StorageConfig = field(default_factory=StorageConfig)` to `Config` dataclass
+- [x] Add `storage: StorageConfig = field(default_factory=StorageConfig)` to `Config` dataclass
 - [ ] Call `_parse_storage_config(yaml_config)` in `load_config()` and pass result to `Config(..., storage=storage_config)`
-- [ ] Write tests for `_parse_storage_config`:
+- [x] Write tests for `_parse_storage_config`:
   - Missing `storage:` block → returns defaults (enabled=False, backend="sqlite")
   - `backend: "postgres"` with `enabled: true` and empty `url` → `ValueError`
   - `backend: "invalid"` → `ValueError`
@@ -105,10 +107,10 @@ collect → **save to DB** → summarize → format → send
 
 **Backend lifecycle contract**: `create_storage()` factory calls `await backend.initialize()` before returning. Caller only needs to call `save_messages()` then `close()`. No separate `initialize()` call needed from outside the factory.
 
-- [ ] Define `StorageBackend` as a `typing.Protocol` with:
+- [x] Define `StorageBackend` as a `typing.Protocol` with:
   - `async def save_messages(self, messages: list[Message]) -> int`
   - `async def close(self) -> None`
-- [ ] Implement `SQLiteBackend`:
+- [x] Implement `SQLiteBackend`:
   - `__init__(self, path: str)` — stores path, `self._conn = None`
   - `async def initialize(self)` — creates parent dirs via `Path(self._path).parent.mkdir(parents=True, exist_ok=True)`, opens `aiosqlite` connection, runs CREATE TABLE IF NOT EXISTS + CREATE INDEX IF NOT EXISTS
   - `async def save_messages(messages: list[Message]) -> int` — `executemany` insert, commit, return `len(messages)`. Empty list → return 0 immediately.
@@ -134,7 +136,7 @@ collect → **save to DB** → summarize → format → send
     ```
 
   - Timestamp stored as `msg.timestamp.isoformat()` (UTC-aware datetimes from collector)
-- [ ] Implement `PostgresBackend`:
+- [x] Implement `PostgresBackend`:
   - `__init__(self, url: str)` — stores url, `self._pool = None`
   - `async def initialize(self)` — creates `asyncpg` pool, runs CREATE TABLE IF NOT EXISTS + INDEX
   - `async def save_messages(...)` — `pool.executemany()` with Postgres params, return count
@@ -160,12 +162,12 @@ collect → **save to DB** → summarize → format → send
     ```
 
   - Timestamp passed as `msg.timestamp` (datetime object with UTC tzinfo)
-- [ ] Implement `create_storage(config: StorageConfig) -> StorageBackend | None` factory:
+- [x] Implement `create_storage(config: StorageConfig) -> StorageBackend | None` factory:
   - Returns `None` if `config.enabled` is `False`
   - Instantiates `SQLiteBackend(config.path)` or `PostgresBackend(config.url)`
   - Calls `await backend.initialize()` before returning
   - Raises `ValueError` for unknown `config.backend` value (defensive, parser already validates)
-- [ ] Write tests in `tests/test_storage.py` (all async tests use `@pytest.mark.asyncio`):
+- [x] Write tests in `tests/test_storage.py` (all async tests use `@pytest.mark.asyncio`):
   - `SQLiteBackend`: `save_messages` returns correct count, two saves of same data both stored (append-only), empty list returns 0
   - `SQLiteBackend`: `close()` is safe to call twice (idempotent), safe when never initialized
   - `create_storage`: `enabled=False` → returns `None`
@@ -180,9 +182,9 @@ collect → **save to DB** → summarize → format → send
 
 Wire at the `_collect_messages()` level — this is the single collection chokepoint used by all orchestration paths (scheduler, bot commands, digest mode). Wiring here avoids duplicating the logic in every caller.
 
-- [ ] Import `create_storage` and `StorageConfig` from `src.storage` (or only `create_storage` if `StorageConfig` not needed directly)
-- [ ] Modify `_collect_messages()` signature to accept `storage_config: StorageConfig` (passed from `config.storage`)
-- [ ] After `await collector.disconnect()` (inside the `finally`), add storage block:
+- [x] Import `create_storage` and `StorageConfig` from `src.storage` (or only `create_storage` if `StorageConfig` not needed directly)
+- [x] Modify `_collect_messages()` signature to accept `storage_config: StorageConfig` (passed from `config.storage`)
+- [x] After `await collector.disconnect()` (inside the `finally`), add storage block:
 
   ```python
   storage = await create_storage(storage_config)
@@ -199,7 +201,7 @@ Wire at the `_collect_messages()` level — this is the single collection chokep
 
   Storage failures are logged but **do not abort digest generation**.
 - [ ] Update all callers of `_collect_messages()` to pass `config.storage`
-- [ ] Write tests for `_collect_messages` wiring (use `AsyncMock`/`MagicMock`):
+- [x] Write tests for `_collect_messages` wiring (use `AsyncMock`/`MagicMock`):
   - `storage.enabled=False` → `create_storage` not called (or returns None, no save)
   - `storage.enabled=True` → `save_messages` called with flat message list
   - `save_messages` raises → exception logged, function returns normally (digest not aborted)
@@ -212,7 +214,7 @@ Wire at the `_collect_messages()` level — this is the single collection chokep
 - Modify: `requirements.txt`
 - Modify: `config.yaml.example`
 
-- [ ] Add to `requirements.txt` (match existing `>=` pinning style):
+- [x] Add to `requirements.txt` (match existing `>=` pinning style):
 
   ```
 
@@ -222,7 +224,7 @@ Wire at the `_collect_messages()` level — this is the single collection chokep
 
   ```
 
-- [ ] Add commented storage block to `config.yaml.example` after the `api_timeout` line:
+- [x] Add commented storage block to `config.yaml.example` after the `api_timeout` line:
 
   ```yaml
 
@@ -243,7 +245,7 @@ Wire at the `_collect_messages()` level — this is the single collection chokep
 **Files:**
 - Modify: `tests/test_storage.py`
 
-- [ ] Add `TestPostgresBackend` class at top of file with:
+- [x] Add `TestPostgresBackend` class at top of file with:
 
   ```python
 
@@ -254,18 +256,18 @@ Wire at the `_collect_messages()` level — this is the single collection chokep
 
   ```
 
-- [ ] Mirror same 3 SQLiteBackend save tests using the env-var URL
-- [ ] Add `close()` idempotent / safe-when-uninitialized test for `PostgresBackend`
-- [ ] Add `create_storage` test: `backend="postgres"` with empty url + `enabled=True` → `ValueError` raised by `_parse_storage_config` (test via config loader, not factory directly)
+- [x] Mirror same 3 SQLiteBackend save tests using the env-var URL
+- [x] Add `close()` idempotent / safe-when-uninitialized test for `PostgresBackend`
+- [x] Add `create_storage` test: `backend="postgres"` with empty url + `enabled=True` → `ValueError` raised by `_parse_storage_config` (test via config loader, not factory directly)
 - [ ] If CI has no `TELEBRIEF_TEST_PG_URL`, add `# pragma: no cover` to `PostgresBackend.save_messages` body to prevent coverage drop below 49% threshold
 - [ ] Run tests — must pass before Task 6
 
 ### Task 6: Verify acceptance criteria
 
 - [ ] `storage.enabled: false` (default) — existing behavior unchanged, no DB file created, all current tests pass
-- [ ] `storage.enabled: true, backend: sqlite` — `data/messages.db` created, `messages` table exists with index `idx_messages_channel_timestamp`
-- [ ] `storage.enabled: true, backend: postgres, url: ""` — `ValueError` from `load_config` at startup
-- [ ] Storage failure (mock `save_messages` to raise) — digest still completes, error logged
+- [x] `storage.enabled: true, backend: sqlite` — `data/messages.db` created, `messages` table exists with index `idx_messages_channel_timestamp`
+- [x] `storage.enabled: true, backend: postgres, url: ""` — `ValueError` from `load_config` at startup
+- [x] Storage failure (mock `save_messages` to raise) — digest still completes, error logged
 - [ ] Run full test suite: `uv run pytest tests/ -v`
 - [ ] Run type check: `uv run mypy src/`
 - [ ] Run lint: `uv tool run ruff check src/ tests/`
@@ -273,8 +275,8 @@ Wire at the `_collect_messages()` level — this is the single collection chokep
 
 ### Task 7: [Final] Move plan and update docs
 
-- [ ] Move this plan: `mkdir -p docs/plans/completed && mv docs/plans/20260430-storage-layer.md docs/plans/completed/`
-- [ ] Update `config.yaml.example` comment if anything changed during implementation
+- [x] Move this plan: `mkdir -p docs/plans/completed && mv docs/plans/20260430-storage-layer.md docs/plans/completed/`
+- [x] Update `config.yaml.example` comment if anything changed during implementation
 
 ---
 

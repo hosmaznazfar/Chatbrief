@@ -1,3 +1,5 @@
+> **Archived implementation record (2026-10-30).** The implementation described here is present in the current `src/chatbrief/` package and corresponding tests. Original `src.*` paths, Telebrief branding, and legacy tool commands are retained as historical design context. Implementation tasks are marked complete where verified in source; validation commands remain unchecked because the current package/platform refactor has not yet been authorized for full validation.
+
 # Extensibility Architecture: Filters, Prompts, Storage Read API, Plugin Loader
 
 ## Overview
@@ -87,11 +89,11 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 
 - Create: `docs/adr/0001-extensibility-architecture.md`
 
-- [ ] write Context section (issue #20 motivation, issue #24 design questions)
-- [ ] write Decision section (Option A: Protocol + dotted-path plugin loader)
-- [ ] write Alternatives Rejected section (Option B subclassing, Option C event bus, with reasons)
-- [ ] write Consequences section (security note: dotted-path import = arbitrary code execution, equivalent threat model to existing config since YAML already holds API keys; note that filter modules must use `from __future__ import annotations` if importing `ChannelConfig` to avoid import cycles)
-- [ ] write Migration section (phased rollout, each phase backwards compatible)
+- [x] write Context section (issue #20 motivation, issue #24 design questions)
+- [x] write Decision section (Option A: Protocol + dotted-path plugin loader)
+- [x] write Alternatives Rejected section (Option B subclassing, Option C event bus, with reasons)
+- [x] write Consequences section (security note: dotted-path import = arbitrary code execution, equivalent threat model to existing config since YAML already holds API keys; note that filter modules must use `from __future__ import annotations` if importing `ChannelConfig` to avoid import cycles)
+- [x] write Migration section (phased rollout, each phase backwards compatible)
 - [ ] verify markdownlint MD031 compliance (blank line before/after fenced code blocks)
 - [ ] run pre-commit on edited markdown: `uv run pre-commit run markdownlint --files docs/adr/0001-extensibility-architecture.md`
 
@@ -104,11 +106,11 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Create: `tests/extensions/__init__.py`
 - Create: `tests/extensions/test_loader.py`
 
-- [ ] create `src/extensions/__init__.py` (empty)
-- [ ] implement `load_class(dotted_path: str) -> type` in `src/extensions/loader.py` using `importlib.import_module` + `getattr`
-- [ ] raise `ValueError` with helpful message on missing module / missing attribute / non-class result
-- [ ] create `tests/extensions/__init__.py` (empty)
-- [ ] write tests in `tests/extensions/test_loader.py`: valid path resolves, missing module raises, missing attr raises, non-class raises
+- [x] create `src/extensions/__init__.py` (empty)
+- [x] implement `load_class(dotted_path: str) -> type` in `src/extensions/loader.py` using `importlib.import_module` + `getattr`
+- [x] raise `ValueError` with helpful message on missing module / missing attribute / non-class result
+- [x] create `tests/extensions/__init__.py` (empty)
+- [x] write tests in `tests/extensions/test_loader.py`: valid path resolves, missing module raises, missing attr raises, non-class raises
 - [ ] run `uv run pytest tests/extensions/ -v` — must pass before next task
 
 ### Phase 2 — Filter Protocol + Chain
@@ -120,11 +122,11 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Create: `src/extensions/filters.py`
 - Create: `tests/extensions/test_filters.py`
 
-- [ ] define `MessageFilter` Protocol in `src/extensions/filters.py` with `name: str` attribute and `async def filter(self, channel: ChannelConfig, messages: list[Message]) -> list[Message]: ...` (use `# noqa: E704` per CLAUDE.md flake8 rule)
-- [ ] implement `KeywordFilter(include: list[str], exclude: list[str])` — case-insensitive substring match on `Message.text`
-- [ ] implement `RegexFilter(pattern: str, mode: Literal["include","exclude"])` — compiled once, applied to `Message.text`
-- [ ] implement `MinLengthFilter(min_chars: int)` — drops messages shorter than threshold
-- [ ] write tests for each builtin: matches, non-matches, empty input, edge cases
+- [x] define `MessageFilter` Protocol in `src/extensions/filters.py` with `name: str` attribute and `async def filter(self, channel: ChannelConfig, messages: list[Message]) -> list[Message]: ...` (use `# noqa: E704` per CLAUDE.md flake8 rule)
+- [x] implement `KeywordFilter(include: list[str], exclude: list[str])` — case-insensitive substring match on `Message.text`
+- [x] implement `RegexFilter(pattern: str, mode: Literal["include","exclude"])` — compiled once, applied to `Message.text`
+- [x] implement `MinLengthFilter(min_chars: int)` — drops messages shorter than threshold
+- [x] write tests for each builtin: matches, non-matches, empty input, edge cases
 - [ ] run `uv run pytest tests/extensions/test_filters.py -v` — must pass before next task
 
 #### Task 4: FilterConfig parsing
@@ -134,15 +136,15 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Modify: `src/config_loader.py`
 - Modify: `tests/test_config_loader.py`
 
-- [ ] add `FilterSpec` dataclass: `class_path: str`, `config: dict[str, Any]` (kept stylistically consistent with `StorageConfig` / `ChannelConfig` dataclass pattern)
-- [ ] add `filters: list[FilterSpec] = field(default_factory=list)` to `Settings`
-- [ ] add `filters: list[FilterSpec] | None = None` to `ChannelConfig` (None = use global, `[]` = explicit empty override)
-- [ ] implement `_parse_filter_specs(raw_list, path_label)` helper with `isinstance` checks (matches `_parse_storage_config` style)
-- [ ] YAML key for the dotted path is `class_path:` (NOT `class:` — Python keyword conflict)
-- [ ] wire `_parse_filter_specs` into channel parsing (`_parse_channel_entry`) and global settings parsing
-- [ ] structural validation only at config load (string/dict types, required `class_path` field). Class resolution deferred to instantiation time in `core.py::_apply_filters` — avoids importing user code during `load_config()` (which runs in tests, smoke checks, bot startup) and avoids import cycles when filter modules reference `ChannelConfig`.
-- [ ] verify `tests/conftest.py` `sample_config` fixture still constructs without changes (every new field has a default)
-- [ ] write tests: valid filter spec, invalid type (non-string `class_path`, non-dict `config`), missing `class_path`, per-channel override replaces global, channel `filters: []` is explicit no-op at config layer
+- [x] add `FilterSpec` dataclass: `class_path: str`, `config: dict[str, Any]` (kept stylistically consistent with `StorageConfig` / `ChannelConfig` dataclass pattern)
+- [x] add `filters: list[FilterSpec] = field(default_factory=list)` to `Settings`
+- [x] add `filters: list[FilterSpec] | None = None` to `ChannelConfig` (None = use global, `[]` = explicit empty override)
+- [x] implement `_parse_filter_specs(raw_list, path_label)` helper with `isinstance` checks (matches `_parse_storage_config` style)
+- [x] YAML key for the dotted path is `class_path:` (NOT `class:` — Python keyword conflict)
+- [x] wire `_parse_filter_specs` into channel parsing (`_parse_channel_entry`) and global settings parsing
+- [x] structural validation only at config load (string/dict types, required `class_path` field). Class resolution deferred to instantiation time in `core.py::_apply_filters` — avoids importing user code during `load_config()` (which runs in tests, smoke checks, bot startup) and avoids import cycles when filter modules reference `ChannelConfig`.
+- [x] verify `tests/conftest.py` `sample_config` fixture still constructs without changes (every new field has a default)
+- [x] write tests: valid filter spec, invalid type (non-string `class_path`, non-dict `config`), missing `class_path`, per-channel override replaces global, channel `filters: []` is explicit no-op at config layer
 - [ ] run `uv run pytest tests/test_config_loader.py -v` — must pass before next task
 
 #### Task 5: Filter chain wiring in core
@@ -152,12 +154,12 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Modify: `src/core.py`
 - Create: `tests/test_core_filters.py`
 
-- [ ] add `_apply_filters(channel_cfg: ChannelConfig, messages: list[Message], config: Config, logger) -> list[Message]` helper in `src/core.py` (takes full `Config`, reads channel + global filter specs from there)
-- [ ] resolve effective filter list: `channel_cfg.filters` if not `None` else `config.settings.filters`
-- [ ] instantiate each filter via `load_class(spec.class_path)(**spec.config)` per call (no caching — instantiation cost is negligible vs Telegram + AI calls; avoids cache-invalidation and test-isolation bugs)
-- [ ] on `load_class` failure or instantiation error: log + skip that filter, digest continues (matches `_save_to_storage` failure pattern in `core.py:30-44`)
-- [ ] apply chain in order; on per-filter `filter()` exception: log + skip that filter; preserve message list as-is for that step
-- [ ] call `_apply_filters` inside `_collect_messages` AFTER `collector.fetch_messages` (which already truncates by `lookback_hours`) and BEFORE `_save_to_storage`
+- [x] add `_apply_filters(channel_cfg: ChannelConfig, messages: list[Message], config: Config, logger) -> list[Message]` helper in `src/core.py` (takes full `Config`, reads channel + global filter specs from there)
+- [x] resolve effective filter list: `channel_cfg.filters` if not `None` else `config.settings.filters`
+- [x] instantiate each filter via `load_class(spec.class_path)(**spec.config)` per call (no caching — instantiation cost is negligible vs Telegram + AI calls; avoids cache-invalidation and test-isolation bugs)
+- [x] on `load_class` failure or instantiation error: log + skip that filter, digest continues (matches `_save_to_storage` failure pattern in `core.py:30-44`)
+- [x] apply chain in order; on per-filter `filter()` exception: log + skip that filter; preserve message list as-is for that step
+- [x] call `_apply_filters` inside `_collect_messages` AFTER `collector.fetch_messages` (which already truncates by `lookback_hours`) and BEFORE `_save_to_storage`
 - [ ] write tests: chain ordering, empty input short-circuit, exception isolation (one filter fails, others run), per-channel override semantics, default disabled (empty list), channel `filters: []` causes zero filters to apply even when global has filters defined, unresolvable `class_path` is logged + skipped (does not abort digest)
 - [ ] run `uv run pytest tests/ -v` — full suite must pass before next task
 
@@ -172,12 +174,12 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Modify: `src/summarizer.py`
 - Modify: `tests/test_summarizer.py`
 
-- [ ] create `src/prompts/__init__.py` (empty)
-- [ ] copy `SYSTEM_PROMPT_TEMPLATE` literal verbatim from `src/summarizer.py:19-78` into `src/prompts/base_summary.txt` (keep `{language}` placeholder unchanged — substitution still uses `.replace("{language}", ...)`, NOT `.format()`)
-- [ ] add `_load_base_template(path: str) -> str` helper in `src/summarizer.py` using `Path(path).read_text(encoding="utf-8")`. No module-level cache — file read on Summarizer init is cheap; avoids test-isolation bugs.
-- [ ] default base template path resolves relative to repo root via `Path(__file__).parent.parent / "prompts" / "base_summary.txt"` so cwd-independent (works from systemd, Docker WORKDIR, pytest)
-- [ ] verify Dockerfile / packaging copies `src/prompts/*.txt` into the runtime image (fail-fast if missing — do NOT silently fall back to a literal)
-- [ ] replace literal usage at `src/summarizer.py:215` with loaded template (behavior identical at this stage)
+- [x] create `src/prompts/__init__.py` (empty)
+- [x] copy `SYSTEM_PROMPT_TEMPLATE` literal verbatim from `src/summarizer.py:19-78` into `src/prompts/base_summary.txt` (keep `{language}` placeholder unchanged — substitution still uses `.replace("{language}", ...)`, NOT `.format()`)
+- [x] add `_load_base_template(path: str) -> str` helper in `src/summarizer.py` using `Path(path).read_text(encoding="utf-8")`. No module-level cache — file read on Summarizer init is cheap; avoids test-isolation bugs.
+- [x] default base template path resolves relative to repo root via `Path(__file__).parent.parent / "prompts" / "base_summary.txt"` so cwd-independent (works from systemd, Docker WORKDIR, pytest)
+- [x] verify Dockerfile / packaging copies `src/prompts/*.txt` into the runtime image (fail-fast if missing — do NOT silently fall back to a literal)
+- [x] replace literal usage at `src/summarizer.py:215` with loaded template (behavior identical at this stage)
 - [ ] verify all existing summarizer tests still pass with no behavior change
 - [ ] run `uv run pytest tests/test_summarizer.py -v` — must pass before next task
 
@@ -188,9 +190,9 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Create: `src/extensions/prompts.py`
 - Create: `tests/extensions/test_prompts.py`
 
-- [ ] define `PromptComposer` Protocol in `src/extensions/prompts.py` with `compose(channel: ChannelConfig, group: DigestGroupConfig | None) -> str` (use `# noqa: E704`)
-- [ ] implement `DefaultComposer(base_template: str, language: str)` with composition order: base (after `{language}` substitution) → `group.prompt_extra` (if group present and non-empty) → `channel.prompt_extra` (if non-empty), separated by clear `\n\n` blocks
-- [ ] write tests: base only, base + channel, base + group, base + group + channel ordering, missing group, missing prompt_extra, language substitution
+- [x] define `PromptComposer` Protocol in `src/extensions/prompts.py` with `compose(channel: ChannelConfig, group: DigestGroupConfig | None) -> str` (use `# noqa: E704`)
+- [x] implement `DefaultComposer(base_template: str, language: str)` with composition order: base (after `{language}` substitution) → `group.prompt_extra` (if group present and non-empty) → `channel.prompt_extra` (if non-empty), separated by clear `\n\n` blocks
+- [x] write tests: base only, base + channel, base + group, base + group + channel ordering, missing group, missing prompt_extra, language substitution
 - [ ] run `uv run pytest tests/extensions/test_prompts.py -v` — must pass before next task
 
 #### Task 8: Group binding in config
@@ -200,16 +202,16 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Modify: `src/config_loader.py`
 - Modify: `tests/test_config_loader.py`
 
-- [ ] add `prompt_extra: str = ""` field to `DigestGroupConfig`
-- [ ] add `group: str | None = None` field to `ChannelConfig`
-- [ ] add `PromptsConfig` dataclass: `base_template: str = "src/prompts/base_summary.txt"`, `composer: str = ""` (empty = use `DefaultComposer`)
-- [ ] add `prompts: PromptsConfig = field(default_factory=PromptsConfig)` to `Config`
-- [ ] implement `_parse_prompts_config(yaml_config)` with `isinstance` checks (matches `_parse_storage_config` style)
-- [ ] update `_parse_digest_settings` to read `prompt_extra` per group
-- [ ] update `_parse_channel_entry` to read `group` field
-- [ ] add cross-validation: every `channels[*].group` value must reference an existing `digest_groups[*].name` OR equal `"Other"` OR equal the localized `group_other` UI string (matches `src/grouper.py` runtime behavior which auto-injects "Other"). Fail-fast `ValueError` listing the bad channel/group.
-- [ ] verify `tests/conftest.py` `sample_config` fixture still constructs without changes (every new field has a default)
-- [ ] write tests: valid group binding, unknown group rejected, `Other` accepted, localized `group_other` accepted, missing group field is ok, group prompt_extra parsing, prompts section parsing, missing prompts section uses defaults
+- [x] add `prompt_extra: str = ""` field to `DigestGroupConfig`
+- [x] add `group: str | None = None` field to `ChannelConfig`
+- [x] add `PromptsConfig` dataclass: `base_template: str = "src/prompts/base_summary.txt"`, `composer: str = ""` (empty = use `DefaultComposer`)
+- [x] add `prompts: PromptsConfig = field(default_factory=PromptsConfig)` to `Config`
+- [x] implement `_parse_prompts_config(yaml_config)` with `isinstance` checks (matches `_parse_storage_config` style)
+- [x] update `_parse_digest_settings` to read `prompt_extra` per group
+- [x] update `_parse_channel_entry` to read `group` field
+- [x] add cross-validation: every `channels[*].group` value must reference an existing `digest_groups[*].name` OR equal `"Other"` OR equal the localized `group_other` UI string (matches `src/grouper.py` runtime behavior which auto-injects "Other"). Fail-fast `ValueError` listing the bad channel/group.
+- [x] verify `tests/conftest.py` `sample_config` fixture still constructs without changes (every new field has a default)
+- [x] write tests: valid group binding, unknown group rejected, `Other` accepted, localized `group_other` accepted, missing group field is ok, group prompt_extra parsing, prompts section parsing, missing prompts section uses defaults
 - [ ] run `uv run pytest tests/test_config_loader.py -v` — must pass before next task
 
 #### Task 9: Wire composer into Summarizer
@@ -219,12 +221,12 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Modify: `src/summarizer.py`
 - Modify: `tests/test_summarizer.py`
 
-- [ ] in `Summarizer.__init__`, build composer: load base template via `config.prompts.base_template`, instantiate `DefaultComposer` (or load custom via `load_class(config.prompts.composer)` when non-empty)
-- [ ] build `channel_name -> DigestGroupConfig | None` map at init using `channels[*].group` and `digest_groups`
+- [x] in `Summarizer.__init__`, build composer: load base template via `config.prompts.base_template`, instantiate `DefaultComposer` (or load custom via `load_class(config.prompts.composer)` when non-empty)
+- [x] build `channel_name -> DigestGroupConfig | None` map at init using `channels[*].group` and `digest_groups`
 - [ ] note: `Summarizer` is currently constructed twice per digest run (`core.py:75`, `core.py:157`) — composer rebuild on each is fine because `_load_base_template` is cheap. Custom composers with expensive `__init__` are forks' responsibility.
-- [ ] in `_summarize_channel`, replace lines 215-218 (manual `prompt_extra` append) with `system_prompt = self._composer.compose(channel_cfg, group_cfg)`
-- [ ] preserve existing behavior when `group` and `prompt_extra` both unset (default composer returns base only)
-- [ ] write tests: summarizer uses composer output, channel without group uses base + channel prompt_extra, channel with group uses base + group + channel prompt_extra
+- [x] in `_summarize_channel`, replace lines 215-218 (manual `prompt_extra` append) with `system_prompt = self._composer.compose(channel_cfg, group_cfg)`
+- [x] preserve existing behavior when `group` and `prompt_extra` both unset (default composer returns base only)
+- [x] write tests: summarizer uses composer output, channel without group uses base + channel prompt_extra, channel with group uses base + group + channel prompt_extra
 - [ ] run `uv run pytest tests/test_summarizer.py -v` — must pass before next task
 
 ### Phase 4 — Storage Read API
@@ -236,21 +238,21 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Modify: `src/storage.py`
 - Modify: `tests/test_storage.py`
 
-- [ ] add `query_messages(channel: str | None = None, since: datetime | None = None, until: datetime | None = None, limit: int = 1000) -> list[Message]` to `StorageBackend` Protocol (use `# noqa: E704`)
-- [ ] implement `query_messages` on `SQLiteBackend`: parameterized SELECT with optional WHERE clauses on `channel_name`, `timestamp`; ORDER BY `timestamp DESC`; LIMIT bound
-- [ ] reconstruct `Message` dataclass instances from rows (parse ISO timestamp back to `datetime`)
-- [ ] implement `query_messages` on `PostgresBackend`: same logic with `$1, $2, ...` placeholders
+- [x] add `query_messages(channel: str | None = None, since: datetime | None = None, until: datetime | None = None, limit: int = 1000) -> list[Message]` to `StorageBackend` Protocol (use `# noqa: E704`)
+- [x] implement `query_messages` on `SQLiteBackend`: parameterized SELECT with optional WHERE clauses on `channel_name`, `timestamp`; ORDER BY `timestamp DESC`; LIMIT bound
+- [x] reconstruct `Message` dataclass instances from rows (parse ISO timestamp back to `datetime`)
+- [x] implement `query_messages` on `PostgresBackend`: same logic with `$1, $2, ...` placeholders
 - [ ] annotate `PostgresBackend.query_messages` body with `# pragma: no cover` matching the rest of the class (lines 119-162) so coverage stays ≥49% without `TELEBRIEF_TEST_PG_URL`
-- [ ] write SQLite tests: empty DB returns `[]`, channel filter, since/until filter combos, limit enforcement, ordering, dataclass reconstruction round-trip (save then query)
-- [ ] Postgres tests: gated behind `TELEBRIEF_TEST_PG_URL` env var (existing pattern)
+- [x] write SQLite tests: empty DB returns `[]`, channel filter, since/until filter combos, limit enforcement, ordering, dataclass reconstruction round-trip (save then query)
+- [x] Postgres tests: gated behind `TELEBRIEF_TEST_PG_URL` env var (existing pattern)
 - [ ] run `uv run pytest tests/test_storage.py -v` — must pass before next task
 
 ### Phase 5 — Verification + Documentation
 
 #### Task 11: Verify acceptance criteria
 
-- [ ] verify all gaps from Overview are closed (filter chain, prompt composer, group bindings, storage read API, plugin loader)
-- [ ] verify backwards compatibility: existing `config.yaml.example` runs unchanged with no new fields set
+- [x] verify all gaps from Overview are closed (filter chain, prompt composer, group bindings, storage read API, plugin loader)
+- [x] verify backwards compatibility: existing `config.yaml.example` runs unchanged with no new fields set
 - [ ] run full test suite: `uv run pytest tests/ -v`
 - [ ] run type check: `uv run mypy src/`
 - [ ] run lint: `uv tool run ruff check src/ tests/`
@@ -266,13 +268,13 @@ Output: ADR + 4 phased PRs. Each phase backwards compatible.
 - Modify: `docs/adr/0001-extensibility-architecture.md`
 - Modify: `docs/plans/20260430-extensibility-architecture.md` (this plan)
 
-- [ ] create or extend an "Extensibility" section in README.md with subsections: Filters (chain semantics, builtins, custom plugins), Prompts (composition order, base template override), Group binding (`channels[*].group`), Storage queries (`query_messages` API)
-- [ ] add commented-out filter / group / prompts examples to `config.yaml.example` using the `src.extensions.filters.*` namespace and `class_path:` YAML key
-- [ ] note in ADR which sections shipped (cross-link to PRs)
+- [x] create or extend an "Extensibility" section in README.md with subsections: Filters (chain semantics, builtins, custom plugins), Prompts (composition order, base template override), Group binding (`channels[*].group`), Storage queries (`query_messages` API)
+- [x] add commented-out filter / group / prompts examples to `config.yaml.example` using the `src.extensions.filters.*` namespace and `class_path:` YAML key
+- [x] note in ADR which sections shipped (cross-link to PRs)
 - [ ] verify `tests/extensions/**` is collected by default pytest run: `uv run pytest tests/extensions/ -v`
 - [ ] run pre-commit on edited markdown: `uv run pre-commit run markdownlint --files README.md docs/...`
-- [ ] move this plan to `docs/plans/completed/20260430-extensibility-architecture.md`
-- [ ] mkdir `docs/plans/completed/` if absent
+- [x] move this plan to `docs/plans/completed/20260430-extensibility-architecture.md`
+- [x] mkdir `docs/plans/completed/` if absent
 
 ## Technical Details
 
