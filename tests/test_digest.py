@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from chatbrief.config.models import ChannelConfig, DigestGroupConfig, FilterSpec, StorageConfig
+from chatbrief.config.models import ChannelConfig, FilterSpec, StorageConfig
 from chatbrief.digest import builder as digest_builder
 from chatbrief.digest import cache as digest_cache
 from chatbrief.digest import collector as digest_collector
