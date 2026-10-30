@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.scheduler import DigestScheduler
+from chatbrief.scheduler import DigestScheduler
 
 
 def make_scheduler(sample_config, mock_logger):
@@ -126,7 +126,7 @@ async def test_scheduled_digest_job_success(sample_config, mock_logger):
 
     with pytest.MonkeyPatch.context() as monkeypatch:
         mock_generate = AsyncMock(return_value=True)
-        monkeypatch.setattr("src.scheduler.generate_and_send_digest", mock_generate)
+        monkeypatch.setattr("chatbrief.scheduler.generate_and_send_digest", mock_generate)
 
         await scheduler._scheduled_digest_job()
 
@@ -144,7 +144,7 @@ async def test_scheduled_digest_job_failure(sample_config, mock_logger):
 
     with pytest.MonkeyPatch.context() as monkeypatch:
         mock_generate = AsyncMock(return_value=False)
-        monkeypatch.setattr("src.scheduler.generate_and_send_digest", mock_generate)
+        monkeypatch.setattr("chatbrief.scheduler.generate_and_send_digest", mock_generate)
 
         await scheduler._scheduled_digest_job()
 
@@ -158,7 +158,7 @@ async def test_scheduled_digest_job_exception(sample_config, mock_logger):
 
     with pytest.MonkeyPatch.context() as monkeypatch:
         mock_generate = AsyncMock(side_effect=RuntimeError("digest error"))
-        monkeypatch.setattr("src.scheduler.generate_and_send_digest", mock_generate)
+        monkeypatch.setattr("chatbrief.scheduler.generate_and_send_digest", mock_generate)
 
         await scheduler._scheduled_digest_job()
 

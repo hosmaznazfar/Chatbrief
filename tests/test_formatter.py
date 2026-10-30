@@ -2,8 +2,8 @@
 
 import pytest
 
-from src.chatbrief.formatter import DigestFormatter
-from src.grouper import GroupedPoint
+from chatbrief.formatter import DigestFormatter
+from chatbrief.grouper import GroupedPoint
 
 
 @pytest.fixture
@@ -261,7 +261,7 @@ def test_extract_channel_url_public(sample_config, mock_logger):
     """Extracts base channel URL from a public message link."""
     from datetime import datetime
 
-    from src.message import Message
+    from chatbrief.message import Message
 
     messages = [
         Message(
@@ -283,7 +283,7 @@ def test_extract_channel_url_private(sample_config, mock_logger):
     """Extracts base channel URL from a private message link."""
     from datetime import datetime
 
-    from src.message import Message
+    from chatbrief.message import Message
 
     messages = [
         Message(
@@ -312,7 +312,7 @@ def test_extract_channel_url_fallback_link(sample_config, mock_logger):
     """Returns None when all message links are '#' fallback."""
     from datetime import datetime
 
-    from src.message import Message
+    from chatbrief.message import Message
 
     messages = [
         Message(

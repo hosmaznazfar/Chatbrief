@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.chatbrief.config import ChannelConfig, Config, Settings
+from chatbrief.config.models import ChannelConfig, Config, Platform, Settings
 
 
 @pytest.fixture
@@ -48,6 +48,7 @@ def sample_config():
     )
 
     config = Config(
+        platform=Platform.TELEGRAM,
         channels=channels,
         settings=settings,
         telegram_api_id=12345678,
@@ -64,7 +65,7 @@ def sample_config():
 @pytest.fixture
 def sample_messages():
     """Create sample messages for testing."""
-    from src.message import Message
+    from chatbrief.message import Message
 
     return [
         Message(

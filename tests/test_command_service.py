@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import src.commands.service
-from src.commands.models import CommandStatus
-from src.commands.service import CommandService
+import chatbrief.commands.service
+from chatbrief.commands.models import CommandStatus
+from chatbrief.commands.service import CommandService
 
 
 @pytest.fixture
@@ -54,7 +54,7 @@ async def test_digest_success(english_config, mock_logger):
     service = CommandService(english_config, mock_logger)
 
     with patch.object(
-        src.commands.service,
+        chatbrief.commands.service,
         "generate_and_send_digest",
         new=AsyncMock(return_value=True),
     ):
@@ -73,7 +73,7 @@ async def test_digest_failure(english_config, mock_logger):
     service = CommandService(english_config, mock_logger)
 
     with patch.object(
-        src.commands.service,
+        chatbrief.commands.service,
         "generate_and_send_digest",
         new=AsyncMock(return_value=False),
     ):
@@ -92,7 +92,7 @@ async def test_digest_exception(english_config, mock_logger):
     service = CommandService(english_config, mock_logger)
 
     with patch.object(
-        src.commands.service,
+        chatbrief.commands.service,
         "generate_and_send_digest",
         new=AsyncMock(side_effect=RuntimeError("digest failed")),
     ):
@@ -118,7 +118,7 @@ async def test_digest_rate_limited(english_config, mock_logger):
     service = CommandService(english_config, mock_logger)
 
     with patch.object(
-        src.commands.service,
+        chatbrief.commands.service,
         "generate_and_send_digest",
         new=AsyncMock(return_value=True),
     ):
@@ -172,7 +172,7 @@ async def test_cleanup_success(english_config, mock_logger):
     mock_sender.cleanup_old_digests = AsyncMock(return_value=True)
 
     with patch.object(
-        src.commands.service,
+        chatbrief.commands.service,
         "create_message_sender",
         return_value=mock_sender,
     ):
@@ -195,7 +195,7 @@ async def test_cleanup_failure(english_config, mock_logger):
     mock_sender.cleanup_old_digests = AsyncMock(return_value=False)
 
     with patch.object(
-        src.commands.service,
+        chatbrief.commands.service,
         "create_message_sender",
         return_value=mock_sender,
     ):
@@ -217,7 +217,7 @@ async def test_cleanup_rate_limited(english_config, mock_logger):
     mock_sender.cleanup_old_digests = AsyncMock(return_value=True)
 
     with patch.object(
-        src.commands.service,
+        chatbrief.commands.service,
         "create_message_sender",
         return_value=mock_sender,
     ):
@@ -239,12 +239,12 @@ async def test_rate_limit_resets_after_cooldown(english_config, mock_logger):
 
     with (
         patch.object(
-            src.commands.service,
+            chatbrief.commands.service,
             "generate_and_send_digest",
             new=AsyncMock(return_value=True),
         ),
         patch.object(
-            src.commands.service.time,
+            chatbrief.commands.service.time,
             "monotonic",
             side_effect=[0.0, 10.0, 31.0],
         ),

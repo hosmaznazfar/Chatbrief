@@ -6,9 +6,9 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.chatbrief.config import StorageConfig
-from src.message import Message
-from src.storage import PostgresBackend, SQLiteBackend, create_storage
+from chatbrief.config.models import StorageConfig
+from chatbrief.message import Message
+from chatbrief.storage import PostgresBackend, SQLiteBackend, create_storage
 
 
 def _make_message(
@@ -316,7 +316,7 @@ class TestCreateStorage:
             await create_storage(cfg)
 
     def test_postgres_empty_url_raises_via_config_loader(self, tmp_path, monkeypatch):
-        from src.chatbrief.config.loader import load_config
+        from chatbrief.config.loader import load_config
 
         monkeypatch.setenv("TELEGRAM_API_ID", "12345678")
         monkeypatch.setenv("TELEGRAM_API_HASH", "test_hash")

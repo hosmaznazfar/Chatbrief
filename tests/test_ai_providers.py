@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.ai_providers import (
+from chatbrief.ai_providers import (
     AnthropicProvider,
     OllamaProvider,
     OpenAIProvider,
@@ -19,7 +19,7 @@ from src.ai_providers import (
 @pytest.mark.unit
 def test_create_provider_openai(mock_logger):
     """Test creating OpenAI provider."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = create_provider(
             provider_name="openai",
             logger=mock_logger,
@@ -74,7 +74,7 @@ def test_create_provider_anthropic_missing_key(mock_logger):
 @pytest.mark.unit
 def test_create_provider_case_insensitive(mock_logger):
     """Test that provider name is case-insensitive."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = create_provider(
             provider_name="OpenAI",
             logger=mock_logger,
@@ -90,7 +90,7 @@ def test_create_provider_case_insensitive(mock_logger):
 @pytest.mark.asyncio
 async def test_openai_provider_chat_completion(mock_logger):
     """Test OpenAI provider chat completion."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_response = MagicMock()
@@ -116,7 +116,7 @@ async def test_openai_provider_chat_completion(mock_logger):
 @pytest.mark.asyncio
 async def test_openai_provider_none_content_raises(mock_logger):
     """Test OpenAI provider raises RuntimeError when content is None."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -144,7 +144,7 @@ async def test_openai_provider_none_content_raises(mock_logger):
 @pytest.mark.asyncio
 async def test_openai_provider_empty_string_content_raises(mock_logger):
     """Test OpenAI provider raises RuntimeError when content is empty string."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -172,7 +172,7 @@ async def test_openai_provider_empty_string_content_raises(mock_logger):
 @pytest.mark.asyncio
 async def test_openai_provider_refusal_raises(mock_logger):
     """Test OpenAI provider raises RuntimeError when model refuses."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -200,7 +200,7 @@ async def test_openai_provider_refusal_raises(mock_logger):
 @pytest.mark.asyncio
 async def test_openai_provider_logs_response_metadata(mock_logger):
     """Test OpenAI provider logs finish_reason and token usage."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -236,7 +236,7 @@ async def test_openai_provider_logs_response_metadata(mock_logger):
 @pytest.mark.asyncio
 async def test_openai_provider_length_with_content_returns_truncated(mock_logger):
     """Test OpenAI returns truncated content and warns when finish_reason=length."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -268,7 +268,7 @@ async def test_openai_provider_length_with_content_returns_truncated(mock_logger
 @pytest.mark.asyncio
 async def test_openai_provider_length_empty_content_raises_with_guidance(mock_logger):
     """Test OpenAI raises with actionable guidance when finish_reason=length and content empty."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -298,7 +298,7 @@ async def test_openai_provider_length_empty_content_raises_with_guidance(mock_lo
 @pytest.mark.asyncio
 async def test_openai_provider_passes_reasoning_effort_when_provided(mock_logger):
     """OpenAI provider passes reasoning_effort to the API when a value is given."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -328,7 +328,7 @@ async def test_openai_provider_passes_reasoning_effort_when_provided(mock_logger
 @pytest.mark.asyncio
 async def test_openai_provider_omits_reasoning_effort_when_none(mock_logger):
     """OpenAI provider does NOT include reasoning_effort in the API call when it is None."""
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -361,7 +361,7 @@ async def test_openai_provider_falls_back_when_reasoning_effort_rejected(mock_lo
     import httpx
     from openai import BadRequestError
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -413,7 +413,7 @@ async def test_openai_provider_falls_back_to_max_tokens_without_reasoning_effort
     import httpx
     from openai import BadRequestError
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -464,7 +464,7 @@ async def test_openai_provider_falls_back_to_max_tokens_after_reasoning_effort_r
     import httpx
     from openai import BadRequestError
 
-    with patch("src.ai_providers.AsyncOpenAI"):
+    with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
         mock_choice = MagicMock()
@@ -526,7 +526,7 @@ async def test_ollama_provider_chat_completion(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         result = await provider.chat_completion(
             messages=[{"role": "user", "content": "Hello"}],
@@ -552,7 +552,7 @@ async def test_ollama_provider_error(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(RuntimeError, match="Ollama API error 500"):
             await provider.chat_completion(
@@ -578,7 +578,7 @@ async def test_ollama_provider_error_body_truncated(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(RuntimeError) as exc_info:
             await provider.chat_completion(
@@ -624,7 +624,7 @@ async def test_ollama_provider_ndjson_content_type(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         result = await provider.chat_completion(
             messages=[{"role": "user", "content": "Hello"}],
@@ -653,7 +653,7 @@ async def test_ollama_provider_debug_logging(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         await provider.chat_completion(
             messages=[{"role": "user", "content": "Hello"}],
@@ -727,7 +727,7 @@ async def test_ollama_provider_empty_content_raises(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(RuntimeError, match="empty content"):
             await provider.chat_completion(
@@ -759,7 +759,7 @@ async def test_ollama_provider_missing_message_key_raises(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(RuntimeError, match="empty content"):
             await provider.chat_completion(
@@ -793,7 +793,7 @@ async def test_ollama_provider_length_with_content_returns_truncated(mock_logger
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         result = await provider.chat_completion(
             messages=[{"role": "user", "content": "Hello"}],
@@ -831,7 +831,7 @@ async def test_ollama_provider_length_empty_content_raises_with_guidance(mock_lo
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(TokenBudgetExhaustedError) as exc_info:
             await provider.chat_completion(
@@ -858,7 +858,7 @@ async def test_ollama_provider_accepts_reasoning_effort_param(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         result = await provider.chat_completion(
             messages=[{"role": "user", "content": "Hello"}],
@@ -890,7 +890,7 @@ async def test_anthropic_provider_chat_completion(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         result = await provider.chat_completion(
             messages=[
@@ -920,7 +920,7 @@ async def test_anthropic_provider_error_body_truncated(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(RuntimeError) as exc_info:
             await provider.chat_completion(
@@ -949,7 +949,7 @@ async def test_anthropic_provider_error(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(RuntimeError, match="Anthropic API error 401"):
             await provider.chat_completion(
@@ -980,7 +980,7 @@ async def test_anthropic_provider_empty_content_array_raises(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(RuntimeError, match="empty content"):
             await provider.chat_completion(
@@ -1011,7 +1011,7 @@ async def test_anthropic_provider_no_text_blocks_raises(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(RuntimeError, match="empty content"):
             await provider.chat_completion(
@@ -1042,7 +1042,7 @@ async def test_anthropic_provider_logs_response_metadata(mock_logger):
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         result = await provider.chat_completion(
             messages=[{"role": "user", "content": "Hello"}],
@@ -1080,7 +1080,7 @@ async def test_anthropic_provider_max_tokens_with_content_returns_truncated(mock
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         result = await provider.chat_completion(
             messages=[{"role": "user", "content": "Hello"}],
@@ -1115,7 +1115,7 @@ async def test_anthropic_provider_max_tokens_empty_content_raises_with_guidance(
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
     mock_session.close = AsyncMock()
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         with pytest.raises(TokenBudgetExhaustedError) as exc_info:
             await provider.chat_completion(
@@ -1146,7 +1146,7 @@ async def test_anthropic_provider_accepts_reasoning_effort_param(mock_logger):
     mock_session = MagicMock()
     mock_session.post = MagicMock(return_value=AsyncContextManager(mock_response))
 
-    with patch("src.ai_providers.aiohttp.ClientSession") as mock_cs:
+    with patch("chatbrief.ai_providers.aiohttp.ClientSession") as mock_cs:
         mock_cs.return_value = AsyncContextManager(mock_session)
         result = await provider.chat_completion(
             messages=[{"role": "user", "content": "Hello"}],

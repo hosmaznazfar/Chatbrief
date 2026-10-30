@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.chatbrief.config import DigestGroupConfig
-from src.grouper import (
+from chatbrief.config.models import DigestGroupConfig
+from chatbrief.grouper import (
     DigestGrouper,
     ExtractedBullet,
     _dedup_extracted,
@@ -41,7 +41,7 @@ def config_with_other_group(sample_config):
 @pytest.fixture
 def grouper(config_with_groups, mock_logger):
     """Create a DigestGrouper with mocked AI provider."""
-    with patch("src.grouper.create_provider") as mock_create:
+    with patch("chatbrief.grouper.create_provider") as mock_create:
         mock_provider = AsyncMock()
         mock_create.return_value = mock_provider
         g = DigestGrouper(config_with_groups, mock_logger)
@@ -52,7 +52,7 @@ def grouper(config_with_groups, mock_logger):
 @pytest.fixture
 def grouper_english(config_with_other_group, mock_logger):
     """Create a DigestGrouper with English config and mocked AI provider."""
-    with patch("src.grouper.create_provider") as mock_create:
+    with patch("chatbrief.grouper.create_provider") as mock_create:
         mock_provider = AsyncMock()
         mock_create.return_value = mock_provider
         g = DigestGrouper(config_with_other_group, mock_logger)

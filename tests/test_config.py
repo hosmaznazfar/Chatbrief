@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from src.chatbrief.config.loader import load_config
-from src.chatbrief.config import DigestGroupConfig, FilterSpec, McpConfig, PromptsConfig, StorageConfig
+from chatbrief.config.loader import load_config
+from chatbrief.config.models import DigestGroupConfig, FilterSpec, McpConfig, PromptsConfig, StorageConfig
 
 
 @pytest.mark.unit
@@ -76,9 +76,9 @@ settings:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     # Mock load_dotenv to prevent loading from .env file
-    import src.chatbrief.config.loader
+    import chatbrief.config.loader
 
-    with patch.object(src.chatbrief.config.loader, "load_dotenv"):
+    with patch.object(chatbrief.config.loader, "load_dotenv"):
         with pytest.raises(ValueError, match="Missing required environment variables"):
             load_config(str(config_file))
 
@@ -138,9 +138,9 @@ settings:
     config_file = tmp_path / "config.yaml"
     config_file.write_text(config_content)
 
-    import src.chatbrief.config.loader
+    import chatbrief.config.loader
 
-    with patch.object(src.chatbrief.config.loader, "load_dotenv"):
+    with patch.object(chatbrief.config.loader, "load_dotenv"):
         config = load_config(str(config_file))
 
     assert config.settings.ai_provider == "ollama"
@@ -168,9 +168,9 @@ settings:
     config_file = tmp_path / "config.yaml"
     config_file.write_text(config_content)
 
-    import src.chatbrief.config.loader
+    import chatbrief.config.loader
 
-    with patch.object(src.chatbrief.config.loader, "load_dotenv"):
+    with patch.object(chatbrief.config.loader, "load_dotenv"):
         with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
             load_config(str(config_file))
 
@@ -751,7 +751,7 @@ def test_filter_spec_global_parsed(tmp_path, mock_env_vars):
         'channels:\n  - id: "@test"\n    name: "Test"\n'
         "settings:\n  target_user_id: 123456789\n"
         "  filters:\n"
-        "    - class_path: src.extensions.filters.KeywordFilter\n"
+        "    - class_path: chatbrief.extensions.filters.KeywordFilter\n"
         "      config:\n"
         "        include:\n          - job\n"
         "        exclude:\n          - nsfw\n"
@@ -760,7 +760,7 @@ def test_filter_spec_global_parsed(tmp_path, mock_env_vars):
     assert len(config.settings.filters) == 1
     spec = config.settings.filters[0]
     assert spec == FilterSpec(
-        class_path="src.extensions.filters.KeywordFilter",
+        class_path="chatbrief.extensions.filters.KeywordFilter",
         config={"include": ["job"], "exclude": ["nsfw"]},
     )
 
@@ -772,7 +772,7 @@ def test_filter_spec_config_defaults_to_empty_dict(tmp_path, mock_env_vars):
         'channels:\n  - id: "@test"\n    name: "Test"\n'
         "settings:\n  target_user_id: 123456789\n"
         "  filters:\n"
-        "    - class_path: src.extensions.filters.MinLengthFilter\n"
+        "    - class_path: chatbrief.extensions.filters.MinLengthFilter\n"
     )
     config = load_config(str(p))
     assert config.settings.filters[0].config == {}
@@ -806,20 +806,20 @@ def test_filter_spec_channel_override(tmp_path, mock_env_vars):
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
         "    filters:\n"
-        "      - class_path: src.extensions.filters.KeywordFilter\n"
+        "      - class_path: chatbrief.extensions.filters.KeywordFilter\n"
         "        config:\n          include:\n            - python\n"
         "settings:\n  target_user_id: 123456789\n"
         "  filters:\n"
-        "    - class_path: src.extensions.filters.MinLengthFilter\n"
+        "    - class_path: chatbrief.extensions.filters.MinLengthFilter\n"
         "      config:\n        min_chars: 10\n"
     )
     config = load_config(str(p))
     assert config.settings.filters is not None
     assert len(config.settings.filters) == 1
-    assert config.settings.filters[0].class_path == "src.extensions.filters.MinLengthFilter"
+    assert config.settings.filters[0].class_path == "chatbrief.extensions.filters.MinLengthFilter"
     assert config.channels[0].filters is not None
     assert len(config.channels[0].filters) == 1
-    assert config.channels[0].filters[0].class_path == "src.extensions.filters.KeywordFilter"
+    assert config.channels[0].filters[0].class_path == "chatbrief.extensions.filters.KeywordFilter"
 
 
 @pytest.mark.unit
@@ -853,7 +853,7 @@ def test_filter_spec_non_dict_config_raises(tmp_path, mock_env_vars):
         'channels:\n  - id: "@test"\n    name: "Test"\n'
         "settings:\n  target_user_id: 123456789\n"
         "  filters:\n"
-        "    - class_path: src.extensions.filters.MinLengthFilter\n"
+        "    - class_path: chatbrief.extensions.filters.MinLengthFilter\n"
         "      config: not a dict\n"
     )
     with pytest.raises(ValueError, match="config must be a mapping"):
@@ -866,7 +866,7 @@ def test_filter_spec_non_mapping_item_raises(tmp_path, mock_env_vars):
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
         "settings:\n  target_user_id: 123456789\n"
-        "  filters:\n    - src.extensions.filters.MinLengthFilter\n"
+        "  filters:\n    - chatbrief.extensions.filters.MinLengthFilter\n"
     )
     with pytest.raises(ValueError, match="must be a mapping"):
         load_config(str(p))
@@ -938,11 +938,11 @@ def test_prompts_config_strips_whitespace(tmp_path, mock_env_vars):
         "settings:\n  target_user_id: 123456789\n"
         "prompts:\n"
         "  base_template: '  src/prompts/base_summary.txt  '\n"
-        "  composer: '  src.extensions.prompts.DefaultComposer  '\n"
+        "  composer: '  chatbrief.extensions.prompts.DefaultComposer  '\n"
     )
     config = load_config(str(p))
     assert config.prompts.base_template == "src/prompts/base_summary.txt"
-    assert config.prompts.composer == "src.extensions.prompts.DefaultComposer"
+    assert config.prompts.composer == "chatbrief.extensions.prompts.DefaultComposer"
 
 
 @pytest.mark.unit

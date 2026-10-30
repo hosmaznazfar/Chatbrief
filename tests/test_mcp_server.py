@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from mcp.server.mcpserver.exceptions import ToolError
 
-from src.mcp_server import _is_loopback, build_server
+from chatbrief.mcp_server import _is_loopback, build_server
 
 
 def _text(result) -> str:
@@ -33,7 +33,7 @@ async def test_registers_all_tools(server):
 @pytest.mark.asyncio
 async def test_get_digest_returns_built_digest(server, sample_config, mock_logger):
     """get_digest passes the lookback window through and returns the digest text."""
-    with patch("src.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
+    with patch("chatbrief.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
         mock_build.return_value = "Header\n\nGroup msg"
 
         result = await server.call_tool("get_digest", {"hours": 12})
@@ -46,7 +46,7 @@ async def test_get_digest_returns_built_digest(server, sample_config, mock_logge
 @pytest.mark.asyncio
 async def test_get_digest_defaults_to_24_hours(server, sample_config, mock_logger):
     """Calling get_digest without arguments uses a 24 hour window."""
-    with patch("src.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
+    with patch("chatbrief.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
         mock_build.return_value = "digest"
 
         await server.call_tool("get_digest", {})
@@ -58,7 +58,7 @@ async def test_get_digest_defaults_to_24_hours(server, sample_config, mock_logge
 @pytest.mark.asyncio
 async def test_get_digest_reports_empty_result(server):
     """An empty build reads as an explicit 'nothing found', not a blank response."""
-    with patch("src.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
+    with patch("chatbrief.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
         mock_build.return_value = ""
 
         result = await server.call_tool("get_digest", {"hours": 6})
@@ -72,7 +72,7 @@ async def test_get_digest_reports_empty_result(server):
 @pytest.mark.parametrize("hours", [0, -5, 169, 100000])
 async def test_get_digest_rejects_out_of_range_hours(server, hours):
     """Out-of-range windows fail before any collection happens."""
-    with patch("src.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
+    with patch("chatbrief.mcp_server.build_digest", new_callable=AsyncMock) as mock_build:
         with pytest.raises(ToolError):
             await server.call_tool("get_digest", {"hours": hours})
 
@@ -83,7 +83,7 @@ async def test_get_digest_rejects_out_of_range_hours(server, hours):
 @pytest.mark.asyncio
 async def test_get_last_digest_without_cache(server):
     """With no cached digest the tool points the model at get_digest."""
-    with patch("src.mcp_server.read_last_digest", return_value=None):
+    with patch("chatbrief.mcp_server.read_last_digest", return_value=None):
         result = await server.call_tool("get_last_digest", {})
 
         assert "get_digest" in _text(result)
@@ -98,7 +98,7 @@ async def test_get_last_digest_includes_age(server):
         "hours": 24,
         "text": "Header\n\nGroup msg",
     }
-    with patch("src.mcp_server.read_last_digest", return_value=cached):
+    with patch("chatbrief.mcp_server.read_last_digest", return_value=cached):
         result = await server.call_tool("get_last_digest", {})
 
         text = _text(result)
@@ -113,7 +113,7 @@ async def test_get_channel_messages_renders_messages(
     server, sample_config, mock_logger, sample_messages
 ):
     """Each message is rendered with its time, sender, text and link under a source header."""
-    with patch("src.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
+    with patch("chatbrief.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
         mock_collect.return_value = (sample_messages, "storage")
 
         result = await server.call_tool(
@@ -132,7 +132,7 @@ async def test_get_channel_messages_renders_messages(
 @pytest.mark.asyncio
 async def test_get_channel_messages_defaults(server, sample_config, mock_logger, sample_messages):
     """Calling without a window uses 24 hours and 200 messages."""
-    with patch("src.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
+    with patch("chatbrief.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
         mock_collect.return_value = (sample_messages, "telegram")
 
         await server.call_tool("get_channel_messages", {"channel": "Test Channel"})
@@ -144,7 +144,7 @@ async def test_get_channel_messages_defaults(server, sample_config, mock_logger,
 @pytest.mark.asyncio
 async def test_get_channel_messages_reports_empty_result(server):
     """An empty channel reads as an explicit 'nothing found', not a bare header."""
-    with patch("src.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
+    with patch("chatbrief.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
         mock_collect.return_value = ([], "storage")
 
         result = await server.call_tool(
@@ -159,7 +159,7 @@ async def test_get_channel_messages_reports_empty_result(server):
 @pytest.mark.asyncio
 async def test_get_channel_messages_surfaces_unknown_channel(server):
     """An unknown channel surfaces as a tool error the model can act on."""
-    with patch("src.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
+    with patch("chatbrief.mcp_server.collect_channel_messages", new_callable=AsyncMock) as mock_collect:
         mock_collect.side_effect = ValueError("Unknown channel 'Nope'. Configured channels: X")
 
         with pytest.raises(ToolError):
