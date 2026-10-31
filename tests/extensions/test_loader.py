@@ -1,20 +1,15 @@
-fr
+from __future__ import annotations
 
-# pylint: disable=import-outside-toplevel,too-few-public-methodsom __future__ import annotations
+import collections
+import pathlib
 
-import pytest
+import pytestimport pytest
 
 from chatbrief.extensions.loader import load_class
 
 
-class _SampleClass:
-    pass
-
-
 def test_load_class_valid_builtin():
     cls = load_class("pathlib.Path")
-    import pathlib
-
     assert cls is pathlib.Path
 
 
@@ -26,8 +21,6 @@ def test_load_class_function_not_class():
 
 def test_load_class_stdlib_class():
     cls = load_class("collections.OrderedDict")
-    import collections
-
     assert cls is collections.OrderedDict
 
 
