@@ -7,6 +7,7 @@ from telegram.error import TelegramError
 
 from chatbrief.platforms.telegram import telegram_sender
 from chatbrief.platforms.telegram.telegram_sender import TelegramMessageSender
+from chatbrief.utils import get_digest_message_ids
 from chatbrief.utils import save_digest_message_ids
 
 
@@ -278,8 +279,6 @@ async def test_send_channel_messages_with_tracking(
     assert mock_bot.send_message.call_count == 3
 
     # Verify message IDs were saved
-    from chatbrief.utils import get_digest_message_ids
-
     saved_ids = get_digest_message_ids(123456789)
     assert len(saved_ids) == 3
     assert 101 in saved_ids
