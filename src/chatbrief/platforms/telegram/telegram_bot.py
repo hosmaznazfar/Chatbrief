@@ -3,7 +3,6 @@ Telegram bot command handlers.
 """
 
 import logging
-from typing import Optional
 
 from telegram import BotCommand, Update
 from telegram.ext import Application, CommandHandler, ContextTypes
@@ -34,7 +33,7 @@ class TelegramBot:
         self.config = config
         self.logger = logger
         self.command_service = command_service
-        self.app: Optional[Application] = None
+        self.app: Application | None = None
         self._ui = get_ui_strings(config.settings.output_language)
 
     def setup_application(self) -> Application:
