@@ -1,5 +1,7 @@
 """Tests for the platform-neutral command service."""
 
+# pylint: disable=redefined-outer-name
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
