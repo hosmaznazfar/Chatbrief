@@ -434,7 +434,7 @@ settings:
         config = load_config(str(config_file))
 
     assert config.settings.digest_mode == "digest"
-    assert config.settings.digest_groups == []
+    assert not config.settings.digest_groups
     assert "digest mode enabled but no digest_groups configured" in caplog.text
 
 
