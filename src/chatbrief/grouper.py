@@ -180,7 +180,7 @@ def _dedup_extracted(bullets: list["ExtractedBullet"]) -> list["ExtractedBullet"
     return list(by_key.values())
 
 
-class DigestGrouper:
+class DigestGrouper:  # pylint: disable=too-few-public-methods
     """Classifies channel summaries into topic groups using AI."""
 
     def __init__(self, config: Config, logger: logging.Logger):
