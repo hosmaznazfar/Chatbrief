@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 import chatbrief.platforms.telegram.telegram_source as telegram_source
-
 from chatbrief.message import Message
 from chatbrief.platforms.telegram.telegram_source import TelegramMessageSource
 

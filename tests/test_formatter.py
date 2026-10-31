@@ -270,9 +270,7 @@ def test_channel_section_includes_channel_link(sample_config, mock_logger):
 
 
 @pytest.mark.unit
-def test_format_channel_message_includes_channel_link(
-    sample_config, mock_logger, sample_messages
-):
+def test_format_channel_message_includes_channel_link(sample_config, mock_logger, sample_messages):
     """Standalone channel message renders the explicitly supplied platform URL."""
     formatter = DigestFormatter(sample_config, mock_logger)
     msg = formatter.format_channel_message(

@@ -64,9 +64,7 @@ async def test_digest_success(english_config, mock_logger):
 
     source = MagicMock()
     sender = MagicMock()
-    service = _make_command_service(
-        english_config, mock_logger, source=source, sender=sender
-    )
+    service = _make_command_service(english_config, mock_logger, source=source, sender=sender)
     generate = AsyncMock(return_value=True)
 
     with patch.object(

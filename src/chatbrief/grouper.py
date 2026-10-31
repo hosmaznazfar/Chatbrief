@@ -260,7 +260,7 @@ class DigestGrouper:
         ]
 
     def _build_classifier_prompt(
-            self, bullets: list[ExtractedBullet], groups: list[DigestGroupConfig]
+        self, bullets: list[ExtractedBullet], groups: list[DigestGroupConfig]
     ) -> list[dict[str, str]]:
         """Pass 2b prompt: classify pre-extracted, dedup'd bullets into groups."""
         group_list = "\n".join(f'- "{g.name}": {g.description}' for g in groups)
@@ -300,7 +300,7 @@ class DigestGrouper:
         ]
 
     async def _extract_bullets_from_channel(
-            self, channel_name: str, summary: str, source_url: str
+        self, channel_name: str, summary: str, source_url: str
     ) -> list[ExtractedBullet]:
         """Pass 2a per-channel: AI call returning extracted bullets for one channel."""
         if not _strip_channel_summary_noise(summary).strip():
@@ -315,7 +315,7 @@ class DigestGrouper:
         return self._parse_extracted_response(response, channel_name, source_url)
 
     def _parse_extracted_response(
-            self, response: str, channel_name: str, source_url: str
+        self, response: str, channel_name: str, source_url: str
     ) -> list[ExtractedBullet]:
         """Parse extractor JSON array into ExtractedBullet objects."""
         cleaned = re.sub(r"^```(?:json)?\s*\n?", "", response.strip())
@@ -341,9 +341,9 @@ class DigestGrouper:
         return result
 
     async def _extract_all_bullets(
-            self,
-            channel_summaries: dict[str, str],
-            channel_urls: dict[str, str],
+        self,
+        channel_summaries: dict[str, str],
+        channel_urls: dict[str, str],
     ) -> list[ExtractedBullet]:
         """Run Pass 2a in parallel across channels, bounded by a semaphore."""
         sem = asyncio.Semaphore(_EXTRACTOR_CONCURRENCY)
@@ -370,9 +370,9 @@ class DigestGrouper:
         return bullets
 
     async def _classify_bullets(
-            self,
-            bullets: list[ExtractedBullet],
-            groups: list[DigestGroupConfig],
+        self,
+        bullets: list[ExtractedBullet],
+        groups: list[DigestGroupConfig],
     ) -> dict[str, list[GroupedPoint]]:
         """Pass 2b: single AI call to classify pre-extracted bullets into groups."""
         if not bullets:
@@ -389,11 +389,11 @@ class DigestGrouper:
         return self._parse_grouped_response(response, valid_group_names, urls)
 
     def _collect_group_points(
-            self,
-            target_name: str,
-            points: list,
-            urls: dict[str, str],
-            seen_keys: set[tuple[str, str, str]],
+        self,
+        target_name: str,
+        points: list,
+        urls: dict[str, str],
+        seen_keys: set[tuple[str, str, str]],
     ) -> tuple[list[GroupedPoint], int, int]:
         """Build GroupedPoint list for a single group, dropping malformed + duplicates.
 
@@ -423,10 +423,10 @@ class DigestGrouper:
         return grouped, malformed_skipped, dedup_dropped
 
     def _parse_grouped_response(
-            self,
-            response: str,
-            valid_group_names: set[str],
-            channel_urls: Optional[dict[str, str]] = None,
+        self,
+        response: str,
+        valid_group_names: set[str],
+        channel_urls: Optional[dict[str, str]] = None,
     ) -> dict[str, list[GroupedPoint]]:
         """Parse AI JSON response into grouped points.
 
@@ -480,9 +480,9 @@ class DigestGrouper:
             return {}
 
     def _warn_missing_channels(
-            self,
-            result: dict[str, list[GroupedPoint]],
-            input_channels: set[str],
+        self,
+        result: dict[str, list[GroupedPoint]],
+        input_channels: set[str],
     ) -> None:
         """Log a warning if any input channel produced no bullets in the final output."""
         output_sources: set[str] = set()
@@ -500,9 +500,9 @@ class DigestGrouper:
             )
 
     async def group_summaries(
-            self,
-            channel_summaries: dict[str, str],
-            channel_urls: Optional[dict[str, str]] = None,
+        self,
+        channel_summaries: dict[str, str],
+        channel_urls: Optional[dict[str, str]] = None,
     ) -> dict[str, list[GroupedPoint]]:
         """Two-pass grouping: parallel extract → dedup chokepoint → classify.
 
@@ -565,9 +565,9 @@ class DigestGrouper:
         return result
 
     def _build_fallback_group(
-            self,
-            channel_summaries: dict[str, str],
-            channel_urls: Optional[dict[str, str]] = None,
+        self,
+        channel_summaries: dict[str, str],
+        channel_urls: Optional[dict[str, str]] = None,
     ) -> dict[str, list[GroupedPoint]]:
         """Build a single 'Other' group from all channel summaries as fallback."""
         urls = channel_urls or {}

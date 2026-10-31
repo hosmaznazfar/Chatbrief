@@ -7,9 +7,7 @@ from chatbrief.scheduler import DigestScheduler
 
 
 def make_scheduler(sample_config, mock_logger):
-    scheduler = DigestScheduler(
-        sample_config, mock_logger, source=MagicMock(), sender=MagicMock()
-    )
+    scheduler = DigestScheduler(sample_config, mock_logger, source=MagicMock(), sender=MagicMock())
 
     mock_scheduler = MagicMock()
     scheduler.scheduler = mock_scheduler

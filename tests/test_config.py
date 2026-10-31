@@ -6,7 +6,13 @@ from unittest.mock import patch
 import pytest
 
 from chatbrief.config.loader import load_config
-from chatbrief.config.models import DigestGroupConfig, FilterSpec, McpConfig, PromptsConfig, StorageConfig
+from chatbrief.config.models import (
+    DigestGroupConfig,
+    FilterSpec,
+    McpConfig,
+    PromptsConfig,
+    StorageConfig,
+)
 
 
 @pytest.mark.unit

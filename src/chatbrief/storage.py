@@ -154,11 +154,11 @@ class StorageBackend(Protocol):
     async def close(self) -> None: ...  # noqa: E704
 
     async def query_messages(  # noqa: E704
-            self,
-            channel_name: str | None = None,
-            since: datetime | None = None,
-            until: datetime | None = None,
-            limit: int = 1000,
+        self,
+        channel_name: str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        limit: int = 1000,
     ) -> list[Message]: ...
 
 
@@ -207,11 +207,11 @@ class SQLiteBackend:
         return len(messages)
 
     async def query_messages(
-            self,
-            channel_name: str | None = None,
-            since: datetime | None = None,
-            until: datetime | None = None,
-            limit: int = 1000,
+        self,
+        channel_name: str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        limit: int = 1000,
     ) -> list[Message]:
         from chatbrief.message import Message as Msg
 
@@ -305,11 +305,11 @@ class PostgresBackend:  # pragma: no cover
         return len(messages)
 
     async def query_messages(
-            self,
-            channel_name: str | None = None,
-            since: datetime | None = None,
-            until: datetime | None = None,
-            limit: int = 1000,
+        self,
+        channel_name: str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        limit: int = 1000,
     ) -> list[Message]:
         from chatbrief.message import Message as Msg
 

@@ -134,7 +134,7 @@ class Summarizer:
         return {"channel_summaries": channel_summaries, "overview": ""}
 
     async def _summarize_per_channel(
-            self, messages_by_channel: dict[str, list[Message]]
+        self, messages_by_channel: dict[str, list[Message]]
     ) -> dict[str, str]:
         """
         Generate summary for each channel.
@@ -272,7 +272,7 @@ Messages (total: {actual_count}):
             raise
 
     async def _enforce_length_limit(
-            self, channel_name: str, summary: str, chat_messages: list
+        self, channel_name: str, summary: str, chat_messages: list
     ) -> str:
         """Request shorter summary if over limit, truncate as last resort."""
         if len(summary) <= MAX_SUMMARY_CHARS:

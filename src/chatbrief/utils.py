@@ -66,14 +66,14 @@ def get_lookback_time(hours: int) -> datetime:
 
 def split_message(text: str, max_length: int = 4000) -> list[str]:
     """
-    Split long message into multiple parts for Telegram.
+        Split long message into multiple parts for Telegram.
 
-    Args:
-        text: Text to split
-        max_length: Maximum length per message
-list
-    Returns:
-        List of message parts
+        Args:
+            text: Text to split
+            max_length: Maximum length per message
+    list
+        Returns:
+            List of message parts
     """
     if len(text) <= max_length:
         return [text]

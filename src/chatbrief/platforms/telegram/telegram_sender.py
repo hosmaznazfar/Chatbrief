@@ -116,7 +116,7 @@ class TelegramMessageSender(MessageSender):
             return False
 
     async def send_channel_messages(
-            self, channel_messages: list[tuple[str, str]], user_id: Optional[int] = None
+        self, channel_messages: list[tuple[str, str]], user_id: Optional[int] = None
     ) -> bool:
         """
         Send separate messages for each channel.
@@ -272,7 +272,7 @@ class TelegramMessageSender(MessageSender):
             return deleted_count > 0
 
     async def _send_message_with_tracking(
-            self, user_id: int, message_text: str, channel_name: str
+        self, user_id: int, message_text: str, channel_name: str
     ) -> Optional[int]:
         """
         Send a message with markdown fallback and return message ID.
@@ -306,9 +306,9 @@ class TelegramMessageSender(MessageSender):
             raise
 
     async def _send_summary_message(
-            self,
-            user_id: int,
-            summary_message: str,
+        self,
+        user_id: int,
+        summary_message: str,
     ) -> Optional[int]:
         """
         Send summary message and return message ID.
@@ -342,7 +342,7 @@ class TelegramMessageSender(MessageSender):
             return None
 
     def _log_and_return_result(
-            self, success_count: int, total_count: int, failed_channels: list[str]
+        self, success_count: int, total_count: int, failed_channels: list[str]
     ) -> bool:
         """
         Log summary and return success status.
@@ -364,7 +364,7 @@ class TelegramMessageSender(MessageSender):
         return success_count > 0
 
     async def _send_channel_messages_loop(
-            self, user_id: int, channel_messages: list[tuple[str, str]]
+        self, user_id: int, channel_messages: list[tuple[str, str]]
     ) -> tuple[list[int], int, list[str]]:
         """
         Send messages for all channels.
@@ -403,10 +403,10 @@ class TelegramMessageSender(MessageSender):
         return sent_message_ids, success_count, failed_channels
 
     async def send_channel_messages_with_tracking(
-            self,
-            channel_messages: list[tuple[str, str]],
-            summary_message: Optional[str] = None,
-            user_id: Optional[int] = None,
+        self,
+        channel_messages: list[tuple[str, str]],
+        summary_message: Optional[str] = None,
+        user_id: Optional[int] = None,
     ) -> bool:
         """
         Send separate messages for each channel and track message IDs for cleanup.

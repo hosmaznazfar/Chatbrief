@@ -41,9 +41,9 @@ def _format_messages(channel: str, messages: list[Message], source: str, hours: 
 
 
 def build_server(
-        config: Config,
-        logger: logging.Logger,
-        source: MessageSource,
+    config: Config,
+    logger: logging.Logger,
+    source: MessageSource,
 ) -> MCPServer:
     """Build the MCP server exposing the digest tools.
 

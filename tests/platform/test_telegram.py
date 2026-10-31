@@ -355,9 +355,7 @@ async def test_fetch_messages_flood_wait_retry(sample_config, mock_logger):
         ]
     )
 
-    with patch.object(
-        telegram_source.asyncio, "sleep", new_callable=AsyncMock
-    ) as mock_sleep:
+    with patch.object(telegram_source.asyncio, "sleep", new_callable=AsyncMock) as mock_sleep:
         result = await source.fetch_messages(hours=24)
 
     assert result == {

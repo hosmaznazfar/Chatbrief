@@ -16,11 +16,11 @@ class DigestScheduler:
     """Schedules daily digest generation."""
 
     def __init__(
-            self,
-            config: Config,
-            logger: logging.Logger,
-            source: MessageSource,
-            sender: MessageSender,
+        self,
+        config: Config,
+        logger: logging.Logger,
+        source: MessageSource,
+        sender: MessageSender,
     ):
         """
         Initialize scheduler.

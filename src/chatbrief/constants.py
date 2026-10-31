@@ -1,4 +1,5 @@
 """Configuration and digest constants for Chatbrief."""
+
 SUPPORTED_LANGUAGES = (
     "English",
     "Russian",

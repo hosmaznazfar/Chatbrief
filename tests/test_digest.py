@@ -144,9 +144,7 @@ async def test_generate_and_send_digest_returns_false_when_sender_fails(
     sender = _make_sender(send_result=False)
     _configure_channel_builder(monkeypatch)
 
-    result = await generate_and_send_digest(
-        sample_config, mock_logger, source, sender, hours=24
-    )
+    result = await generate_and_send_digest(sample_config, mock_logger, source, sender, hours=24)
 
     assert result is False
 
@@ -546,9 +544,7 @@ async def test_filter_exception_is_isolated_from_following_filters(
         FilterSpec("pass", {}),
     ]
     channel = ChannelConfig(id="@test", name="Test Channel")
-    with patch.object(
-        digest_collector, "load_class", side_effect=[BrokenFilter, PassFilter]
-    ):
+    with patch.object(digest_collector, "load_class", side_effect=[BrokenFilter, PassFilter]):
         result = await _apply_filters(channel, sample_messages, sample_config, mock_logger)
 
     assert result == sample_messages[:1]

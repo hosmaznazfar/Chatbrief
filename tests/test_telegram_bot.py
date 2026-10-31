@@ -35,8 +35,7 @@ def _make_command_service() -> MagicMock:
         return_value=CommandResult(
             status=CommandStatus.SUCCESS,
             message=(
-                "Telebrief Status\nProvider\nModel\nEnabled\n"
-                "Commands:\nAutomatic mode:\nFeatures:"
+                "Telebrief Status\nProvider\nModel\nEnabled\nCommands:\nAutomatic mode:\nFeatures:"
             ),
         )
     )
