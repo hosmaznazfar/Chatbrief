@@ -1,11 +1,11 @@
-# Use Python 3.14 slim image — pinned for reproducibility
-FROM mirror.gcr.io/library/python:3.14.3-slim
+# Use a pinned stable Python 3.15 image for reproducible builds
+FROM mirror.gcr.io/library/python:3.15.2-slim
 
 # Set working directory
 WORKDIR /app
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.12.9 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.6 /uv /uvx /bin/
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
