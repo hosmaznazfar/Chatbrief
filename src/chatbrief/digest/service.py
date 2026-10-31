@@ -11,7 +11,7 @@ from chatbrief.digest.validators import validate_hours
 from chatbrief.platforms.base import MessageSender, MessageSource
 
 
-async def generate_and_send_digest(
+async def generate_and_send_digest(  # pylint: disable=too-many-positional-arguments
     config: Config,
     logger: logging.Logger,
     source: MessageSource,
@@ -50,7 +50,7 @@ async def generate_and_send_digest(
             user_id,
         )
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error(
             f"Digest generation failed: {e}",
             exc_info=True,
