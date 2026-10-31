@@ -7,8 +7,7 @@ from telegram.error import TelegramError
 
 from chatbrief.platforms.telegram import telegram_sender
 from chatbrief.platforms.telegram.telegram_sender import TelegramMessageSender
-from chatbrief.utils import get_digest_message_ids
-from chatbrief.utils import save_digest_message_ids
+from chatbrief.utils import get_digest_message_ids, save_digest_message_ids
 
 
 @pytest.mark.unit
