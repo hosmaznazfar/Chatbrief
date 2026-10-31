@@ -1,9 +1,13 @@
 """Tests for config module."""
 
+# pylint: disable=too-many-lines,import-outside-toplevel
+
 import logging
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = pytest.mark.usefixtures("mock_env_vars")
 
 from chatbrief.config.loader import load_config
 from chatbrief.config.models import (
@@ -16,7 +20,7 @@ from chatbrief.config.models import (
 
 
 @pytest.mark.unit
-def test_load_config_success(temp_config_file, mock_env_vars):
+def test_load_config_success(temp_config_file):
     """Test successful configuration loading."""
     config = load_config(temp_config_file)
 
@@ -34,7 +38,7 @@ def test_load_config_success(temp_config_file, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_load_config_custom_output_language(tmp_path, mock_env_vars):
+def test_load_config_custom_output_language(tmp_path):
     """Test config loading with custom output_language."""
     config_content = """
 channels:
@@ -90,7 +94,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_invalid_target_user(tmp_path, mock_env_vars):
+def test_load_config_invalid_target_user(tmp_path):
     """Test error handling for invalid target user ID."""
     config_content = """
 channels:
@@ -108,7 +112,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_no_channels(tmp_path, mock_env_vars):
+def test_load_config_no_channels(tmp_path):
     """Test error handling for no channels configured."""
     config_content = """
 channels: []
@@ -182,7 +186,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_unsupported_provider(tmp_path, mock_env_vars):
+def test_load_config_unsupported_provider(tmp_path):
     """Test error for unsupported ai_provider value."""
     config_content = """
 channels:
@@ -201,7 +205,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_null_ai_provider(tmp_path, mock_env_vars):
+def test_load_config_null_ai_provider(tmp_path):
     """Test that ai_provider: null gives a clear ValueError, not AttributeError."""
     config_content = """
 channels:
@@ -220,7 +224,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_temperature_fallback(tmp_path, mock_env_vars):
+def test_load_config_temperature_fallback(tmp_path):
     """Test that temperature falls back to openai_temperature when not set."""
     config_content = """
 channels:
@@ -241,7 +245,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_temperature_override(tmp_path, mock_env_vars):
+def test_load_config_temperature_override(tmp_path):
     """Test that explicit temperature overrides openai_temperature."""
     config_content = """
 channels:
@@ -262,7 +266,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_api_timeout_string_coercion(tmp_path, mock_env_vars):
+def test_load_config_api_timeout_string_coercion(tmp_path):
     """Test that api_timeout is coerced to int even when YAML provides a string."""
     config_content = """
 channels:
@@ -283,7 +287,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_default_max_tokens_per_summary(tmp_path, mock_env_vars):
+def test_load_config_default_max_tokens_per_summary(tmp_path):
     """Test that max_tokens_per_summary defaults to 1500 when not specified."""
     config_content = """
 channels:
@@ -302,7 +306,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_default_max_prompt_chars(tmp_path, mock_env_vars):
+def test_load_config_default_max_prompt_chars(tmp_path):
     """Test that max_prompt_chars defaults to 8000 when not specified."""
     config_content = """
 channels:
@@ -321,7 +325,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_custom_max_prompt_chars(tmp_path, mock_env_vars):
+def test_load_config_custom_max_prompt_chars(tmp_path):
     """Test that max_prompt_chars is loaded correctly from YAML."""
     config_content = """
 channels:
@@ -341,7 +345,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_digest_mode_with_groups(tmp_path, mock_env_vars):
+def test_load_config_digest_mode_with_groups(tmp_path):
     """Test valid digest config loads correctly."""
     config_content = """
 channels:
@@ -373,7 +377,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_digest_defaults(tmp_path, mock_env_vars):
+def test_load_config_digest_defaults(tmp_path):
     """Test missing digest_groups defaults to empty list, digest_mode defaults to channel."""
     config_content = """
 channels:
@@ -389,11 +393,11 @@ settings:
     config = load_config(str(config_file))
 
     assert config.settings.digest_mode == "channel"
-    assert config.settings.digest_groups == []
+    assert not config.settings.digest_groups
 
 
 @pytest.mark.unit
-def test_load_config_invalid_digest_mode(tmp_path, mock_env_vars):
+def test_load_config_invalid_digest_mode(tmp_path):
     """Test invalid digest_mode value raises ValueError."""
     config_content = """
 channels:
@@ -412,7 +416,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_digest_mode_empty_groups_warns(tmp_path, mock_env_vars, caplog):
+def test_load_config_digest_mode_empty_groups_warns(tmp_path, caplog):
     """Test digest_mode 'digest' with empty digest_groups logs warning."""
     config_content = """
 channels:
@@ -435,7 +439,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_digest_groups_null(tmp_path, mock_env_vars):
+def test_load_config_digest_groups_null(tmp_path):
     """Test digest_groups: null (YAML key with no value) defaults to empty list."""
     config_content = """
 channels:
@@ -454,7 +458,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_digest_groups_non_string_fields(tmp_path, mock_env_vars):
+def test_load_config_digest_groups_non_string_fields(tmp_path):
     """Test digest_groups with non-string name/description raises ValueError."""
     config_content = """
 channels:
@@ -475,7 +479,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_valid_output_languages(tmp_path, mock_env_vars):
+def test_load_config_valid_output_languages(tmp_path):
     """Test that all supported languages are accepted."""
     for lang in ("English", "Russian", "Spanish", "German", "French"):
         config_content = f"""
@@ -495,7 +499,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_invalid_output_language(tmp_path, mock_env_vars):
+def test_load_config_invalid_output_language(tmp_path):
     """Test that invalid output_language raises ValueError with supported list."""
     config_content = """
 channels:
@@ -519,7 +523,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_per_channel_overrides(tmp_path, mock_env_vars):
+def test_load_config_per_channel_overrides(tmp_path):
     """Per-channel lookback_hours and prompt_extra are parsed into ChannelConfig."""
     config_content = """
 channels:
@@ -546,7 +550,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_invalid_lookback_hours_type(tmp_path, mock_env_vars):
+def test_load_config_invalid_lookback_hours_type(tmp_path):
     """Non-int lookback_hours raises ValueError."""
     config_content = """
 channels:
@@ -565,7 +569,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_invalid_lookback_hours_value(tmp_path, mock_env_vars):
+def test_load_config_invalid_lookback_hours_value(tmp_path):
     """Non-positive lookback_hours raises ValueError."""
     config_content = """
 channels:
@@ -584,7 +588,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_load_config_duplicate_channel_names(tmp_path, mock_env_vars):
+def test_load_config_duplicate_channel_names(tmp_path):
     """Duplicate channel names raise ValueError to prevent silent override loss."""
     config_content = """
 channels:
@@ -625,7 +629,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_storage_config_missing_block_defaults(tmp_path, mock_env_vars):
+def test_storage_config_missing_block_defaults(tmp_path):
     config = load_config(_storage_config_file(tmp_path, ""))
     assert config.storage == StorageConfig()
     assert config.storage.enabled is False
@@ -635,7 +639,7 @@ def test_storage_config_missing_block_defaults(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_storage_config_sqlite_explicit(tmp_path, mock_env_vars):
+def test_storage_config_sqlite_explicit(tmp_path):
     block = """
 storage:
   enabled: true
@@ -649,7 +653,7 @@ storage:
 
 
 @pytest.mark.unit
-def test_storage_config_postgres_with_url(tmp_path, mock_env_vars):
+def test_storage_config_postgres_with_url(tmp_path):
     block = """
 storage:
   enabled: true
@@ -663,7 +667,7 @@ storage:
 
 
 @pytest.mark.unit
-def test_storage_config_postgres_enabled_empty_url_raises(tmp_path, mock_env_vars):
+def test_storage_config_postgres_enabled_empty_url_raises(tmp_path):
     block = """
 storage:
   enabled: true
@@ -675,7 +679,7 @@ storage:
 
 
 @pytest.mark.unit
-def test_storage_config_postgres_disabled_empty_url_ok(tmp_path, mock_env_vars):
+def test_storage_config_postgres_disabled_empty_url_ok(tmp_path):
     block = """
 storage:
   enabled: false
@@ -687,7 +691,7 @@ storage:
 
 
 @pytest.mark.unit
-def test_storage_config_invalid_backend_raises(tmp_path, mock_env_vars):
+def test_storage_config_invalid_backend_raises(tmp_path):
     block = """
 storage:
   backend: mysql
@@ -697,7 +701,7 @@ storage:
 
 
 @pytest.mark.unit
-def test_storage_config_enabled_not_bool_raises(tmp_path, mock_env_vars):
+def test_storage_config_enabled_not_bool_raises(tmp_path):
     block = """
 storage:
   enabled: "yes"
@@ -707,7 +711,7 @@ storage:
 
 
 @pytest.mark.unit
-def test_storage_config_empty_path_raises(tmp_path, mock_env_vars):
+def test_storage_config_empty_path_raises(tmp_path):
     block = """
 storage:
   path: ""
@@ -719,7 +723,7 @@ storage:
 
 
 @pytest.mark.unit
-def test_storage_config_url_not_string_raises(tmp_path, mock_env_vars):
+def test_storage_config_url_not_string_raises(tmp_path):
     block = """
 storage:
   url: 12345
@@ -729,7 +733,7 @@ storage:
 
 
 @pytest.mark.unit
-def test_storage_config_not_mapping_raises(tmp_path, mock_env_vars):
+def test_storage_config_not_mapping_raises(tmp_path):
     block = "storage: true"
     with pytest.raises(ValueError, match="'storage' must be a mapping"):
         load_config(_storage_config_file(tmp_path, block))
@@ -741,17 +745,17 @@ def test_storage_config_not_mapping_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_defaults_to_empty_global(tmp_path, mock_env_vars):
+def test_filter_spec_defaults_to_empty_global(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\nsettings:\n  target_user_id: 123456789\n'
     )
     config = load_config(str(p))
-    assert config.settings.filters == []
+    assert not config.settings.filters
 
 
 @pytest.mark.unit
-def test_filter_spec_global_parsed(tmp_path, mock_env_vars):
+def test_filter_spec_global_parsed(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -772,7 +776,7 @@ def test_filter_spec_global_parsed(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_config_defaults_to_empty_dict(tmp_path, mock_env_vars):
+def test_filter_spec_config_defaults_to_empty_dict(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -785,7 +789,7 @@ def test_filter_spec_config_defaults_to_empty_dict(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_channel_null_uses_global(tmp_path, mock_env_vars):
+def test_filter_spec_channel_null_uses_global(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n    filters:\n'
@@ -796,7 +800,7 @@ def test_filter_spec_channel_null_uses_global(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_channel_empty_list_explicit_noop(tmp_path, mock_env_vars):
+def test_filter_spec_channel_empty_list_explicit_noop(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n    filters: []\n'
@@ -807,7 +811,7 @@ def test_filter_spec_channel_empty_list_explicit_noop(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_channel_override(tmp_path, mock_env_vars):
+def test_filter_spec_channel_override(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -829,7 +833,7 @@ def test_filter_spec_channel_override(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_missing_class_path_raises(tmp_path, mock_env_vars):
+def test_filter_spec_missing_class_path_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -841,7 +845,7 @@ def test_filter_spec_missing_class_path_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_non_string_class_path_raises(tmp_path, mock_env_vars):
+def test_filter_spec_non_string_class_path_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -853,7 +857,7 @@ def test_filter_spec_non_string_class_path_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_non_dict_config_raises(tmp_path, mock_env_vars):
+def test_filter_spec_non_dict_config_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -867,7 +871,7 @@ def test_filter_spec_non_dict_config_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_non_mapping_item_raises(tmp_path, mock_env_vars):
+def test_filter_spec_non_mapping_item_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -879,7 +883,7 @@ def test_filter_spec_non_mapping_item_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_filter_spec_channel_invalid_class_path_raises(tmp_path, mock_env_vars):
+def test_filter_spec_channel_invalid_class_path_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -895,7 +899,7 @@ def test_filter_spec_channel_invalid_class_path_raises(tmp_path, mock_env_vars):
     "bad_path",
     ["NoDots", "trailing.", ".leading", "two..dots", "has space.Cls", "1bad.Cls"],
 )
-def test_filter_spec_invalid_dotted_path_raises(tmp_path, mock_env_vars, bad_path):
+def test_filter_spec_invalid_dotted_path_raises(tmp_path, bad_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -911,7 +915,7 @@ def test_filter_spec_invalid_dotted_path_raises(tmp_path, mock_env_vars, bad_pat
     "bad_composer",
     ["NoDots", "trailing.", ".leading", "two..dots", "has space.Cls", "1bad.Cls"],
 )
-def test_prompts_composer_invalid_dotted_path_raises(tmp_path, mock_env_vars, bad_composer):
+def test_prompts_composer_invalid_dotted_path_raises(tmp_path, bad_composer):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -924,7 +928,7 @@ def test_prompts_composer_invalid_dotted_path_raises(tmp_path, mock_env_vars, ba
 
 
 @pytest.mark.unit
-def test_prompts_composer_empty_string_allowed(tmp_path, mock_env_vars):
+def test_prompts_composer_empty_string_allowed(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -937,7 +941,7 @@ def test_prompts_composer_empty_string_allowed(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_prompts_config_strips_whitespace(tmp_path, mock_env_vars):
+def test_prompts_config_strips_whitespace(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -978,7 +982,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_digest_group_prompt_extra_parsed(tmp_path, mock_env_vars):
+def test_digest_group_prompt_extra_parsed(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -993,7 +997,7 @@ def test_digest_group_prompt_extra_parsed(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_digest_group_prompt_extra_defaults_empty(tmp_path, mock_env_vars):
+def test_digest_group_prompt_extra_defaults_empty(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -1007,7 +1011,7 @@ def test_digest_group_prompt_extra_defaults_empty(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_digest_group_prompt_extra_non_string_raises(tmp_path, mock_env_vars):
+def test_digest_group_prompt_extra_non_string_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -1022,7 +1026,7 @@ def test_digest_group_prompt_extra_non_string_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_channel_group_field_parsed(tmp_path, mock_env_vars):
+def test_channel_group_field_parsed(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@jobs"\n    name: "Jobs"\n    group: MyGroup\n'
@@ -1036,7 +1040,7 @@ def test_channel_group_field_parsed(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_channel_group_none_by_default(tmp_path, mock_env_vars):
+def test_channel_group_none_by_default(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\nsettings:\n  target_user_id: 123456789\n'
@@ -1046,7 +1050,7 @@ def test_channel_group_none_by_default(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_channel_group_other_accepted(tmp_path, mock_env_vars):
+def test_channel_group_other_accepted(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n    group: Other\n'
@@ -1057,7 +1061,7 @@ def test_channel_group_other_accepted(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_channel_group_localized_other_accepted(tmp_path, mock_env_vars):
+def test_channel_group_localized_other_accepted(tmp_path):
     # Russian localized "Other" is "Другое"
     p = tmp_path / "config.yaml"
     p.write_text(
@@ -1069,7 +1073,7 @@ def test_channel_group_localized_other_accepted(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_channel_unknown_group_raises(tmp_path, mock_env_vars):
+def test_channel_unknown_group_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n    group: NonExistent\n'
@@ -1080,7 +1084,7 @@ def test_channel_unknown_group_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_channel_unknown_group_error_lists_bad_channel(tmp_path, mock_env_vars):
+def test_channel_unknown_group_error_lists_bad_channel(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "MyChan"\n    group: BadGroup\n'
@@ -1093,7 +1097,7 @@ def test_channel_unknown_group_error_lists_bad_channel(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_channel_group_null_yaml_is_none(tmp_path, mock_env_vars):
+def test_channel_group_null_yaml_is_none(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n    group:\n'
@@ -1109,7 +1113,7 @@ def test_channel_group_null_yaml_is_none(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_prompts_config_missing_block_defaults(tmp_path, mock_env_vars):
+def test_prompts_config_missing_block_defaults(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\nsettings:\n  target_user_id: 123456789\n'
@@ -1121,7 +1125,7 @@ def test_prompts_config_missing_block_defaults(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_prompts_config_explicit_values(tmp_path, mock_env_vars):
+def test_prompts_config_explicit_values(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -1136,7 +1140,7 @@ def test_prompts_config_explicit_values(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_prompts_config_not_mapping_raises(tmp_path, mock_env_vars):
+def test_prompts_config_not_mapping_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -1148,7 +1152,7 @@ def test_prompts_config_not_mapping_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_prompts_config_empty_base_template_raises(tmp_path, mock_env_vars):
+def test_prompts_config_empty_base_template_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -1160,7 +1164,7 @@ def test_prompts_config_empty_base_template_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_prompts_config_composer_not_string_raises(tmp_path, mock_env_vars):
+def test_prompts_config_composer_not_string_raises(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -1172,7 +1176,7 @@ def test_prompts_config_composer_not_string_raises(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_digest_group_config_equality_with_prompt_extra(tmp_path, mock_env_vars):
+def test_digest_group_config_equality_with_prompt_extra(tmp_path):
     p = tmp_path / "config.yaml"
     p.write_text(
         'channels:\n  - id: "@test"\n    name: "Test"\n'
@@ -1210,7 +1214,7 @@ settings:
 
 
 @pytest.mark.unit
-def test_mcp_config_missing_block_defaults(tmp_path, mock_env_vars):
+def test_mcp_config_missing_block_defaults(tmp_path):
     """No mcp: block leaves the server disabled on loopback."""
     config = load_config(_mcp_config_file(tmp_path, ""))
     assert config.mcp == McpConfig()
@@ -1221,7 +1225,7 @@ def test_mcp_config_missing_block_defaults(tmp_path, mock_env_vars):
 
 
 @pytest.mark.unit
-def test_mcp_config_explicit(tmp_path, mock_env_vars):
+def test_mcp_config_explicit(tmp_path):
     """An explicit block is parsed field by field."""
     block = """
 mcp:
@@ -1251,7 +1255,7 @@ mcp:
         ("mcp: notamapping\n", "'mcp' must be a mapping"),
     ],
 )
-def test_mcp_config_rejects_invalid(tmp_path, mock_env_vars, block, match):
+def test_mcp_config_rejects_invalid(tmp_path, block, match):
     """Malformed mcp blocks fail loudly at load time, not at request time."""
     with pytest.raises(ValueError, match=match):
         load_config(_mcp_config_file(tmp_path, block))
