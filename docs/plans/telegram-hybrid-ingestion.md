@@ -17,6 +17,14 @@ This is a target architecture and implementation plan, not a statement that mult
 
 ## Decisions
 
+### 0. Chatbrief user identity and registration
+
+- **Use Telegram identity as the Chatbrief user identity.** A user starts a private conversation with the central bot, and their Telegram user ID identifies their Chatbrief user record.
+- Do not introduce a separate email/password account system for this Telegram-first product.
+- Keep optional Telethon account linking separate from Chatbrief identity. Linking a personal Telegram account is an explicit capability for historical backfill, not a registration requirement and not a replacement for the bot identity used for Chatbrief authorization and delivery.
+- Scope subscriptions, source permissions, digest preferences, schedules, and delivery records to the Chatbrief user identified by that Telegram user ID.
+- Treat the Telegram user ID as an external identity key; do not use usernames or display names as stable identifiers.
+
 ### 1. Retain the current libraries and implementation
 
 - Keep `python-telegram-bot` for Bot API commands, updates, and message delivery.
