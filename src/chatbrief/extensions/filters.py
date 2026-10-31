@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 @runtime_checkable
-class MessageFilter(Protocol):
+class MessageFilter(Protocol):  # pylint: disable=too-few-public-methods
     name: str
 
     async def filter(  # noqa: E704
@@ -17,7 +17,7 @@ class MessageFilter(Protocol):
     ) -> list[Message]: ...
 
 
-class KeywordFilter:
+class KeywordFilter:  # pylint: disable=too-few-public-methods
     """Keep messages that contain any include keyword and none of the exclude keywords."""
 
     name = "keyword"
@@ -26,7 +26,9 @@ class KeywordFilter:
         self._include = [kw.lower() for kw in (include or [])]
         self._exclude = [kw.lower() for kw in (exclude or [])]
 
-    async def filter(self, channel: ChannelConfig, messages: list[Message]) -> list[Message]:
+    async def filter(  # pylint: disable=unused-argument
+        self, channel: ChannelConfig, messages: list[Message]
+    ) -> list[Message]:
         result = []
         for msg in messages:
             text = (msg.text or "").lower()
@@ -38,7 +40,7 @@ class KeywordFilter:
         return result
 
 
-class RegexFilter:
+class RegexFilter:  # pylint: disable=too-few-public-methods
     """Keep or drop messages based on a compiled regex pattern."""
 
     name = "regex"
@@ -49,7 +51,9 @@ class RegexFilter:
         self._re = re.compile(pattern)
         self._mode = mode
 
-    async def filter(self, channel: ChannelConfig, messages: list[Message]) -> list[Message]:
+    async def filter(  # pylint: disable=unused-argument
+        self, channel: ChannelConfig, messages: list[Message]
+    ) -> list[Message]:
         result = []
         for msg in messages:
             matched = bool(self._re.search(msg.text or ""))
@@ -60,7 +64,7 @@ class RegexFilter:
         return result
 
 
-class MinLengthFilter:
+class MinLengthFilter:  # pylint: disable=too-few-public-methods
     """Drop messages shorter than min_chars characters."""
 
     name = "min_length"
@@ -70,5 +74,7 @@ class MinLengthFilter:
             raise ValueError(f"min_chars must be >= 0, got {min_chars}")
         self._min_chars = min_chars
 
-    async def filter(self, channel: ChannelConfig, messages: list[Message]) -> list[Message]:
+    async def filter(  # pylint: disable=unused-argument
+        self, channel: ChannelConfig, messages: list[Message]
+    ) -> list[Message]:
         return [msg for msg in messages if len(msg.text or "") >= self._min_chars]
