@@ -14,10 +14,12 @@ from telethon.errors import ChannelPrivateError, FloodWaitError
 from telethon.tl import types as tl_types
 from telethon.tl.patched import Message as TelegramMessage
 
+from chatbrief.config.loader import load_config
 from chatbrief.config.models import ChannelConfig, Config
 from chatbrief.message import Message
 from chatbrief.platforms.base import MessageSource
 from chatbrief.ui_strings import get_ui_strings
+from chatbrief.utils import setup_logging
 
 
 class TelegramMessageSource(MessageSource):
@@ -385,9 +387,6 @@ async def main() -> None:
     Run interactively to create sessions/user.session:
         uv run python -m chatbrief.platforms.telegram.telegram_source
     """
-    from chatbrief.config.loader import load_config
-    from chatbrief.utils import setup_logging
-
     config = load_config()
     logger = setup_logging(config.log_level)
 
