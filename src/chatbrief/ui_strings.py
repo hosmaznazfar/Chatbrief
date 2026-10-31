@@ -116,7 +116,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_help_desc": "Show help",
         "rate_limited": "⏳ Please wait before sending this command again.",
         "generating_digest": (
-            "⏳ Generating digest for the last 24 hours...\\nThis may take 1-2 "
+            "⏳ Generating digest for the last 24 hours...\nThis may take 1-2 "
             "minutes."
         ),
         "digest_done": "✅ Digest ready!",
@@ -192,7 +192,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_help_desc": "Показать справку",
         "rate_limited": "⏳ Пожалуйста, подождите перед повторной отправкой команды.",
         "generating_digest": (
-            "⏳ Генерирую дайджест за последние 24 часа...\\nЭто может занять 1-2 "
+            "⏳ Генерирую дайджест за последние 24 часа...\nЭто может занять 1-2 "
             "минуты."
         ),
         "digest_done": "✅ Дайджест готов!",
@@ -268,7 +268,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_help_desc": "Mostrar ayuda",
         "rate_limited": "⏳ Por favor, espere antes de enviar este comando nuevamente.",
         "generating_digest": (
-            "⏳ Generando resumen de las últimas 24 horas...\\nEsto puede tardar "
+            "⏳ Generando resumen de las últimas 24 horas...\nEsto puede tardar "
             "1-2 minutos."
         ),
         "digest_done": "✅ ¡Resumen listo!",
@@ -344,7 +344,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_help_desc": "Hilfe anzeigen",
         "rate_limited": "⏳ Bitte warten Sie, bevor Sie diesen Befehl erneut senden.",
         "generating_digest": (
-            "⏳ Erstelle Zusammenfassung der letzten 24 Stunden...\\nDies kann 1-2 "
+            "⏳ Erstelle Zusammenfassung der letzten 24 Stunden...\nDies kann 1-2 "
             "Minuten dauern."
         ),
         "digest_done": "✅ Zusammenfassung fertig!",
@@ -426,7 +426,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_help_desc": "Afficher l'aide",
         "rate_limited": "⏳ Veuillez patienter avant de renvoyer cette commande.",
         "generating_digest": (
-            "⏳ Génération du résumé des 24 dernières heures...\\nCela peut prendre "
+            "⏳ Génération du résumé des 24 dernières heures...\nCela peut prendre "
             "1-2 minutes."
         ),
         "digest_done": "✅ Résumé prêt !",
