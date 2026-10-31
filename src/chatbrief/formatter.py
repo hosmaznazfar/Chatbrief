@@ -4,13 +4,14 @@ Markdown formatter for digest output.
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
+from chatbrief.config.loader import load_config
 from chatbrief.config.models import Config
 from chatbrief.grouper import GroupedPoint
 from chatbrief.message import Message
 from chatbrief.summarizer import ERROR_SUMMARY_PREFIX
 from chatbrief.ui_strings import get_month_names, get_ui_strings
+from chatbrief.utils import setup_logging
 
 
 class DigestFormatter:
@@ -45,7 +46,7 @@ class DigestFormatter:
         self,
         channel_name: str,
         summary: str,
-        channel_url: Optional[str] = None,
+        channel_url: str | None = None,
     ) -> str:
         """
         Create section for a single channel.
@@ -75,7 +76,7 @@ class DigestFormatter:
         channel_summaries: dict[str, str],
         messages_by_channel: dict[str, list[Message]],
         hours: int = 24,
-        channel_urls: Optional[dict[str, str]] = None,
+        channel_urls: dict[str, str] | None = None,
     ) -> str:
         """
         Create formatted digest.
@@ -241,7 +242,7 @@ class DigestFormatter:
         summary: str,
         messages: list[Message],
         hours: int = 24,
-        channel_url: Optional[str] = None,
+        channel_url: str | None = None,
     ) -> str:
         """
         Format a single channel's summary as a standalone message.
@@ -454,9 +455,6 @@ class DigestFormatter:
 
 def main():
     """Test formatter."""
-    from chatbrief.config.loader import load_config
-    from chatbrief.utils import setup_logging
-
     config = load_config()
     logger = setup_logging(config.log_level)
 
