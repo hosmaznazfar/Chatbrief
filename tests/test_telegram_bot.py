@@ -1,5 +1,7 @@
 """Tests for telegram_bot platform adapter — commands, language, and rate limiting."""
 
+# pylint: disable=redefined-outer-name,no-member
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
