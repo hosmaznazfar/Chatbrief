@@ -319,7 +319,8 @@ class AnthropicProvider(AIProvider):
             )
         if stop_reason == "max_tokens":
             self.logger.warning(
-                "Anthropic response was truncated (stop_reason=max_tokens); returning partial content. "
+                "Anthropic response was truncated (stop_reason=max_tokens); "
+                "returning partial content. "
                 "Consider increasing max_tokens_per_summary in config.yaml."
             )
         return text
