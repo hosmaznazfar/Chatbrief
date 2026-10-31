@@ -1,5 +1,9 @@
 """Tests for formatter module."""
 
+# pylint: disable=redefined-outer-name,import-outside-toplevel
+
+from datetime import datetime
+
 import pytest
 
 from chatbrief.formatter import DigestFormatter
@@ -103,7 +107,7 @@ def test_create_statistics(sample_config, mock_logger, sample_messages):
 
 
 @pytest.mark.unit
-def test_formatter_without_emojis(sample_config, mock_logger, sample_messages):
+def test_formatter_without_emojis(sample_config, mock_logger):
     """Test formatter with emojis disabled."""
     sample_config.settings.use_emojis = False
     formatter = DigestFormatter(sample_config, mock_logger)
@@ -217,8 +221,6 @@ def test_truncation_message_uses_output_language(english_config, mock_logger, sa
 @pytest.mark.unit
 def test_format_date_russian_month_names(sample_config, mock_logger):
     """_format_date returns Russian month names when output_language is Russian."""
-    from datetime import datetime
-
     formatter = DigestFormatter(sample_config, mock_logger)  # output_language=Russian
     # February in Russian genitive (used in dates) is "февраля"
     dt = datetime(2026, 2, 22)
