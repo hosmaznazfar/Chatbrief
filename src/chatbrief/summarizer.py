@@ -3,6 +3,7 @@ AI-powered summarizer using pluggable providers with configurable output languag
 """
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +41,16 @@ def __getattr__(name: str) -> str:
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
+@dataclass(slots=True)
+class _ProviderSettings:
+    """Runtime settings shared by all provider calls made by one summarizer."""
+
+    provider: AIProvider
+    model: str
+    temperature: float
+    max_tokens: int
+
+
 class Summarizer:
     """Generates AI-powered summaries using a pluggable AI provider."""
 
@@ -53,17 +64,19 @@ class Summarizer:
         """
         self.config = config
         self.logger = logger
-        self.provider: AIProvider = create_provider(
-            provider_name=config.settings.ai_provider,
-            logger=logger,
-            openai_api_key=config.openai_api_key,
-            anthropic_api_key=config.anthropic_api_key,
-            ollama_base_url=config.settings.ollama_base_url,
-            api_timeout=config.settings.api_timeout,
+        self._provider_settings = _ProviderSettings(
+            provider=create_provider(
+                provider_name=config.settings.ai_provider,
+                logger=logger,
+                openai_api_key=config.openai_api_key,
+                anthropic_api_key=config.anthropic_api_key,
+                ollama_base_url=config.settings.ollama_base_url,
+                api_timeout=config.settings.api_timeout,
+            ),
+            model=config.settings.ai_model,
+            temperature=config.settings.temperature,
+            max_tokens=config.settings.max_tokens_per_summary,
         )
-        self.model = config.settings.ai_model
-        self.temperature = config.settings.temperature
-        self.max_tokens = config.settings.max_tokens_per_summary
         self.output_language = config.settings.output_language
         self._channels_by_name = {ch.name: ch for ch in config.channels}
 
@@ -151,7 +164,7 @@ class Summarizer:
                 summary = await self._summarize_channel(channel_name, messages)
                 summaries[channel_name] = summary
                 self.logger.info(f"Summarized {channel_name}")
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 self.logger.error(f"Failed to summarize {channel_name}: {e}")
                 summaries[channel_name] = f"{ERROR_SUMMARY_PREFIX}: {str(e)}"
 
@@ -237,28 +250,28 @@ Messages (total: {actual_count}):
     async def _call_ai_with_retry(self, channel_name: str, chat_messages: list) -> str:
         """Call AI provider, retrying with higher token budget on exhaustion."""
         try:
-            return await self.provider.chat_completion(
+            return await self._provider_settings.provider.chat_completion(
                 messages=chat_messages,
-                model=self.model,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
+                model=self._provider_settings.model,
+                temperature=self._provider_settings.temperature,
+                max_tokens=self._provider_settings.max_tokens,
             )
         except TokenBudgetExhaustedError:
-            retry_max_tokens = self.max_tokens * 3
+            retry_max_tokens = self._provider_settings.max_tokens * 3
             self.logger.warning(
                 "Token budget exhausted for %s; retrying with max_tokens=%d",
                 channel_name,
                 retry_max_tokens,
             )
             try:
-                return await self.provider.chat_completion(
+                return await self._provider_settings.provider.chat_completion(
                     messages=chat_messages,
-                    model=self.model,
-                    temperature=self.temperature,
+                    model=self._provider_settings.model,
+                    temperature=self._provider_settings.temperature,
                     max_tokens=retry_max_tokens,
                     reasoning_effort="low",
                 )
-            except Exception as retry_exc:
+            except Exception as retry_exc:  # pylint: disable=broad-exception-caught
                 self.logger.error(
                     "Retry also failed for %s (max_tokens=%d): %s",
                     channel_name,
@@ -266,9 +279,6 @@ Messages (total: {actual_count}):
                     retry_exc,
                 )
                 raise
-        except Exception as e:
-            self.logger.error(f"AI provider error for {channel_name}: {e}")
-            raise
 
     async def _enforce_length_limit(
         self, channel_name: str, summary: str, chat_messages: list
@@ -306,13 +316,13 @@ Messages (total: {actual_count}):
             },
         ]
         try:
-            summary = await self.provider.chat_completion(
+            summary = await self._provider_settings.provider.chat_completion(
                 messages=retry_messages,
-                model=self.model,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
+                model=self._provider_settings.model,
+                temperature=self._provider_settings.temperature,
+                max_tokens=self._provider_settings.max_tokens,
             )
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error("Length-reduction retry failed for %s: %s", channel_name, e)
 
         if len(summary) > MAX_SUMMARY_CHARS:
