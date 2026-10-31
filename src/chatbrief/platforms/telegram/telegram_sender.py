@@ -17,8 +17,8 @@ from chatbrief.utils import (
     clear_digest_message_ids,
     get_digest_message_ids,
     save_digest_message_ids,
-    split_message,
     setup_logging,
+    split_message,
 )
 
 
