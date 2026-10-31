@@ -66,6 +66,28 @@ A Telegram group/supergroup is a source chat. A `DigestGroupConfig` grouping is 
 - Handle edits, deletions, media metadata, and messages without text deliberately; do not assume message text is a safe identity.
 - Confirm the correct key and update semantics against the existing schema before implementing migrations.
 
+### 8. Shared archive and source-access policy
+
+- Use one shared, deduplicated archive of source messages rather than a separate message copy for every subscriber.
+- Per-user subscriptions reference source chats; subscription state and source-access authorization are separate.
+- Enforce strict source-level access checks on every message/history/digest query. Shared storage must never imply shared user access.
+- Public channels and public groups may be subscribed to by any Chatbrief user without channel/group administrator approval, provided the central bot can access the source.
+- Private channels and groups require established access through the central bot or a linked Telegram user account.
+- The person/account that establishes access to a private source initially controls its Chatbrief sharing policy. Other Chatbrief users require explicit authorization before subscribing.
+- A user's membership/access through their own linked Telegram account does not automatically grant the central bot access, or grant other Chatbrief users access.
+- Keep public-source discovery/availability distinct from the question of whether a particular ingestion path can technically read the source.
+
+### 9. Subscription-driven ingestion and configurable retention
+
+- Start collecting a source when its first authorized Chatbrief user subscribes.
+- Continue collection while at least one authorized subscription remains active.
+- Stop collection when the last authorized subscription ends or loses access.
+- When the last authorized subscription ends, retain already archived messages for a configurable grace period; the default is **14 days**.
+- If an authorized subscription is restored before the grace period expires, cancel the pending expiry and resume collection.
+- If the grace period expires with no authorized subscribers, delete the archived messages for that source, subject to any separately approved legal/operational retention requirements.
+- Revoking a user's authorization takes effect immediately. The grace period governs archive retention, not continued access for the revoked user.
+- Make the grace period configurable; do not hardcode 14 days into deletion logic.
+
 ### 7. Secure linked user sessions
 
 - Treat Telethon session data as account credentials.
