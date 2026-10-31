@@ -107,7 +107,7 @@ def build_server(
             hours: How many hours back to look, 1 to 168 (default 24)
             limit: Maximum messages to return, 1 to 500, newest kept (default 200)
         """
-        messages, storage_source = await collect_channel_messages(
+        messages, message_source = await collect_channel_messages(
             config,
             logger,
             source,
@@ -120,7 +120,7 @@ def build_server(
         return _format_messages(
             channel,
             messages,
-            storage_source,
+            message_source,
             hours,
         )
 
