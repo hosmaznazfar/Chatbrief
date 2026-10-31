@@ -464,7 +464,7 @@ async def test_fetch_channel_messages_private_entity(sample_config, mock_logger)
 
     source.client.get_entity = AsyncMock(return_value=entity)
 
-    async def iter_messages(*args, **kwargs):
+    async def iter_messages(*_args, **_kwargs):
         yield message
 
     with patch.object(source.client, "iter_messages", side_effect=iter_messages):
