@@ -20,7 +20,7 @@ async def _save_to_storage(
     storage = None
     try:
         storage = await create_storage(sc)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error(
             f"Storage init failed ({type(e).__name__}), digest continues",
             exc_info=True,
@@ -30,7 +30,7 @@ async def _save_to_storage(
             flat = [msg for msgs in messages_by_channel.values() for msg in msgs]
             saved = await storage.save_messages(flat)
             logger.info(f"Stored {saved} messages ({sc.backend})")
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error(
                 f"Storage write failed ({type(e).__name__}), digest continues",
                 exc_info=True,
@@ -38,7 +38,7 @@ async def _save_to_storage(
         finally:
             try:
                 await storage.close()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 logger.error(
                     f"Storage close failed ({type(e).__name__})",
                     exc_info=True,
@@ -62,7 +62,7 @@ async def _apply_filters(
         try:
             cls = load_class(spec.class_path)
             filter_instance = cls(**spec.config)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error(
                 f"Filter load/init failed ({spec.class_path}, {type(e).__name__}), skipping",
                 exc_info=True,
@@ -88,7 +88,7 @@ async def _apply_filters(
                 )
             else:
                 messages = result
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error(
                 f"Filter {getattr(filter_instance, 'name', spec.class_path)!r} filter() raised"
                 f" {type(e).__name__} ({spec.class_path}), skipping",
@@ -112,7 +112,7 @@ def _resolve_channel(config: Config, channel: str) -> ChannelConfig:
     raise ValueError(f"Unknown channel {channel!r}. Configured channels: {known}")
 
 
-async def collect_channel_messages(
+async def collect_channel_messages(  # pylint: disable=too-many-positional-arguments
     config: Config,
     logger: logging.Logger,
     source: MessageSource,
