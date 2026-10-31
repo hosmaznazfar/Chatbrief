@@ -1,9 +1,9 @@
 # Chatbrief — current project handover
 
-**Updated:** 2026-10-30  
+**Updated:** 2026-10-31  
 **Repository:** https://github.com/hosmaznazfar/Chatbrief  
-**Active branch:** `refactor/chatbrief-package-layout`  
-**Verified GitHub HEAD before this handover update:** `6e9b241f28b329c0242d39040bd87ff6d66aa8f0`
+**Active branch:** `upgrade/full-project-modernization`  
+**Verified GitHub HEAD before this handover update:** branch created from `refactor/chatbrief-package-layout`; see the latest branch commit for the current HEAD.
 **Branch comparison:** 117 commits ahead of `main`, 0 behind (at the verified comparison).
 **Local worktree:** unknown; GitHub cannot show local uncommitted changes.
 
@@ -79,4 +79,25 @@ The verified GitHub tree currently contains `graphify-out/graph.json` and `graph
 
 ## Immediate next action
 
-The implementation changes are committed to `refactor/chatbrief-package-layout`. The developer should inspect local status and bring the branch into the local checkout without overwriting uncommitted work. When satisfied that the implementation is ready, explicitly authorize validation; until then, keep the full test suite deferred.
+The website-removal step is committed to `upgrade/full-project-modernization`. The developer should inspect local status and bring this branch into the local checkout without overwriting uncommitted work. When satisfied that the modernization is ready, explicitly authorize validation; until then, keep the full test suite deferred.
+
+
+## Python-only modernization (2026-10-31)
+
+The developer decided to remove the website entirely and keep Chatbrief as a Python-only project, with no replacement web framework.
+
+Completed directly on `upgrade/full-project-modernization`:
+- Deleted the complete `website/` Astro project, including its npm manifests, static assets, Astro source, Cloudflare Pages configuration, and Wrangler configuration.
+- Removed the website build job and Node/npm setup from `.github/workflows/ci.yml`; the Python build job now depends on lint, tests, and security only.
+- Removed the obsolete `node_modules/` ignore entry.
+- Updated `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/AI_WORKFLOW.md`, and `FEATURE_IMPLEMENTATION_CHECKLIST.md` to describe the Python-only stack and remove website build instructions.
+
+Preserved:
+- Python package, tests, `uv.lock`, and Python CI jobs.
+- Docker deployment workflow and `.github/workflows/docker-publish.yml`.
+- Existing Graphify artifacts and their independent local workflow.
+
+Validation:
+- No tests, package build, or CI workflow execution was run.
+- Local Graphify output is not visible to this GitHub-only session; the local graph changes reported by the developer have not been copied or overwritten.
+- Local worktree state remains unknown. The developer must fetch/checkout the remote branch and inspect the diff before continuing.
