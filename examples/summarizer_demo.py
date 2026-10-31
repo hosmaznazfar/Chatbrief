@@ -28,16 +28,16 @@ async def main() -> None:
     summarizer = Summarizer(config, logger)
     result = await summarizer.summarize_all(messages)
 
-    print("\\n" + "=" * 50)
+    print("\n" + "=" * 50)
     print("OVERVIEW:")
     print("=" * 50)
     print(result["overview"])
 
-    print("\\n" + "=" * 50)
+    print("\n" + "=" * 50)
     print("CHANNEL SUMMARIES:")
     print("=" * 50)
     for channel, summary in result["channel_summaries"].items():
-        print(f"\\n{channel}:")
+        print(f"\n{channel}:")
         print(summary)
 
 
