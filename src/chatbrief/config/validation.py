@@ -1,7 +1,7 @@
 import logging
-from typing import List
 
 from chatbrief.constants import PROVIDER_DEFAULT_MODELS, SUPPORTED_LANGUAGES, SUPPORTED_PROVIDERS
+from chatbrief.ui_strings import get_ui_strings
 
 from .models import (
     ChannelConfig,
@@ -311,7 +311,7 @@ def parse_prompts_config(yaml_config: dict) -> PromptsConfig:
 
 
 def validate_channel_groups(
-    channels: List[ChannelConfig],
+    channels: list[ChannelConfig],
     digest_groups: list[DigestGroupConfig],
     output_language: str,
 ) -> None:
@@ -323,7 +323,6 @@ def validate_channel_groups(
     Raises:
         ValueError: listing all channels with invalid group references.
     """
-    from chatbrief.ui_strings import get_ui_strings
 
     ui = get_ui_strings(output_language)
     localized_other = ui.get("group_other", "Other")
@@ -342,7 +341,7 @@ def validate_channel_groups(
         )
 
 
-def parse_channels(yaml_config: dict) -> List[ChannelConfig]:
+def parse_channels(yaml_config: dict) -> list[ChannelConfig]:
     """Parse and validate channel configs from YAML.
 
     Raises:
