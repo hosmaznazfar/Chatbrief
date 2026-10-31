@@ -92,8 +92,24 @@ source. The findings and an initial migration proposal are recorded in
 `docs/plans/telegram-hybrid-ingestion.md`. The plan remains at approved target direction;
 no application code or database schema has changed.
 
-Next, review the Phase 1 findings and decide the message ownership model before any schema
-design or implementation. The recommended starting point is a shared, deduplicated source
-message archive with per-user subscriptions and strict subscription-scoped reads. Then agree
-on the central-bot chat onboarding/access policy and the Bot API-only configuration behavior.
-Only after those decisions should Phase 2 begin.
+The following architecture decisions have now been approved and are recorded in
+`docs/plans/telegram-hybrid-ingestion.md`:
+
+- Shared, deduplicated message archive with per-user subscriptions and strict source-access
+  boundaries.
+- Public channels/groups are subscribable without administrator approval when the central bot
+  can access them.
+- Private sources require established access; sharing a private source with other Chatbrief
+  users requires explicit authorization from its access owner.
+- Collect only while at least one authorized subscription exists.
+- When the last authorized subscription ends, retain messages for a configurable grace period
+  (14 days by default); restore subscription before expiry to cancel pending deletion.
+- Authorization revocation is immediate; retention does not preserve revoked-user access.
+
+No application code, database schema, or migrations have changed. These are target-policy
+decisions only.
+
+Continue the architecture decision process before Phase 2. The next open question is the role
+of optional Telethon integration: whether it should be used only for explicit historical
+backfill when a user requests it, or also as a continuing ingestion path when Bot API access
+is unavailable. Resolve that scope before designing ingestion lifecycle and ownership details.
