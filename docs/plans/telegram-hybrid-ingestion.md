@@ -88,6 +88,14 @@ A Telegram group/supergroup is a source chat. A `DigestGroupConfig` grouping is 
 - Revoking a user's authorization takes effect immediately. The grace period governs archive retention, not continued access for the revoked user.
 - Make the grace period configurable; do not hardcode 14 days into deletion logic.
 
+### 10. Telethon scope: explicit historical backfill only
+
+- Telethon is optional and is used only for historical backfill explicitly requested by a user.
+- The central Bot API is the only continuous ingestion path in this architecture.
+- Do not use Telethon as a continuous collector or automatic fallback when the central bot cannot access a source.
+- A source readable only through a user's linked account may be backfilled, but it will not receive ongoing collection under this policy.
+- Users without linked accounts remain fully supported for sources the central bot can access; their historical lookback is limited to the shared archive's available messages.
+
 ### 7. Secure linked user sessions
 
 - Treat Telethon session data as account credentials.
@@ -236,14 +244,16 @@ only. Local uncommitted Graphify rebuild output is not visible to this GitHub in
 - Review the existing command throttling and sender tracking for tenant isolation.
 - Design and test database constraints that prevent cross-user data exposure.
 
-### Phase 5 — Adapt Telethon as an optional historical integration
+### Phase 5 — Adapt Telethon as an optional historical-backfill integration
 
 - Add an explicit account-linking lifecycle for each Chatbrief user.
 - Store each user's Telethon session securely and independently.
-- Backfill history from the chats the linked account can access.
+- Use Telethon only when a user explicitly requests historical backfill for a source accessible to that linked account.
 - Send backfilled messages through the same normalization, deduplication, and persistence path as Bot API updates.
+- Do not run Telethon as a continuous or fallback ingestion worker. Ongoing collection belongs to the central Bot API path.
+- Explain that sources inaccessible to the central bot can be backfilled, but will not receive ongoing updates through Telethon under this approved scope.
 - Support cancellation, rate limits/flood waits, partial failures, progress, retry/resume, and disconnect/revocation.
-- Keep users without linked sessions fully functional through Bot API ingestion.
+- Keep users without linked sessions fully functional through Bot API ingestion; their historical summaries are limited to messages already available in the Chatbrief archive.
 
 ### Phase 6 — Reliability, security, and acceptance
 
