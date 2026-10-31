@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+
+from chatbrief.message import Message
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -10,7 +12,6 @@ if TYPE_CHECKING:
     import aiosqlite as _aiosqlite
 
     from chatbrief.config.models import StorageConfig
-    from chatbrief.message import Message
 
 _CREATE_SQLITE_TABLE = """
                        CREATE TABLE IF NOT EXISTS messages
@@ -213,7 +214,6 @@ class SQLiteBackend:
         until: datetime | None = None,
         limit: int = 1000,
     ) -> list[Message]:
-        from chatbrief.message import Message as Msg
 
         if self._conn is None:
             raise RuntimeError("SQLiteBackend not initialized; call initialize() first")
@@ -246,7 +246,7 @@ class SQLiteBackend:
                 if ts.tzinfo is None:
                     ts = ts.replace(tzinfo=timezone.utc)
                 rows.append(
-                    Msg(
+                    Message(
                         channel_name=row[0],
                         sender=row[1],
                         text=row[2],
@@ -350,7 +350,7 @@ class PostgresBackend:  # pragma: no cover
             if ts.tzinfo is None:
                 ts = ts.replace(tzinfo=timezone.utc)
             result.append(
-                Msg(
+                Message(
                     channel_name=r["channel_name"],
                     sender=r["sender"],
                     text=r["text"],
