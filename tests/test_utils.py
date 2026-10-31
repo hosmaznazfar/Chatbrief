@@ -107,8 +107,6 @@ def test_setup_logging_info_level(tmp_path):
 @pytest.mark.unit
 def test_setup_logging_debug_level(tmp_path):
     """Test setup_logging with DEBUG level."""
-    import os
-
     original_dir = os.getcwd()
     os.chdir(tmp_path)
 
