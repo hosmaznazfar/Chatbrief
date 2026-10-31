@@ -17,7 +17,6 @@ This is the operational guide for AI-assisted work in Chatbrief. Project facts b
 - Python requirement: `>=3.14`.
 - Python environment and dependency management: `uv`; `uv.lock` is committed.
 - Backend/application: asynchronous Python Telegram digest application, with AI provider integrations, scheduling, storage, extensibility hooks, and an optional MCP server.
-- Website: Astro project under `website/`, with its own `package-lock.json`.
 - Packaging: setuptools with src-layout package discovery.
 - Development tools declared in `pyproject.toml`: Ruff, Pyright, Pylint, Bandit, Vulture, pytest, pytest-cov, pytest-asyncio, and pre-commit.
 - CI: `.github/workflows/ci.yml`; inspect it before changing validation assumptions.
@@ -117,13 +116,6 @@ make test
 make check
 ```
 
-Website checks, after installing its locked dependencies:
-
-```bash
-npm ci --prefix website
-npm run build --prefix website
-```
-
 Do not claim any command ran unless its output is available. The existing CI workflow is authoritative for CI commands; check it before changing this list.
 
 **Current refactor state (2026-10-30):** the package-layout and platform-abstraction implementation migration is ready for validation on `refactor/chatbrief-package-layout`. The full test suite and quality checks have not been run. Do not run them until the developer explicitly authorizes validation. The historical baseline of 471 passed / 7 skipped and 80.28% coverage belongs to the pre-refactor state; it is not evidence that this branch currently passes.
@@ -146,7 +138,7 @@ Read-only commands:
 ./pj check --dry-run
 ```
 
-`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. `./pj workflow validate` only validates `.pj/workflow.toml`; it does not orchestrate feature/fix stages. `./pj check` runs the configured Python quality checks, while `./pj graph refresh` and `./pj graph diff` support the graph-first development process. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The quality-check workflow remains Python-only; the separate Astro website is not part of pj checks. Graphify is not a check prerequisite: its independent pj graph commands are optional local graph operations.
+`./pj doctor` verifies that the current interpreter is Python 3.14+, that `uv` is available, and that the workflow configuration exists and validates. `./pj workflow validate` only validates `.pj/workflow.toml`; it does not orchestrate feature/fix stages. `./pj check` runs the configured Python quality checks, while `./pj graph refresh` and `./pj graph diff` support the graph-first development process. It exits non-zero when a required prerequisite or the configuration is missing/invalid. `./pj check` runs the configured checks in order. The pytest step must not be run until the developer declares the current refactor ready for validation. The project and quality-check workflow are Python-only. Graphify is not a check prerequisite: its independent pj graph commands are optional local graph operations.
 
 ## Git and change safety
 
