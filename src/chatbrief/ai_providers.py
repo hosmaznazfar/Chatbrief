@@ -30,7 +30,7 @@ class TokenBudgetExhaustedError(RuntimeError):
     """Raised when a provider exhausts its token budget without producing visible output."""
 
 
-class AIProvider(ABC):
+class AIProvider(ABC):  # pylint: disable=too-few-public-methods
     """Abstract base class for AI providers."""
 
     @abstractmethod
@@ -58,7 +58,7 @@ class AIProvider(ABC):
         """
 
 
-class OpenAIProvider(AIProvider):
+class OpenAIProvider(AIProvider):  # pylint: disable=too-few-public-methods
     """OpenAI API provider."""
 
     def __init__(self, api_key: str, logger: logging.Logger, timeout: int = 60):
@@ -161,7 +161,7 @@ class OpenAIProvider(AIProvider):
         return await self.client.chat.completions.create(**create_kwargs)
 
 
-class OllamaProvider(AIProvider):
+class OllamaProvider(AIProvider):  # pylint: disable=too-few-public-methods
     """Ollama local LLM provider."""
 
     def __init__(self, base_url: str, logger: logging.Logger, timeout: int = 300):
@@ -243,7 +243,7 @@ class OllamaProvider(AIProvider):
         return text
 
 
-class AnthropicProvider(AIProvider):
+class AnthropicProvider(AIProvider):  # pylint: disable=too-few-public-methods
     """Anthropic Claude API provider."""
 
     def __init__(self, api_key: str, logger: logging.Logger, timeout: int = 60):
