@@ -1,7 +1,7 @@
 # Chatbrief — persistent project context
 
 Repository: https://github.com/hosmaznazfar/Chatbrief  
-Active refactor branch: `refactor/chatbrief-package-layout`  
+Active modernization branch: `upgrade/full-project-modernization`  
 Primary package: `src/chatbrief/`  
 Python: `>=3.14`; package/dependency manager: `uv`
 
@@ -28,7 +28,6 @@ The repository includes:
 - Root entry point/composition root: `main.py`
 - Python dependencies and tool configuration: `pyproject.toml`, `uv.lock`
 - Tests: `tests/`
-- Astro website: `website/`
 - CI: `.github/workflows/ci.yml`
 - Architecture decisions and plans: `docs/adr/`, `docs/plans/`
 
@@ -48,7 +47,7 @@ The repository includes:
 
 ## Current refactor status (2026-10-30)
 
-The package/platform implementation migration on `refactor/chatbrief-package-layout` is ready for validation. The full test suite and quality checks have deliberately not been run.
+The package/platform implementation migration is the starting point for the Python-only modernization on `upgrade/full-project-modernization`. The full test suite and quality checks have deliberately not been run.
 
 Completed:
 - Migrated test imports to `chatbrief.*` and moved legacy `tests/test_core.py` behavior coverage into `tests/test_digest.py`.
@@ -86,7 +85,7 @@ Follow `docs/AI_WORKFLOW.md` for the developer's required sequence: inspect the 
 
 ## Tooling and commands
 
-Use `uv` and the committed lockfile. Configured tools include Ruff, Pyright, Pylint, Bandit, Vulture, pytest, pytest-cov, pytest-asyncio, and pre-commit. Website dependencies are managed independently with npm and `website/package-lock.json`.
+Use `uv` and the committed lockfile. Configured tools include Ruff, Pyright, Pylint, Bandit, Vulture, pytest, pytest-cov, pytest-asyncio, and pre-commit. The project is Python-only; Python dependencies and tooling are managed with `uv`.
 
 Do not add Graphify to the Python check pipeline: .pj/workflow.toml remains Python-only. Graphify is available through its separate optional pj graph command group.
 
@@ -96,8 +95,7 @@ Do not add Graphify to the Python check pipeline: .pj/workflow.toml remains Pyth
 - The Python workflow prerequisites are Python 3.14+ and `uv`. Graphify is an optional separately installed CLI.
 - `./pj doctor` checks the Python version, `uv` availability, and workflow configuration validity; it returns non-zero when a required prerequisite or configuration is missing/invalid.
 - `.pj/workflow.toml` defines Ruff lint, Ruff format check, Pyright, and pytest, all executed through `uv run`.
-- The separate Astro website is not part of the Python `pj` workflow.
-- Do not add Node/npm, Rust/Cargo, or Graphify to the Python check pipeline. The optional Graphify CLI is managed separately through pj graph commands.
+- Do not add Rust/Cargo or Graphify to the Python check pipeline. The optional Graphify CLI is managed separately through pj graph commands.
 
 ## Safety
 
