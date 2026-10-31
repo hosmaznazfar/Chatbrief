@@ -446,7 +446,7 @@ async def test_setup_bot_menu_exception(sample_config, mock_logger):
     handler = TelegramBot(sample_config, mock_logger, _make_command_service())
 
     mock_app = MagicMock()
-    mock_app.bot.set_my_commands = AsyncMock(side_effect=RuntimeError("Telegram error"))
+    mock_app.bot.set_my_commands = AsyncMock(side_effect=telegram_bot.TelegramError("Telegram error"))
     handler.app = mock_app
 
     await handler.setup_bot_menu()
