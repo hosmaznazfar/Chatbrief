@@ -525,7 +525,7 @@ async def test_filter_exception_is_isolated_from_following_filters(
         def __init__(self):
             pass
 
-        async def filter(self, channel, messages):
+        async def filter(self, _channel, messages):
             raise RuntimeError("filter failed")
 
     class PassFilter:
