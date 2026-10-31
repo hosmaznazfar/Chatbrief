@@ -9,7 +9,7 @@ from telegram import BotCommand, Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from chatbrief.commands.models import CommandStatus
-from chatbrief.commands.service import CommandService
+from chatbrief.commands.protocols import CommandServiceProtocol
 from chatbrief.config.models import Config
 from chatbrief.ui_strings import get_ui_strings
 
@@ -21,7 +21,7 @@ class TelegramBot:
         self,
         config: Config,
         logger: logging.Logger,
-        command_service: CommandService,
+        command_service: CommandServiceProtocol,
     ) -> None:
         """
         Initialize the Telegram command handler.
