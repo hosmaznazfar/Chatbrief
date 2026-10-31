@@ -7,13 +7,13 @@ if TYPE_CHECKING:
 
 
 @runtime_checkable
-class PromptComposer(Protocol):
+class PromptComposer(Protocol):  # pylint: disable=too-few-public-methods
     def compose(  # noqa: E704
         self, channel: ChannelConfig, group: DigestGroupConfig | None
     ) -> str: ...
 
 
-class DefaultComposer:
+class DefaultComposer:  # pylint: disable=too-few-public-methods
     """Compose system prompts from base template, group extra, and channel extra."""
 
     def __init__(self, base_template: str, language: str) -> None:
