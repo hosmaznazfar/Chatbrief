@@ -328,28 +328,20 @@ class TelegramMessageSource(MessageSource):
         """
         try:
             sender = await message.get_sender()
-
             if not sender:
                 return "Unknown"
 
             if isinstance(sender, tl_types.User):
                 name = sender.first_name or ""
-
                 if sender.last_name:
                     name += f" {sender.last_name}"
+            elif isinstance(sender, (tl_types.Chat, tl_types.Channel)):
+                name = sender.title
+            else:
+                username = getattr(sender, "username", None)
+                name = f"@{username}" if username else ""
 
-                return name or "Unknown"
-
-            if isinstance(sender, (tl_types.Chat, tl_types.Channel)):
-                return sender.title
-
-            username = getattr(sender, "username", None)
-
-            if username:
-                return f"@{username}"
-
-            return "Unknown"
-
+            return name or "Unknown"
         except Exception:  # noqa: BLE001
             return "Unknown"
 
