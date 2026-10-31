@@ -114,8 +114,8 @@ class DigestScheduler:
         try:
             hour, minute = map(int, time_str.split(":"))
             return hour, minute
-        except Exception:
-            self.logger.warning(f"Invalid schedule time '{time_str}', using default 08:00")
+        except ValueError:
+            self.logger.warning("Invalid schedule time %r, using default 08:00", time_str)
             return 8, 0
 
     def get_next_run_time(self) -> str:
