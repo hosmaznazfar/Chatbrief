@@ -186,7 +186,7 @@ class DigestFormatter:
             return "💻"
 
         # Crypto/Finance
-        elif any(
+        if any(
             word in name_lower
             for word in [
                 "crypto",
@@ -204,11 +204,11 @@ class DigestFormatter:
             return "💰"
 
         # News
-        elif any(word in name_lower for word in ["news", "новост", "خبر", "اخبار"]):
+        if any(word in name_lower for word in ["news", "новост", "خبر", "اخبار"]):
             return "📰"
 
         # Business
-        elif any(
+        if any(
             word in name_lower
             for word in [
                 "business",
@@ -223,7 +223,7 @@ class DigestFormatter:
             return "💼"
 
         # Science
-        elif any(
+        if any(
             word in name_lower
             for word in [
                 "science",
@@ -238,7 +238,7 @@ class DigestFormatter:
             return "🔬"
 
         # AI/ML
-        elif any(
+        if any(
             word in name_lower
             for word in [
                 "ai",
@@ -254,7 +254,7 @@ class DigestFormatter:
             return "🤖"
 
         # Design
-        elif any(
+        if any(
             word in name_lower
             for word in [
                 "design",
@@ -267,7 +267,7 @@ class DigestFormatter:
             return "🎨"
 
         # Marketing
-        elif any(
+        if any(
             word in name_lower
             for word in [
                 "marketing",
