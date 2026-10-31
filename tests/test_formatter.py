@@ -233,8 +233,6 @@ def test_format_date_russian_month_names(sample_config, mock_logger):
 @pytest.mark.unit
 def test_format_date_english_month_names(english_config, mock_logger):
     """_format_date returns English month names when output_language is English."""
-    from datetime import datetime
-
     formatter = DigestFormatter(english_config, mock_logger)
     dt = datetime(2026, 2, 22)
     result = formatter._format_date(dt)
