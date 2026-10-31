@@ -4,12 +4,12 @@ Telegram implementation of the platform-neutral message sender.
 
 import asyncio
 import logging
-from typing import Optional
 
 from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
 
+from chatbrief.config.loader import load_config
 from chatbrief.config.models import Config
 from chatbrief.formatter import DigestFormatter
 from chatbrief.platforms.base import MessageSender
@@ -18,6 +18,7 @@ from chatbrief.utils import (
     get_digest_message_ids,
     save_digest_message_ids,
     split_message,
+    setup_logging,
 )
 
 
@@ -73,7 +74,7 @@ class TelegramMessageSender(MessageSender):
             else:
                 raise
 
-    async def send_digest(self, digest: str, user_id: Optional[int] = None) -> bool:
+    async def send_digest(self, digest: str, user_id: int | None = None) -> bool:
         """
         Send digest to user.
 
@@ -116,7 +117,7 @@ class TelegramMessageSender(MessageSender):
             return False
 
     async def send_channel_messages(
-        self, channel_messages: list[tuple[str, str]], user_id: Optional[int] = None
+        self, channel_messages: list[tuple[str, str]], user_id: int | None = None
     ) -> bool:
         """
         Send separate messages for each channel.
@@ -183,7 +184,7 @@ class TelegramMessageSender(MessageSender):
         )
         return False
 
-    async def send_message(self, text: str, user_id: Optional[int] = None) -> bool:
+    async def send_message(self, text: str, user_id: int | None = None) -> bool:
         """
         Send a simple text message.
 
@@ -217,7 +218,7 @@ class TelegramMessageSender(MessageSender):
             self.logger.error(f"Failed to send message: {e}")
             return False
 
-    async def cleanup_old_digests(self, user_id: Optional[int] = None) -> bool:
+    async def cleanup_old_digests(self, user_id: int | None = None) -> bool:
         """
         Delete previous digest messages.
 
@@ -274,7 +275,7 @@ class TelegramMessageSender(MessageSender):
 
     async def _send_message_with_tracking(
         self, user_id: int, message_text: str, channel_name: str
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Send a message with markdown fallback and return message ID.
 
@@ -312,7 +313,7 @@ class TelegramMessageSender(MessageSender):
         self,
         user_id: int,
         summary_message: str,
-    ) -> Optional[int]:
+    ) -> int | None:
         """
         Send summary message and return message ID.
 
@@ -408,8 +409,8 @@ class TelegramMessageSender(MessageSender):
     async def send_channel_messages_with_tracking(
         self,
         channel_messages: list[tuple[str, str]],
-        summary_message: Optional[str] = None,
-        user_id: Optional[int] = None,
+        summary_message: str | None = None,
+        user_id: int | None = None,
     ) -> bool:
         """
         Send separate messages for each channel and track message IDs for cleanup.
@@ -464,9 +465,6 @@ class TelegramMessageSender(MessageSender):
 
 async def main():
     """Test sender."""
-    from chatbrief.config.loader import load_config
-    from chatbrief.utils import setup_logging
-
     config = load_config()
     logger = setup_logging(config.log_level)
 
