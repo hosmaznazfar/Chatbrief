@@ -137,6 +137,24 @@ class TestSQLiteBackend:
             await backend.close()
 
     @pytest.mark.asyncio
+    async def test_save_messages_normalizes_optional_fields(self, tmp_path):
+        backend = SQLiteBackend(str(tmp_path / "optional.db"))
+        await backend.initialize()
+        try:
+            message = _make_message()
+            message.link = None
+            message.media_type = None
+
+            await backend.save_messages([message])
+            result = await backend.query_messages()
+
+            assert len(result) == 1
+            assert result[0].link == ""
+            assert result[0].media_type == ""
+        finally:
+            await backend.close()
+
+    @pytest.mark.asyncio
     async def test_query_channel_filter(self, tmp_path):
         backend = SQLiteBackend(str(tmp_path / "q.db"))
         await backend.initialize()
