@@ -166,121 +166,47 @@ class DigestFormatter:
             return "•"
 
         name_lower = channel_name.lower()
-
-        # Tech/Dev
-        if any(
-            word in name_lower
-            for word in [
-                "tech",
-                "dev",
-                "code",
-                "программ",
-                "разработ",
-                "فناوری",
-                "تکنولوژی",
-                "برنامه‌نویسی",
-                "برنامه نویسی",
-                "توسعه",
-            ]
-        ):
-            return "💻"
-
-        # Crypto/Finance
-        if any(
-            word in name_lower
-            for word in [
-                "crypto",
-                "bitcoin",
-                "финанс",
-                "крипто",
-                "ارز",
-                "کریپتو",
-                "بیت‌کوین",
-                "بیت کوین",
-                "مالی",
-                "اقتصاد",
-            ]
-        ):
-            return "💰"
-
-        # News
-        if any(word in name_lower for word in ["news", "новост", "خبر", "اخبار"]):
-            return "📰"
-
-        # Business
-        if any(
-            word in name_lower
-            for word in [
-                "business",
-                "бизнес",
-                "startup",
-                "کسب‌وکار",
-                "کسب و کار",
-                "استارتاپ",
-                "تجارت",
-            ]
-        ):
-            return "💼"
-
-        # Science
-        if any(
-            word in name_lower
-            for word in [
-                "science",
-                "research",
-                "наук",
-                "علم",
-                "علوم",
-                "پژوهش",
-                "تحقیق",
-            ]
-        ):
-            return "🔬"
-
-        # AI/ML
-        if any(
-            word in name_lower
-            for word in [
-                "ai",
-                "ml",
-                "artificial",
-                "ии",
-                "искусственн",
-                "هوش مصنوعی",
-                "یادگیری ماشین",
-                "یادگیری ماشینی",
-            ]
-        ):
-            return "🤖"
-
-        # Design
-        if any(
-            word in name_lower
-            for word in [
-                "design",
-                "дизайн",
-                "ui",
-                "ux",
-                "طراحی",
-            ]
-        ):
-            return "🎨"
-
-        # Marketing
-        if any(
-            word in name_lower
-            for word in [
-                "marketing",
-                "маркетинг",
-                "smm",
-                "بازاریابی",
-            ]
-        ):
-            return "📈"
-
-        # Default
-        else:
-            return "📺"
+        categories = (
+            (
+                (
+                    "tech", "dev", "code", "программ", "разработ", "فناوری",
+                    "تکنولوژی", "برنامه‌نویسی", "برنامه نویسی", "توسعه",
+                ),
+                "💻",
+            ),
+            (
+                (
+                    "crypto", "bitcoin", "финанс", "крипто", "ارز", "کریپто",
+                    "کریپتو", "بیت‌کوین", "بیت کوین", "مالی", "اقتصاد",
+                ),
+                "💰",
+            ),
+            (("news", "новост", "خبر", "اخبار"), "📰"),
+            (
+                (
+                    "business", "бизнес", "startup", "کسب‌وکار", "کسب و کار",
+                    "استارتاپ", "تجارت",
+                ),
+                "💼",
+            ),
+            (
+                ("science", "research", "наук", "علم", "علوم", "پژوهش", "تحقیق"),
+                "🔬",
+            ),
+            (
+                (
+                    "ai", "ml", "artificial", "ии", "искусственн", "هوش مصنوعی",
+                    "یادگیری ماشین", "یادگیری ماشینی",
+                ),
+                "🤖",
+            ),
+            (("design", "дизайн", "ui", "ux", "طراحی"), "🎨"),
+            (("marketing", "маркетинг", "smm", "بازاریابی"), "📈"),
+        )
+        for keywords, emoji in categories:
+            if any(keyword in name_lower for keyword in keywords):
+                return emoji
+        return "📺"
 
     def format_channel_message(
         self,
