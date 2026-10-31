@@ -37,4 +37,3 @@ class CommandServiceProtocol(Protocol):
     def help(self, user_id: int) -> CommandResult:
         """Return command help."""
         ...
-}
