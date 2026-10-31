@@ -1,5 +1,7 @@
 """Tests for the platform-neutral message source contract."""
 
+# pylint: disable=redefined-outer-name
+
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
