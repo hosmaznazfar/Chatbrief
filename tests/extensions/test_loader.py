@@ -1,4 +1,6 @@
-from __future__ import annotations
+fr
+
+# pylint: disable=import-outside-toplevel,too-few-public-methodsom __future__ import annotations
 
 import pytest
 
