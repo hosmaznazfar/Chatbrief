@@ -115,7 +115,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_status_desc": "Show status and settings",
         "cmd_help_desc": "Show help",
         "rate_limited": "⏳ Please wait before sending this command again.",
-        "generating_digest": "⏳ Generating digest for the last 24 hours...\nThis may take 1-2 minutes.",
+        "generating_digest": (
+            "⏳ Generating digest for the last 24 hours...\\nThis may take 1-2 "
+            "minutes."
+        ),
         "digest_done": "✅ Digest ready!",
         "digest_error": "❌ Error generating digest. Check logs for details.",
         "digest_exception": "❌ An error occurred while generating the digest. Check logs.",
@@ -134,7 +137,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "scheduler_not_running": "⏰ Scheduler not running",
         "available_commands": "**Available commands:**",
         "help_title": "🤖 **Chatbrief - AI Digest Generator**",
-        "help_intro": "I automatically generate daily digests from your Telegram channels using AI.",
+        "help_intro": (
+            "I automatically generate daily digests from your Telegram channels "
+            "using AI."
+        ),
         "help_commands_header": "**Commands:**",
         "help_auto_mode": "**Automatic mode:**",
         "help_auto_desc": "Digest is automatically generated every day at {schedule}",
@@ -185,7 +191,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_status_desc": "Показать статус и настройки",
         "cmd_help_desc": "Показать справку",
         "rate_limited": "⏳ Пожалуйста, подождите перед повторной отправкой команды.",
-        "generating_digest": "⏳ Генерирую дайджест за последние 24 часа...\nЭто может занять 1-2 минуты.",
+        "generating_digest": (
+            "⏳ Генерирую дайджест за последние 24 часа...\\nЭто может занять 1-2 "
+            "минуты."
+        ),
         "digest_done": "✅ Дайджест готов!",
         "digest_error": "❌ Ошибка при генерации дайджеста. Проверьте логи для деталей.",
         "digest_exception": "❌ Произошла ошибка при генерации дайджеста. Проверьте логи.",
@@ -204,7 +213,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "scheduler_not_running": "⏰ Планировщик не запущен",
         "available_commands": "**Доступные команды:**",
         "help_title": "🤖 **Chatbrief - AI Digest Generator**",
-        "help_intro": "Я автоматически генерирую ежедневные дайджесты из ваших Telegram-каналов с помощью AI.",
+        "help_intro": (
+            "Я автоматически генерирую ежедневные дайджесты из ваших "
+            "Telegram-каналов с помощью AI."
+        ),
         "help_commands_header": "**Команды:**",
         "help_auto_mode": "**Автоматический режим:**",
         "help_auto_desc": "Дайджест генерируется автоматически каждый день в {schedule}",
@@ -255,7 +267,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_status_desc": "Mostrar estado y configuración",
         "cmd_help_desc": "Mostrar ayuda",
         "rate_limited": "⏳ Por favor, espere antes de enviar este comando nuevamente.",
-        "generating_digest": "⏳ Generando resumen de las últimas 24 horas...\nEsto puede tardar 1-2 minutos.",
+        "generating_digest": (
+            "⏳ Generando resumen de las últimas 24 horas...\\nEsto puede tardar "
+            "1-2 minutos."
+        ),
         "digest_done": "✅ ¡Resumen listo!",
         "digest_error": "❌ Error al generar el resumen. Consulte los registros.",
         "digest_exception": "❌ Ocurrió un error al generar el resumen. Consulte los registros.",
@@ -274,7 +289,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "scheduler_not_running": "⏰ Programador no está en ejecución",
         "available_commands": "**Comandos disponibles:**",
         "help_title": "🤖 **Chatbrief - AI Digest Generator**",
-        "help_intro": "Genero automáticamente resúmenes diarios de tus canales de Telegram usando IA.",
+        "help_intro": (
+            "Genero automáticamente resúmenes diarios de tus canales de Telegram "
+            "usando IA."
+        ),
         "help_commands_header": "**Comandos:**",
         "help_auto_mode": "**Modo automático:**",
         "help_auto_desc": "El resumen se genera automáticamente cada día a las {schedule}",
@@ -325,13 +343,22 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_status_desc": "Status und Einstellungen anzeigen",
         "cmd_help_desc": "Hilfe anzeigen",
         "rate_limited": "⏳ Bitte warten Sie, bevor Sie diesen Befehl erneut senden.",
-        "generating_digest": "⏳ Erstelle Zusammenfassung der letzten 24 Stunden...\nDies kann 1-2 Minuten dauern.",
+        "generating_digest": (
+            "⏳ Erstelle Zusammenfassung der letzten 24 Stunden...\\nDies kann 1-2 "
+            "Minuten dauern."
+        ),
         "digest_done": "✅ Zusammenfassung fertig!",
         "digest_error": "❌ Fehler beim Erstellen der Zusammenfassung. Protokolle prüfen.",
-        "digest_exception": "❌ Beim Erstellen der Zusammenfassung ist ein Fehler aufgetreten. Protokolle prüfen.",
+        "digest_exception": (
+            "❌ Beim Erstellen der Zusammenfassung ist ein Fehler aufgetreten. "
+            "Protokolle prüfen."
+        ),
         "cleaning_up": "🧹 Lösche vorherige Zusammenfassungen...",
         "cleanup_done": "✅ Vorherige Zusammenfassungen erfolgreich gelöscht!",
-        "cleanup_partial": "⚠️ Einige Nachrichten konnten nicht gelöscht werden. Protokolle prüfen.",
+        "cleanup_partial": (
+            "⚠️ Einige Nachrichten konnten nicht gelöscht werden. Protokolle "
+            "prüfen."
+        ),
         "cleanup_error": "❌ Fehler beim Aufräumen. Protokolle prüfen.",
         "status_header": "📊 **Chatbrief-Status**\n",
         "provider_label": "🤖 Anbieter",
@@ -344,7 +371,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "scheduler_not_running": "⏰ Planer läuft nicht",
         "available_commands": "**Verfügbare Befehle:**",
         "help_title": "🤖 **Chatbrief - AI Digest Generator**",
-        "help_intro": "Ich erstelle automatisch tägliche Zusammenfassungen aus deinen Telegram-Kanälen mit KI.",
+        "help_intro": (
+            "Ich erstelle automatisch tägliche Zusammenfassungen aus deinen "
+            "Telegram-Kanälen mit KI."
+        ),
         "help_commands_header": "**Befehle:**",
         "help_auto_mode": "**Automatischer Modus:**",
         "help_auto_desc": "Zusammenfassung wird täglich automatisch um {schedule} erstellt",
@@ -395,13 +425,22 @@ _STRINGS: dict[str, dict[str, str]] = {
         "cmd_status_desc": "Afficher le statut et les paramètres",
         "cmd_help_desc": "Afficher l'aide",
         "rate_limited": "⏳ Veuillez patienter avant de renvoyer cette commande.",
-        "generating_digest": "⏳ Génération du résumé des 24 dernières heures...\nCela peut prendre 1-2 minutes.",
+        "generating_digest": (
+            "⏳ Génération du résumé des 24 dernières heures...\\nCela peut prendre "
+            "1-2 minutes."
+        ),
         "digest_done": "✅ Résumé prêt !",
         "digest_error": "❌ Erreur lors de la génération du résumé. Vérifiez les journaux.",
-        "digest_exception": "❌ Une erreur s'est produite lors de la génération du résumé. Vérifiez les journaux.",
+        "digest_exception": (
+            "❌ Une erreur s'est produite lors de la génération du résumé. "
+            "Vérifiez les journaux."
+        ),
         "cleaning_up": "🧹 Suppression des résumés précédents...",
         "cleanup_done": "✅ Résumés précédents supprimés avec succès !",
-        "cleanup_partial": "⚠️ Échec de la suppression de certains messages. Vérifiez les journaux.",
+        "cleanup_partial": (
+            "⚠️ Échec de la suppression de certains messages. Vérifiez les "
+            "journaux."
+        ),
         "cleanup_error": "❌ Erreur lors du nettoyage. Vérifiez les journaux.",
         "status_header": "📊 **Statut Chatbrief**\n",
         "provider_label": "🤖 Fournisseur",
@@ -414,7 +453,10 @@ _STRINGS: dict[str, dict[str, str]] = {
         "scheduler_not_running": "⏰ Planificateur non démarré",
         "available_commands": "**Commandes disponibles :**",
         "help_title": "🤖 **Chatbrief - AI Digest Generator**",
-        "help_intro": "Je génère automatiquement des résumés quotidiens de vos chaînes Telegram grâce à l'IA.",
+        "help_intro": (
+            "Je génère automatiquement des résumés quotidiens de vos chaînes "
+            "Telegram grâce à l'IA."
+        ),
         "help_commands_header": "**Commandes :**",
         "help_auto_mode": "**Mode automatique :**",
         "help_auto_desc": "Le résumé est généré automatiquement chaque jour à {schedule}",
