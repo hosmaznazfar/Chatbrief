@@ -1,6 +1,11 @@
 """Tests for ai_providers module."""
 
+# pylint: disable=too-many-lines
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import httpx
+from openai import BadRequestError
 
 import pytest
 
@@ -358,9 +363,6 @@ async def test_openai_provider_omits_reasoning_effort_when_none(mock_logger):
 @pytest.mark.asyncio
 async def test_openai_provider_falls_back_when_reasoning_effort_rejected(mock_logger):
     """When the API rejects reasoning_effort (BadRequestError), the provider retries without it."""
-    import httpx
-    from openai import BadRequestError
-
     with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
