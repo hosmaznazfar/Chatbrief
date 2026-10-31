@@ -122,7 +122,7 @@ Do not claim any command ran unless its output is available. The existing CI wor
 
 ## Project workflow helper
 
-The root `./pj` is a Python 3.14+ script implemented with the Python standard library only. It does not require Cargo, Rust, Node.js, npm, or third-party Python packages. Graphify is an optional external CLI used by the separate pj graph command group.
+The root `./pj` is a Python 3.14+ script implemented with the Python standard library only. It does not require Cargo, Rust, or third-party Python packages. Graphify is an optional external CLI used by the separate pj graph command group.
 
 Runtime/tool requirements:
 - Python 3.14+ to execute `pj`.
