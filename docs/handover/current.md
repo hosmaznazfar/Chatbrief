@@ -123,6 +123,12 @@ The optional Telethon role is now also decided:
 No application code, database schema, or migrations have changed. These remain approved target
 architecture decisions, not implemented capabilities.
 
+The source-registration policy is now approved:
+- Public channels and groups: registration through the bot's private chat, if bot access is available.
+- Private groups: registration initiated by an administrator inside the group, with administrator verification.
+- Private channels: a separate administrator-verification flow; an ordinary channel post is not sufficient proof of the human poster's identity.
+- The verified source owner controls private-source sharing. Bot access alone does not establish Chatbrief ownership.
+
 Continue the architecture decision process before Phase 2. The next open question is source
 onboarding: how a Chatbrief user registers a source with the central bot and how Chatbrief
 proves that the registering user is authorized to manage a private source. This needs to account
