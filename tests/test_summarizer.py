@@ -144,7 +144,7 @@ def _make_messages(count: int, text_len: int = 20):
 @pytest.mark.unit
 def test_format_messages_prompt_truncation_keeps_recent(sample_config, mock_logger):
     """When total chars exceed max_chars, only the most recent messages that fit are kept."""
-    # Each formatted line: "N. [HH:MM] S: " (14 chars) + 20 X's + " | https://t.me/test/N" = 56 chars
+    # Each formatted line has a 14-character prefix, 20 X's, and a 22-character URL (56 total).
     # 2 messages + 1 newline = 56 + 1 + 56 = 113 chars → max_chars=120 keeps exactly 2
     # 3 messages = 56*3 + 2 = 170 chars → exceeds 120
     messages = _make_messages(5, text_len=20)
@@ -261,7 +261,7 @@ def test_format_messages_includes_link(sample_config, mock_logger, sample_messag
 async def test_summarize_channel_prompt_instructs_two_tier_format(
     sample_config, mock_logger, sample_messages
 ):
-    """Channel prompt instructs AI to produce full summaries for top posts and one-liners for the rest."""
+    """Check full summaries for top posts and one-liners for the rest."""
 
     with patch.object(chatbrief.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
