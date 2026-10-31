@@ -63,11 +63,19 @@ No full tests or quality checks have been run during this work. The historical p
 
 ## Graphify state
 
-Graphify remains optional local development tooling, not an application dependency or required Python check.
+The developer ran `./pj graph refresh` and `./pj graph diff` locally on
+`refactor/chatbrief-package-layout`. The refresh completed, reporting 2,045 nodes,
+4,822 edges, and 97 communities. The developer committed the resulting artifacts as
+`214a215` and pushed that commit.
 
-The developer indicated the graph-refresh step had already been handled and did not request another refresh. No local Graphify command was run in this session.
+The developer then rebased onto the two remote documentation commits. The Graphify
+post-rebase hook launched another background rebuild; the subsequent local status showed
+additional modified files under `graphify-out/`. Those post-rebase changes remain local and
+unreviewed in this handover. Do not assume they are portable or stage them blindly.
 
-The verified GitHub tree currently contains `graphify-out/graph.json` and `graphify-out/manifest.json`; `GRAPH_REPORT.md` and `graph.html` are not present in that remote snapshot. The tracked `.graphify_analysis.json` and `.graphify_root` files also remain in the branch. Treat the committed graph as an aid, not as proof of current local state; verify important relationships against source and tests. Any Graphify artifact hygiene is a separate follow-up and is not a blocker for the package/platform code migration.
+The committed report is a navigation aid only. Verify task-critical relationships against
+source, tests, configuration, and ADRs. No local Graphify query was run by this GitHub-only
+inspection.
 
 ## Workflow and safety rules
 
@@ -79,25 +87,13 @@ The verified GitHub tree currently contains `graphify-out/graph.json` and `graph
 
 ## Immediate next action
 
-The website-removal step is committed to `upgrade/full-project-modernization`. The developer should inspect local status and bring this branch into the local checkout without overwriting uncommitted work. When satisfied that the modernization is ready, explicitly authorize validation; until then, keep the full test suite deferred.
+Phase 1 of the Telegram hybrid-ingestion plan has been inspected against the committed
+source. The findings and an initial migration proposal are recorded in
+`docs/plans/telegram-hybrid-ingestion.md`. The plan remains at approved target direction;
+no application code or database schema has changed.
 
-
-## Python-only modernization (2026-10-31)
-
-The developer decided to remove the website entirely and keep Chatbrief as a Python-only project, with no replacement web framework.
-
-Completed directly on `upgrade/full-project-modernization`:
-- Deleted the complete `website/` Astro project, including its npm manifests, static assets, Astro source, Cloudflare Pages configuration, and Wrangler configuration.
-- Removed the website build job and Node/npm setup from `.github/workflows/ci.yml`; the Python build job now depends on lint, tests, and security only.
-- Removed the obsolete `node_modules/` ignore entry.
-- Updated `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/AI_WORKFLOW.md`, and `FEATURE_IMPLEMENTATION_CHECKLIST.md` to describe the Python-only stack and remove website build instructions.
-
-Preserved:
-- Python package, tests, `uv.lock`, and Python CI jobs.
-- Docker deployment workflow and `.github/workflows/docker-publish.yml`.
-- Existing Graphify artifacts and their independent local workflow.
-
-Validation:
-- No tests, package build, or CI workflow execution was run.
-- Local Graphify output is not visible to this GitHub-only session; the local graph changes reported by the developer have not been copied or overwritten.
-- Local worktree state remains unknown. The developer must fetch/checkout the remote branch and inspect the diff before continuing.
+Next, review the Phase 1 findings and decide the message ownership model before any schema
+design or implementation. The recommended starting point is a shared, deduplicated source
+message archive with per-user subscriptions and strict subscription-scoped reads. Then agree
+on the central-bot chat onboarding/access policy and the Bot API-only configuration behavior.
+Only after those decisions should Phase 2 begin.
