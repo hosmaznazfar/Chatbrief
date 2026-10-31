@@ -99,6 +99,95 @@ Implement incrementally. Do not rewrite the existing Telegram source, sender, or
 - Produce a concrete migration proposal with data model, ownership boundaries, compatibility impact, migration/backfill strategy, and acceptance criteria.
 - Do not change application code or database schema during this inspection phase.
 
+### Phase 1 findings — verified 2026-10-31
+
+Phase 1 source inspection is complete. These findings describe the implementation at the
+inspection revision; they are not implementation changes.
+
+#### Current lifecycle and boundaries
+
+- `Message` currently contains `text`, `sender`, `timestamp`, `link`,
+  `channel_name`, `has_media`, and `media_type`. It has no platform namespace,
+  stable chat/source ID, or message ID.
+- `MessageSource` exposes connection lifecycle, all-channel and single-channel history
+  fetching, and channel URL lookup. `TelegramMessageSource` implements it with one
+  hard-coded Telethon session at `sessions/user.session`.
+- `TelegramBot` is a python-telegram-bot command adapter. It registers command handlers
+  and polls for updates, but it does not currently ingest ordinary group/channel messages.
+- `PlatformBuilder` creates one Telegram source and one Telegram sender. `main.py`
+  composes one source, sender, scheduler, command service, bot, and optional MCP server.
+- The current digest flow fetches live messages, applies configured filters, optionally
+  writes the filtered messages to storage, then summarizes and sends them. Storage writes
+  are best-effort and are not a continuous update-ingestion mechanism.
+- The scheduled digest is one global daily job. Manual commands and the sender both enforce
+  the single configured `target_user_id`. Digest delivery tracking is stored in a local
+  JSON file keyed by recipient ID, not in the message database.
+
+#### Current persistence behavior
+
+- SQLite and PostgreSQL use the same logical `messages` table fields: generated row ID,
+  `channel_name`, `sender`, `text`, `timestamp`, `link`, `has_media`,
+  `media_type`, and `collected_at`.
+- Neither schema stores platform, Telegram chat ID, Telegram message ID, Chatbrief user
+  ownership, ingestion path, edit state, or collection coverage.
+- There is no uniqueness constraint for source messages. The SQLite tests explicitly verify
+  that saving the same message twice inserts two rows.
+- The read API filters by channel name and time only; it has no tenant/source identity filter.
+- ADR 0002 remains authoritative: stored rows do not establish complete collection coverage,
+  so digest/MCP collection continues to fetch from the live source.
+
+#### Configuration and identity constraints
+
+- `Config.channels` is a single global source list; `ChannelConfig.group` is digest
+  organization, not Telegram group membership.
+- `Settings.target_user_id` is mandatory in the configuration loader and is the only
+  authorized recipient.
+- The configuration loader currently requires `TELEGRAM_API_ID`,
+  `TELEGRAM_API_HASH`, and `TELEGRAM_BOT_TOKEN` together. This conflicts with the
+  target requirement that Bot API-only users must not need personal-account integration
+  credentials. API ID/hash should become conditional on enabling/linking Telethon, while the
+  bot token remains required for the central bot.
+- The Telethon source requires an existing authorized local session file. There is no
+  per-user session-linking, encryption, revocation, or ownership lifecycle.
+
+#### Migration proposal — design direction, not an approved schema
+
+The smallest coherent target appears to require these separate concepts:
+
+1. **Chat/source identity:** a platform-qualified stable chat ID, with display metadata and
+   access state. Telegram's human-readable name must not be the primary key.
+2. **Message identity:** a platform-qualified chat ID plus platform message ID, with a
+   uniqueness constraint. The normalized message content should remain platform-neutral;
+   Telegram-specific IDs and update metadata belong at the ingestion/persistence boundary.
+3. **Ingestion/access provenance:** record whether the central bot or a particular linked
+   account can currently read a chat, and represent ingestion progress/coverage independently
+   from the messages themselves.
+4. **User subscriptions:** associate a Chatbrief user with a source chat, separately from
+   the fact that the bot or a linked account can access that chat.
+5. **Per-user digest preferences:** store lookback, filters, prompt overrides, grouping,
+   schedule, and delivery target per user rather than on one global `Config`.
+6. **Linked Telegram accounts:** store each user's Telethon session independently, encrypted
+   at rest, with explicit connect/revoke/delete lifecycle.
+7. **Delivery tracking:** move sent-message tracking from the local JSON file to durable,
+   recipient-scoped records before supporting multiple recipients.
+
+A shared, deduplicated message archive with user subscriptions referencing source chats is
+the likely default because it avoids storing the same Telegram message once per subscriber.
+That design must enforce subscription-based reads and must not expose messages from a chat
+to a user merely because the central bot can access that chat. A per-user message copy model
+would provide simpler tenant isolation but duplicate content and complicate cross-path
+deduplication. This trade-off remains a developer decision.
+
+No final database schema, migration, or code change is approved by this inspection.
+
+#### Phase 1 verification scope
+
+Inspected the current message model, platform protocols and builder, Telegram source/bot/sender,
+configuration models and loader, storage implementations, digest collector/service/builder,
+scheduler, composition root, storage/digest/scheduler tests, ADR 0002, and the current
+hybrid plan. No application tests or quality checks were run; this phase was source inspection
+only. Local uncommitted Graphify rebuild output is not visible to this GitHub inspection.
+
 ### Phase 2 — Establish a normalized ingestion boundary
 
 - Keep the current Telethon implementation operational.
