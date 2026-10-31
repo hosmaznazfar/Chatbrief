@@ -2,7 +2,7 @@
 
 This is the **shared workflow contract for every AI assistant and development tool** used on Chatbrief: ChatGPT, IDE assistants, terminal agents, code-review tools, and human-led sessions. It is not tied to one assistant, editor, model, or vendor. Tool-specific conveniences may differ, but the project rules, Graphify usage, Git discipline, validation requirements, and handover expectations apply equally to all of them.
 
-This document adapts the reusable workflow defined in [AIWorkFlow](https://github.com/hosmaznazfar/AIWorkFlow) to Chatbrief's actual Python/Astro stack and its local Graphify CLI integration. Slash commands below are conversation conventions, not native commands required from any particular assistant.
+This document adapts the reusable workflow defined in [AIWorkFlow](https://github.com/hosmaznazfar/AIWorkFlow) to Chatbrief's Python stack and its local Graphify CLI integration. Slash commands below are conversation conventions, not native commands required from any particular assistant.
 
 ## Goals
 
@@ -287,7 +287,6 @@ These are optional natural-language shortcuts for conversations; they do not req
 - Do not implement Bale credentials/configuration as if a Bale adapter already exists.
 - Preserve architecture decisions in `docs/adr/` and update an ADR when a material decision changes.
 - Python requirement is `>=3.14`; use uv and the committed `uv.lock`.
-- The Astro website under `website/` has its own `package.json` and `package-lock.json`.
 - Do not run the full test suite until the developer explicitly declares the current package/platform refactor ready for validation. The historical pre-refactor test baseline is not evidence about the current branch.
 
 ## Handover contract
