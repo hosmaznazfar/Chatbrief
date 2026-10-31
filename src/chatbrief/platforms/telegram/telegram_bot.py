@@ -80,7 +80,7 @@ class TelegramBot:
     async def handle_digest(
         self,
         update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
+        _context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Handle /digest command.
@@ -103,15 +103,12 @@ class TelegramBot:
             access_checked=True,
         )
 
-        if result.status is CommandStatus.SUCCESS:
-            await update.message.reply_text(result.message)
-        else:
-            await update.message.reply_text(result.message)
+        await update.message.reply_text(result.message)
 
     async def handle_cleanup(
         self,
         update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
+        _context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Handle /cleanup command.
@@ -139,7 +136,7 @@ class TelegramBot:
     async def handle_status(
         self,
         update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
+        _context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Handle /status command.
@@ -160,7 +157,7 @@ class TelegramBot:
     async def handle_help(
         self,
         update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
+        _context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
         """
         Handle /help and /start commands.
