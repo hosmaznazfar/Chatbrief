@@ -1,6 +1,7 @@
 """Tests for utils module."""
 
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -83,8 +84,6 @@ def test_split_message_exact_boundary():
 @pytest.mark.unit
 def test_setup_logging_info_level(tmp_path):
     """Test setup_logging with INFO level."""
-    import os
-
     # Change to temp directory
     original_dir = os.getcwd()
     os.chdir(tmp_path)
