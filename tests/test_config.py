@@ -454,7 +454,7 @@ settings:
     config_file.write_text(config_content)
 
     config = load_config(str(config_file))
-    assert config.settings.digest_groups == []
+    assert not config.settings.digest_groups
 
 
 @pytest.mark.unit
