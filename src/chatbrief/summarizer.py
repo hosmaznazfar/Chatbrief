@@ -2,7 +2,6 @@
 AI-powered summarizer using pluggable providers with configurable output language.
 """
 
-import asyncio
 import logging
 from pathlib import Path
 from typing import Any
@@ -399,4 +398,3 @@ Messages (total: {actual_count}):
             else:
                 renumbered.append(f"{new_i}{line[dot_pos:]}")
         return "\n".join(renumbered)
-
