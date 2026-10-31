@@ -3,7 +3,7 @@ from __future__ import annotations
 import collections
 import pathlib
 
-import pytestimport pytest
+import pytest
 
 from chatbrief.extensions.loader import load_class
 
