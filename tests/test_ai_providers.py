@@ -409,7 +409,7 @@ async def test_openai_provider_falls_back_when_reasoning_effort_rejected(mock_lo
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_openai_provider_falls_back_to_max_tokens_without_reasoning_effort(mock_logger):
-    """When max_completion_tokens is rejected and reasoning_effort is None, retries with max_tokens."""
+    """Retry with max_tokens when max_completion_tokens is rejected and reasoning_effort is None."""
     import httpx
     from openai import BadRequestError
 
