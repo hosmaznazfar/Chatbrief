@@ -63,7 +63,9 @@ async def test_summarize_all_success(sample_config, mock_logger, sample_messages
         messages_by_channel = {"Test Channel": sample_messages}
 
         # Mock the provider's chat_completion method
-        summarizer._provider_settings.provider.chat_completion = AsyncMock(return_value="Test summary")
+        summarizer._provider_settings.provider.chat_completion = AsyncMock(
+            return_value="Test summary"
+        )
 
         result = await summarizer.summarize_all(messages_by_channel)
 
@@ -82,7 +84,9 @@ async def test_summarize_channel_error(sample_config, mock_logger, sample_messag
         summarizer = Summarizer(sample_config, mock_logger)
 
         # Mock the provider to raise an exception
-        summarizer._provider_settings.provider.chat_completion = AsyncMock(side_effect=Exception("API Error"))
+        summarizer._provider_settings.provider.chat_completion = AsyncMock(
+            side_effect=Exception("API Error")
+        )
 
         with pytest.raises(Exception, match="API Error"):
             await summarizer._summarize_channel("Test Channel", sample_messages)
@@ -300,7 +304,9 @@ async def test_summarize_all_partial_failure(sample_config, mock_logger, sample_
     with patch.object(chatbrief.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
 
-        summarizer._provider_settings.provider.chat_completion = AsyncMock(side_effect=Exception("API timeout"))
+        summarizer._provider_settings.provider.chat_completion = AsyncMock(
+            side_effect=Exception("API timeout")
+        )
 
         result = await summarizer.summarize_all({"Failing Channel": sample_messages})
 
@@ -354,11 +360,17 @@ async def test_summarize_channel_retries_on_token_budget_exhausted(
 
         assert result == "Retry summary"
         assert summarizer._provider_settings.provider.chat_completion.call_count == 2
-        first_max = summarizer._provider_settings.provider.chat_completion.call_args_list[0].kwargs["max_tokens"]
-        second_max = summarizer._provider_settings.provider.chat_completion.call_args_list[1].kwargs["max_tokens"]
+        first_max = summarizer._provider_settings.provider.chat_completion.call_args_list[0].kwargs[
+            "max_tokens"
+        ]
+        second_max = summarizer._provider_settings.provider.chat_completion.call_args_list[
+            1
+        ].kwargs["max_tokens"]
         assert second_max == first_max * 3
         # retry must include reasoning_effort="low"
-        second_kwargs = summarizer._provider_settings.provider.chat_completion.call_args_list[1].kwargs
+        second_kwargs = summarizer._provider_settings.provider.chat_completion.call_args_list[
+            1
+        ].kwargs
         assert second_kwargs.get("reasoning_effort") == "low"
 
 
@@ -390,7 +402,9 @@ async def test_summarize_channel_no_retry_on_success(sample_config, mock_logger,
 
     with patch.object(chatbrief.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
-        summarizer._provider_settings.provider.chat_completion = AsyncMock(return_value="Success summary")
+        summarizer._provider_settings.provider.chat_completion = AsyncMock(
+            return_value="Success summary"
+        )
 
         result = await summarizer._summarize_channel("Test Channel", sample_messages)
 
@@ -435,7 +449,9 @@ async def test_summarize_channel_retry_passes_reasoning_effort_low(
         result = await summarizer._summarize_channel("Test Channel", sample_messages)
 
         assert result == "Retry summary"
-        retry_kwargs = summarizer._provider_settings.provider.chat_completion.call_args_list[1].kwargs
+        retry_kwargs = summarizer._provider_settings.provider.chat_completion.call_args_list[
+            1
+        ].kwargs
         assert retry_kwargs.get("reasoning_effort") == "low"
 
 
@@ -583,7 +599,9 @@ async def test_summarize_channel_detects_output_over_3500_chars(
 
     with patch.object(chatbrief.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
-        summarizer._provider_settings.provider.chat_completion = AsyncMock(side_effect=[long_output, short_output])
+        summarizer._provider_settings.provider.chat_completion = AsyncMock(
+            side_effect=[long_output, short_output]
+        )
 
         result = await summarizer._summarize_channel("Test", sample_messages)
 
@@ -648,7 +666,9 @@ async def test_summarize_channel_truncates_at_sentence_boundary_as_fallback(
 
     with patch.object(chatbrief.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
-        summarizer._provider_settings.provider.chat_completion = AsyncMock(side_effect=[long_output, still_long])
+        summarizer._provider_settings.provider.chat_completion = AsyncMock(
+            side_effect=[long_output, still_long]
+        )
 
         result = await summarizer._summarize_channel("Test", sample_messages)
 
@@ -692,7 +712,9 @@ async def test_summarize_channel_no_retry_when_under_limit(
 
     with patch.object(chatbrief.ai_providers, "AsyncOpenAI"):
         summarizer = Summarizer(sample_config, mock_logger)
-        summarizer._provider_settings.provider.chat_completion = AsyncMock(return_value=short_output)
+        summarizer._provider_settings.provider.chat_completion = AsyncMock(
+            return_value=short_output
+        )
 
         result = await summarizer._summarize_channel("Test", sample_messages)
 
