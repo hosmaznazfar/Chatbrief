@@ -106,7 +106,7 @@ def mock_logger():
 
 
 @pytest.fixture
-def temp_config_file(tmp_path, mock_env_vars):
+def temp_config_file(tmp_path, mock_env_vars):  # pylint: disable=redefined-outer-name
     """Create a temporary config file."""
     config_content = """
 channels:
