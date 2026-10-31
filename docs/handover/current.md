@@ -149,3 +149,17 @@ not implemented capabilities.
 Continue with the next architecture/design step before Phase 2; do not begin application
 implementation until the remaining design decisions and the Phase 1 migration proposal have
 been reviewed.
+
+The Chatbrief user-identity decision is now approved:
+
+- A user's Telegram ID, obtained when they start a private conversation with the central bot,
+  is their Chatbrief identity.
+- Do not introduce a separate email/password account system for this Telegram-first product.
+- Optional Telethon account linking is separate from Chatbrief registration and is used only
+  for explicitly requested historical backfill.
+- Use the stable Telegram user ID, not username or display name, as the external identity key.
+- Scope subscriptions, permissions, digest preferences, schedules, and delivery records to
+  this Chatbrief user identity.
+
+This is an approved target-architecture decision, not an implemented capability. No
+application code, database schema, or migrations have changed.
