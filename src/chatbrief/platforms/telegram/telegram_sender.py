@@ -148,7 +148,9 @@ class TelegramMessageSender(MessageSender):
                 # Verify message length
                 if len(message_text) > 4096:
                     self.logger.error(
-                        f"Message for '{channel_name}' exceeds 4096 chars ({len(message_text)}), splitting..."
+                        "Message for '%s' exceeds 4096 chars (%d), splitting...",
+                        channel_name,
+                        len(message_text),
                     )
                     # Split and send parts
                     parts = split_message(message_text, max_length=4000)
@@ -173,14 +175,16 @@ class TelegramMessageSender(MessageSender):
 
         # Log summary
         if success_count == len(channel_messages):
-            self.logger.info(f"✅ All {success_count} channel messages sent successfully")
+            self.logger.info("✅ All %d channel messages sent successfully", success_count)
             return True
-        else:
-            self.logger.warning(
-                f"⚠️ Sent {success_count}/{len(channel_messages)} messages. "
-                f"Failed: {', '.join(failed_channels)}"
-            )
-            return False
+
+        self.logger.warning(
+            "⚠️ Sent %d/%d messages. Failed: %s",
+            success_count,
+            len(channel_messages),
+            ", ".join(failed_channels),
+        )
+        return False
 
     async def send_message(self, text: str, user_id: Optional[int] = None) -> bool:
         """
@@ -263,13 +267,15 @@ class TelegramMessageSender(MessageSender):
         clear_digest_message_ids(user_id)
 
         if failed_count == 0:
-            self.logger.info(f"✅ Cleaned up {deleted_count} messages successfully")
+            self.logger.info("✅ Cleaned up %d messages successfully", deleted_count)
             return True
-        else:
-            self.logger.warning(
-                f"⚠️ Cleaned up {deleted_count} messages, {failed_count} failed to delete"
-            )
-            return deleted_count > 0
+
+        self.logger.warning(
+            "⚠️ Cleaned up %d messages, %d failed to delete",
+            deleted_count,
+            failed_count,
+        )
+        return deleted_count > 0
 
     async def _send_message_with_tracking(
         self, user_id: int, message_text: str, channel_name: str
@@ -295,7 +301,10 @@ class TelegramMessageSender(MessageSender):
             return message.message_id
         except TelegramError as e:
             if "Can't parse entities" in str(e):
-                self.logger.warning("Markdown parse error, falling back to plain text")
+                self.logger.warning(
+                    "Markdown parse error for %s, falling back to plain text",
+                    channel_name,
+                )
                 message = await self.bot.send_message(
                     chat_id=user_id,
                     text=message_text,
