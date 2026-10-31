@@ -98,9 +98,9 @@ def build_server(
     async def get_channel_messages(channel: str, hours: int = 24, limit: int = 200) -> str:
         """Return the individual messages of one configured channel, unsummarized.
 
-        Reads from Chatbrief's message store when it holds the requested window, and
-        falls back to a live Telegram read otherwise. Free and instant on the stored
-        path; the fallback takes a few seconds. The response header says which was used.
+        Fetches the requested window from the live source. Stored messages are retained
+        for history and export, but are not used as a substitute for a live fetch because
+        the store does not track whether a channel's requested time window is complete.
 
         Args:
             channel: Channel name or id as configured under channels[*] in config.yaml
