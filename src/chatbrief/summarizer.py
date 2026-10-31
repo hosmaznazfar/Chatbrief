@@ -51,7 +51,7 @@ class _ProviderSettings:
     max_tokens: int
 
 
-class Summarizer:
+class Summarizer:  # pylint: disable=too-few-public-methods
     """Generates AI-powered summaries using a pluggable AI provider."""
 
     def __init__(self, config: Config, logger: logging.Logger):
