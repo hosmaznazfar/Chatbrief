@@ -181,64 +181,69 @@ class TelegramMessageSource(MessageSource):
         Returns:
             List of Message objects.
         """
-        messages: list[Message] = []
-        max_messages = self.config.settings.max_messages_per_channel
+        try:
+            messages: list[Message] = []
+            max_messages = self.config.settings.max_messages_per_channel
 
-        # Telethon types get_entity() as Entity | list[Entity].
-        # A single channel ID should resolve to one entity.
-        entity = await self.client.get_entity(channel_config.id)
+            # Telethon types get_entity() as Entity | list[Entity].
+            # A single channel ID should resolve to one entity.
+            entity = await self.client.get_entity(channel_config.id)
 
-        if isinstance(entity, list):
-            raise TypeError(
-                f"Expected a single Telegram entity for channel {channel_config.id}, got a list"
-            )
-
-        async for telegram_message in self.client.iter_messages(
-            entity,
-            limit=max_messages,
-            offset_date=datetime.now(timezone.utc),
-        ):
-            # Stop if message is older than lookback time.
-            if telegram_message.date < lookback_time:
-                break
-
-            # Skip messages without text.
-            if not telegram_message.text:
-                # Handle media-only messages.
-                if telegram_message.media:
-                    media_type = self._get_media_type(telegram_message)
-                    text = f"[{media_type}]"
-                else:
-                    continue
-            else:
-                text = telegram_message.text
-                media_type = (
-                    self._get_media_type(telegram_message) if telegram_message.media else ""
+            if isinstance(entity, list):
+                raise TypeError(
+                    f"Expected a single Telegram entity for channel {channel_config.id}, got a list"
                 )
 
-            # Get sender name.
-            sender = await self._get_sender_name(telegram_message)
-
-            # Generate message link.
-            link = self._generate_message_link(
+            async for telegram_message in self.client.iter_messages(
                 entity,
-                telegram_message.id,
-            )
+                limit=max_messages,
+                offset_date=datetime.now(timezone.utc),
+            ):
+                # Stop if message is older than lookback time.
+                if telegram_message.date < lookback_time:
+                    break
 
-            messages.append(
-                Message(
-                    text=text,
-                    sender=sender,
-                    timestamp=telegram_message.date,
-                    link=link,
-                    channel_name=channel_config.name,
-                    has_media=telegram_message.media is not None,
-                    media_type=media_type or "",
+                # Skip messages without text.
+                if not telegram_message.text:
+                    # Handle media-only messages.
+                    if telegram_message.media:
+                        media_type = self._get_media_type(telegram_message)
+                        text = f"[{media_type}]"
+                    else:
+                        continue
+                else:
+                    text = telegram_message.text
+                    media_type = (
+                        self._get_media_type(telegram_message) if telegram_message.media else ""
+                    )
+
+                # Get sender name.
+                sender = await self._get_sender_name(telegram_message)
+
+                # Generate message link.
+                link = self._generate_message_link(
+                    entity,
+                    telegram_message.id,
                 )
-            )
 
-        messages.sort(key=lambda item: item.timestamp)
-        return messages
+                messages.append(
+                    Message(
+                        text=text,
+                        sender=sender,
+                        timestamp=telegram_message.date,
+                        link=link,
+                        channel_name=channel_config.name,
+                        has_media=telegram_message.media is not None,
+                        media_type=media_type or "",
+                    )
+                )
+
+            messages.sort(key=lambda item: item.timestamp)
+            return messages
+
+        except Exception as exc:  # noqa: BLE001  # pylint: disable=broad-exception-caught
+            self.logger.error(f"Error fetching from {channel_config.name}: {exc}")
+            raise
 
     async def get_channel_url(
         self,
@@ -345,8 +350,11 @@ class TelegramMessageSource(MessageSource):
         message_id: int,
     ) -> str:
         """Generate a clickable Telegram link to a message."""
-        channel_url = TelegramMessageSource._generate_channel_url(entity)
-        return f"{channel_url}/{message_id}" if channel_url else "#"
+        try:
+            channel_url = TelegramMessageSource._generate_channel_url(entity)
+            return f"{channel_url}/{message_id}" if channel_url else "#"
+        except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
+            return "#"
 
     @staticmethod
     def _generate_channel_url(entity: Any) -> str | None:
