@@ -45,6 +45,22 @@ The repository includes:
 - Do not implement Bale configuration/credentials as if the adapter already exists.
 - Keep existing ADRs authoritative; record material architecture changes explicitly.
 
+## Approved target direction: hybrid Telegram ingestion
+
+The approved future direction is documented in [docs/plans/telegram-hybrid-ingestion.md](docs/plans/telegram-hybrid-ingestion.md). This is a plan, not implemented functionality.
+
+- Retain the existing `python-telegram-bot` and Telethon libraries and preserve the current implementation while evolving it incrementally.
+- Use the central Bot API integration as the default for continuous ingestion; ordinary Chatbrief users must not need to link a personal Telegram account.
+- Keep Telethon as an explicit, optional per-user integration for historical backfill from chats accessible to that user's account.
+- Normalize both ingestion paths into the same platform-neutral message pipeline; digest generation must not depend on the collection mechanism.
+- Separate Telegram chat access, per-user source subscriptions, digest preferences, and digest grouping.
+- Deduplicate overlapping Bot API and Telethon collection using a stable Telegram message identity and persistent uniqueness constraint.
+- Treat each Telethon session as a credential owned by exactly one Chatbrief user; secure it at rest and provide disconnect/revocation.
+- Before implementation, inspect the current storage/digest lifecycle and single-user assumptions, then propose the minimum data-model and migration changes. Do not assume the final schema in advance.
+- Preserve the storage-completeness guarantee: stored rows alone do not prove a collection window is complete. Track collection coverage before using stored messages as an authoritative lookback source.
+
+The current implementation remains single-user and Telethon-backed until these planned phases are implemented and verified. Do not describe multi-user hybrid ingestion as an available feature.
+
 ## Current refactor status (2026-10-30)
 
 The package/platform implementation migration is the starting point for the Python-only modernization on `upgrade/full-project-modernization`. The full test suite and quality checks have deliberately not been run.
