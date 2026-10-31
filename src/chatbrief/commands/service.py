@@ -118,7 +118,7 @@ class CommandService:
                 message=self._ui["digest_error"],
             )
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error(
                 "Error generating digest: %s",
                 e,
@@ -157,7 +157,7 @@ class CommandService:
                 message=self._ui["cleanup_partial"],
             )
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error(
                 "Error during cleanup: %s",
                 e,
