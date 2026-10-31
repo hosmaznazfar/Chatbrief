@@ -97,7 +97,7 @@ class DigestScheduler:
             else:
                 self.logger.error("❌ Scheduled digest failed to send")
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error(
                 f"❌ Scheduled digest job failed: {e}",
                 exc_info=True,
