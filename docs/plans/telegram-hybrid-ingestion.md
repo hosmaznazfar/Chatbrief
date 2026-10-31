@@ -202,12 +202,12 @@ The smallest coherent target appears to require these separate concepts:
 7. **Delivery tracking:** move sent-message tracking from the local JSON file to durable,
    recipient-scoped records before supporting multiple recipients.
 
-A shared, deduplicated message archive with user subscriptions referencing source chats is
-the likely default because it avoids storing the same Telegram message once per subscriber.
-That design must enforce subscription-based reads and must not expose messages from a chat
-to a user merely because the central bot can access that chat. A per-user message copy model
-would provide simpler tenant isolation but duplicate content and complicate cross-path
-deduplication. This trade-off remains a developer decision.
+**Decision: use a shared, deduplicated message archive.** Per-user subscriptions reference
+source chats rather than owning separate copies of each message. This avoids duplicate
+message storage and supports cross-path deduplication. Enforce subscription- and
+source-authorization checks on every read so shared storage never grants implicit access.
+A user's ability to access a source, and the central bot's ability to ingest it, do not
+automatically authorize other Chatbrief users to read it.
 
 No final database schema, migration, or code change is approved by this inspection.
 
