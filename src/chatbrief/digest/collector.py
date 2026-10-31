@@ -1,7 +1,6 @@
 import inspect
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from chatbrief.config.models import ChannelConfig, Config
 from chatbrief.constants import MAX_CHANNEL_MESSAGES
@@ -99,44 +98,6 @@ async def _apply_filters(
     return messages
 
 
-async def _channel_from_storage(
-    config: Config,
-    logger: logging.Logger,
-    channel_cfg: ChannelConfig,
-    since: datetime,
-    limit: int,
-) -> Optional[list[Message]]:
-    """Read one channel from storage. None when storage is off, empty or unreadable."""
-    try:
-        storage = await create_storage(config.storage)
-    except Exception as e:
-        logger.error(f"Storage init failed ({type(e).__name__}), falling back to live source")
-        return None
-
-    if storage is None:
-        return None
-
-    try:
-        messages = await storage.query_messages(
-            channel_name=channel_cfg.name,
-            since=since,
-            limit=limit,
-        )
-        messages.reverse()  # query_messages returns newest first
-        return messages or None
-    except Exception as e:
-        logger.error(f"Storage read failed ({type(e).__name__}), falling back to live source")
-        return None
-    finally:
-        try:
-            await storage.close()
-        except Exception as e:
-            logger.error(
-                f"Storage close failed ({type(e).__name__})",
-                exc_info=True,
-            )
-
-
 def _resolve_channel(config: Config, channel: str) -> ChannelConfig:
     """Find the configured channel by its name or its id.
 
@@ -159,18 +120,18 @@ async def collect_channel_messages(
     hours: int = 24,
     limit: int = 200,
 ) -> tuple[list[Message], str]:
-    """Fetch one channel's messages, preferring stored ones over a live source read.
+    """Fetch one channel's messages from the live source.
 
     Args:
         config: Application configuration
         logger: Logger instance
-        source: Message source used when stored messages are unavailable
+        source: Message source used to fetch the channel messages
         channel: Channel name or id as configured under channels[*]
         hours: Lookback window
         limit: Maximum messages to return, newest kept
 
     Returns:
-        (messages in chronological order, source) where source is "storage" or "live"
+        (messages in chronological order, "live")
 
     Raises:
         ValueError: If hours or limit are out of range, or channel is not configured
@@ -185,11 +146,6 @@ async def collect_channel_messages(
 
     channel_cfg = _resolve_channel(config, channel)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
-
-    stored = await _channel_from_storage(config, logger, channel_cfg, since, limit)
-    if stored is not None:
-        logger.info(f"Read {len(stored)} stored messages for {channel_cfg.name!r}")
-        return stored, "storage"
 
     # Same process-wide lock as digest builds — one live source session at a time.
     async with digest_lock:
