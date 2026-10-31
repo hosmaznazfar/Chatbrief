@@ -3,7 +3,6 @@ Digest service API.
 """
 
 import logging
-from typing import Optional
 
 from chatbrief.config.models import Config
 from chatbrief.digest.builder import build_digest_parts, join_parts
@@ -18,7 +17,7 @@ async def generate_and_send_digest(
     source: MessageSource,
     sender: MessageSender,
     hours: int = 24,
-    user_id: Optional[int] = None,
+    user_id: int | None = None,
 ) -> bool:
     """Generate and send digest using the provided platform services."""
     validate_hours(hours)
