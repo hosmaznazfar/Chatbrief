@@ -94,6 +94,7 @@ A Telegram group/supergroup is a source chat. A `DigestGroupConfig` grouping is 
 - The central Bot API is the only continuous ingestion path in this architecture.
 - Do not use Telethon as a continuous collector or automatic fallback when the central bot cannot access a source.
 - A source readable only through a user's linked account may be backfilled, but it will not receive ongoing collection under this policy.
+- **Central-bot access is required for an active subscription.** If the bot cannot access a source, Chatbrief may offer a one-time historical backfill and summary through the linked account, but must not activate an ongoing subscription. The user must arrange central-bot access before an active, continuously updated subscription can begin.
 - Users without linked accounts remain fully supported for sources the central bot can access; their historical lookback is limited to the shared archive's available messages.
 
 ### 7. Secure linked user sessions
@@ -251,7 +252,7 @@ only. Local uncommitted Graphify rebuild output is not visible to this GitHub in
 - Use Telethon only when a user explicitly requests historical backfill for a source accessible to that linked account.
 - Send backfilled messages through the same normalization, deduplication, and persistence path as Bot API updates.
 - Do not run Telethon as a continuous or fallback ingestion worker. Ongoing collection belongs to the central Bot API path.
-- Explain that sources inaccessible to the central bot can be backfilled, but will not receive ongoing updates through Telethon under this approved scope.
+- Require central-bot access before activating an ongoing subscription. If a source is accessible only through the linked Telethon account, offer a one-time historical backfill/summary only; do not activate an ongoing subscription. If central-bot access is later established, the user may then activate an ongoing subscription.
 - Support cancellation, rate limits/flood waits, partial failures, progress, retry/resume, and disconnect/revocation.
 - Keep users without linked sessions fully functional through Bot API ingestion; their historical summaries are limited to messages already available in the Chatbrief archive.
 
