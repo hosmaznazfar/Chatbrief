@@ -1,4 +1,6 @@
-from __future__ import annotations
+fr
+
+# pylint: disable=import-outside-toplevelom __future__ import annotations
 
 from datetime import datetime, timezone
 
