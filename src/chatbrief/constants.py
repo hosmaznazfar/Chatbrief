@@ -1,6 +1,4 @@
-"""Constants for the TeleBrief application."""
-
-"""Config constants for the application."""
+"""Configuration and digest constants for Chatbrief."""
 SUPPORTED_LANGUAGES = (
     "English",
     "Russian",
@@ -22,6 +20,5 @@ PROVIDER_DEFAULT_MODELS = {
     "ollama": "llama3",
 }
 
-"""Digest constants for the application."""
 MAX_DIGEST_HOURS = 168  # one week; guards against a caller asking for a year of history
 MAX_CHANNEL_MESSAGES = 500  # guards against a caller pulling a whole archive into the context
