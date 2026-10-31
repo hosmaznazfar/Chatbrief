@@ -21,7 +21,6 @@ import json
 import logging
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 from chatbrief.ai_providers import AIProvider, create_provider
 from chatbrief.config.models import Config, DigestGroupConfig
@@ -426,7 +425,7 @@ class DigestGrouper:
         self,
         response: str,
         valid_group_names: set[str],
-        channel_urls: Optional[dict[str, str]] = None,
+        channel_urls: dict[str, str] | None = None,
     ) -> dict[str, list[GroupedPoint]]:
         """Parse AI JSON response into grouped points.
 
@@ -502,7 +501,7 @@ class DigestGrouper:
     async def group_summaries(
         self,
         channel_summaries: dict[str, str],
-        channel_urls: Optional[dict[str, str]] = None,
+        channel_urls: dict[str, str] | None = None,
     ) -> dict[str, list[GroupedPoint]]:
         """Two-pass grouping: parallel extract → dedup chokepoint → classify.
 
@@ -567,7 +566,7 @@ class DigestGrouper:
     def _build_fallback_group(
         self,
         channel_summaries: dict[str, str],
-        channel_urls: Optional[dict[str, str]] = None,
+        channel_urls: dict[str, str] | None = None,
     ) -> dict[str, list[GroupedPoint]]:
         """Build a single 'Other' group from all channel summaries as fallback."""
         urls = channel_urls or {}
