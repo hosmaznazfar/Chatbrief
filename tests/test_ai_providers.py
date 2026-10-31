@@ -459,9 +459,6 @@ async def test_openai_provider_falls_back_to_max_tokens_without_reasoning_effort
 @pytest.mark.asyncio
 async def test_openai_provider_falls_back_to_max_tokens_after_reasoning_effort_retry(mock_logger):
     """When both reasoning_effort retry and max_completion_tokens fail, falls back to max_tokens."""
-    import httpx
-    from openai import BadRequestError
-
     with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
