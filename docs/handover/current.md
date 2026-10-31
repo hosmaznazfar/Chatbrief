@@ -109,7 +109,22 @@ The following architecture decisions have now been approved and are recorded in
 No application code, database schema, or migrations have changed. These are target-policy
 decisions only.
 
-Continue the architecture decision process before Phase 2. The next open question is the role
-of optional Telethon integration: whether it should be used only for explicit historical
-backfill when a user requests it, or also as a continuing ingestion path when Bot API access
-is unavailable. Resolve that scope before designing ingestion lifecycle and ownership details.
+The optional Telethon role is now also decided:
+
+- Telethon is used only for explicit, user-requested historical backfill from chats accessible
+  to that user's linked account.
+- The central Bot API is the only continuous ingestion path.
+- Telethon is not a continuous collector or automatic fallback when the central bot cannot
+  access a source. Such a source can be backfilled, but will not receive ongoing updates under
+  the approved scope.
+- Users without linked accounts remain supported for bot-accessible sources; their historical
+  lookback is limited to messages already in the shared archive.
+
+No application code, database schema, or migrations have changed. These remain approved target
+architecture decisions, not implemented capabilities.
+
+Continue the architecture decision process before Phase 2. The next open question is source
+onboarding: how a Chatbrief user registers a source with the central bot and how Chatbrief
+proves that the registering user is authorized to manage a private source. This needs to account
+for Telegram's different behavior for group messages and channel posts, where the initiating
+administrator may not be identifiable from an ordinary channel post.
