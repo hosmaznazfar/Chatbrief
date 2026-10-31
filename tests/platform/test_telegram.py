@@ -8,7 +8,7 @@ from telethon.errors import ChannelPrivateError, FloodWaitError
 from telethon.tl import types as tl_types
 from telethon.tl.types import Document, MessageMediaDocument
 
-import chatbrief.platforms.telegram.telegram_source as telegram_source
+from chatbrief.platforms.telegram import telegram_source
 from chatbrief.platforms.telegram.telegram_source import TelegramMessageSource
 
 TEST_MESSAGE_TIME = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
