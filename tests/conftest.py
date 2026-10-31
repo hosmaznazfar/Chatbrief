@@ -1,11 +1,14 @@
 """Pytest configuration and fixtures."""
 
+# pylint: disable=unused-argument
+
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
 
 from chatbrief.config.models import ChannelConfig, Config, Platform, Settings
+from chatbrief.message import Message
 
 
 @pytest.fixture
@@ -65,8 +68,6 @@ def sample_config():
 @pytest.fixture
 def sample_messages():
     """Create sample messages for testing."""
-    from chatbrief.message import Message
-
     return [
         Message(
             text="Test message 1",
