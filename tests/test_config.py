@@ -7,8 +7,6 @@ from unittest.mock import patch
 
 import pytest
 
-pytestmark = pytest.mark.usefixtures("mock_env_vars")
-
 from chatbrief.config.loader import load_config
 from chatbrief.config.models import (
     DigestGroupConfig,
@@ -17,6 +15,8 @@ from chatbrief.config.models import (
     PromptsConfig,
     StorageConfig,
 )
+
+pytestmark = pytest.mark.usefixtures("mock_env_vars")
 
 
 @pytest.mark.unit
