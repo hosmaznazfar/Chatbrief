@@ -192,9 +192,9 @@ class SQLiteBackend:
                 msg.sender,
                 msg.text,
                 msg.timestamp.isoformat(),
-                msg.link,
+                msg.link or "",
                 int(msg.has_media),
-                msg.media_type,
+                msg.media_type or "",
             )
             for msg in messages
         ]
@@ -293,9 +293,9 @@ class PostgresBackend:  # pragma: no cover
                 msg.sender,
                 msg.text,
                 msg.timestamp,
-                msg.link,
+                msg.link or "",
                 msg.has_media,
-                msg.media_type,
+                msg.media_type or "",
             )
             for msg in messages
         ]
