@@ -1,5 +1,7 @@
 """Tests for the DigestGrouper module."""
 
+# pylint: disable=redefined-outer-name,too-few-public-methods
+
 import json
 from unittest.mock import AsyncMock, patch
 
