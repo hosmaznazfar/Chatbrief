@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timezone
-from typing import Optional
 
 from chatbrief.config.models import Config
 from chatbrief.digest.collector import collect_messages
@@ -96,7 +95,7 @@ async def _build_grouped_parts(
     logger: logging.Logger,
     source: MessageSource,
     hours: int,
-) -> Optional[tuple[list[tuple[str, str]], str]]:
+) -> tuple[list[tuple[str, str]], str] | None:
     """Build topic-grouped digest messages. Returns None if there is nothing to send."""
     messages_by_channel = await collect_messages(config, logger, source, hours)
     if not sum(len(msgs) for msgs in messages_by_channel.values()):
@@ -144,7 +143,7 @@ async def _build_channel_parts(
     logger: logging.Logger,
     source: MessageSource,
     hours: int,
-) -> Optional[tuple[list[tuple[str, str]], str]]:
+) -> tuple[list[tuple[str, str]], str] | None:
     """Build one digest message per channel. Returns None if there is nothing to send."""
     messages_by_channel = await collect_messages(config, logger, source, hours)
     total_messages = sum(len(msgs) for msgs in messages_by_channel.values())
@@ -188,7 +187,7 @@ async def build_digest_parts(
     logger: logging.Logger,
     source: MessageSource,
     hours: int,
-) -> Optional[tuple[list[tuple[str, str]], str]]:
+) -> tuple[list[tuple[str, str]], str] | None:
     """Collect, summarize and format the digest according to the configured digest_mode.
 
     Single chokepoint for every digest producer (scheduler, bot, MCP server), so the
