@@ -172,5 +172,5 @@ if __name__ == "__main__":
         print(f"Channels: {len(config.channels)}")
         print(f"Target user: {config.settings.target_user_id}")
         print(f"AI provider: {config.settings.ai_provider}, model: {config.settings.ai_model}")
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"❌ Configuration error: {e}")
