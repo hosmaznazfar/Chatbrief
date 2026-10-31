@@ -8,6 +8,7 @@ import pytest
 
 import chatbrief.ai_providers
 from chatbrief.ai_providers import TokenBudgetExhaustedError
+
 # SYSTEM_PROMPT_TEMPLATE is exposed through the module-level __getattr__.
 # pylint: disable=no-name-in-module
 from chatbrief.summarizer import (

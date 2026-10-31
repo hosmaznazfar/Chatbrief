@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from chatbrief.platforms.telegram import telegram_source
 from chatbrief.message import Message
+from chatbrief.platforms.telegram import telegram_source
 from chatbrief.platforms.telegram.telegram_source import TelegramMessageSource
 
 TEST_MESSAGE_TIME = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)

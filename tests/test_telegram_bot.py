@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from chatbrief.platforms.telegram import telegram_bot
 from chatbrief.commands.models import CommandResult, CommandStatus
 from chatbrief.commands.service import CommandService
+from chatbrief.platforms.telegram import telegram_bot
 from chatbrief.platforms.telegram.telegram_bot import TelegramBot
 
 

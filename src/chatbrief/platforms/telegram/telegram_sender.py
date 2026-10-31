@@ -268,8 +268,7 @@ class TelegramMessageSender(MessageSender):
             return True
 
         self.logger.warning(
-            f"⚠️ Cleaned up {deleted_count} messages, "
-            f"{failed_count} failed to delete"
+            f"⚠️ Cleaned up {deleted_count} messages, {failed_count} failed to delete"
         )
         return deleted_count > 0
 
@@ -298,8 +297,7 @@ class TelegramMessageSender(MessageSender):
         except TelegramError as e:
             if "Can't parse entities" in str(e):
                 self.logger.warning(
-                    f"Markdown parse error for {channel_name}, "
-                    "falling back to plain text"
+                    f"Markdown parse error for {channel_name}, falling back to plain text"
                 )
                 message = await self.bot.send_message(
                     chat_id=user_id,

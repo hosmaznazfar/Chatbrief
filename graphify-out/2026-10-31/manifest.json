@@ -99,9 +99,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "src/chatbrief/ai_providers.py": {
-    "mtime": 1793387514.5367854,
-    "seen": 1793387520.3014536,
-    "ast_hash": "abe729f6423abbb90d486d77946d5170",
+    "mtime": 1793428193.4226747,
+    "seen": 1793429329.3392153,
+    "ast_hash": "c89cfd82dfab810d605ba9d5a01ba8b9",
     "semantic_hash": ""
   },
   "src/chatbrief/commands/__init__.py": {
@@ -147,10 +147,10 @@
     "semantic_hash": ""
   },
   "src/chatbrief/constants.py": {
-    "mtime": 1789052094.7888188,
-    "seen": 1793378827.4721346,
-    "ast_hash": "87a8dc636808cd74512963d4c072c5d1",
-    "semantic_hash": "87a8dc636808cd74512963d4c072c5d1"
+    "mtime": 1793429337.0058198,
+    "seen": 1793429369.9360435,
+    "ast_hash": "a1ff7686ee205677d38cc2918271fb83",
+    "semantic_hash": ""
   },
   "src/chatbrief/digest/__init__.py": {
     "mtime": 1789052094.788968,
@@ -219,22 +219,22 @@
     "semantic_hash": ""
   },
   "src/chatbrief/formatter.py": {
-    "mtime": 1789059969.34,
-    "seen": 1793378827.473515,
-    "ast_hash": "79f10a6d70a46000bb14497018e5764b",
-    "semantic_hash": "79f10a6d70a46000bb14497018e5764b"
+    "mtime": 1793428193.4216747,
+    "seen": 1793429329.3392882,
+    "ast_hash": "3faf4ac75a7fed9e9964fc10a50adb33",
+    "semantic_hash": ""
   },
   "src/chatbrief/grouper.py": {
-    "mtime": 1789059897.992,
-    "seen": 1793378827.4735801,
-    "ast_hash": "cf2f0095923a792cb7aff9a5c934da33",
-    "semantic_hash": "cf2f0095923a792cb7aff9a5c934da33"
+    "mtime": 1793428193.4226747,
+    "seen": 1793429329.3392913,
+    "ast_hash": "dc485dd6d3b9abf9c37e223a212db286",
+    "semantic_hash": ""
   },
   "src/chatbrief/mcp_server.py": {
-    "mtime": 1789059264.612,
-    "seen": 1793378827.473631,
-    "ast_hash": "fc186300b06be90ebfe9bd9c554b4f6b",
-    "semantic_hash": "fc186300b06be90ebfe9bd9c554b4f6b"
+    "mtime": 1793428193.4176745,
+    "seen": 1793429329.3392942,
+    "ast_hash": "ae1292e95fe5ebd5e8dbe6f1197386d9",
+    "semantic_hash": ""
   },
   "src/chatbrief/message.py": {
     "mtime": 1789052094.791975,
@@ -255,9 +255,9 @@
     "semantic_hash": "dcb17feab63e4ea9788f2645846273ef"
   },
   "src/chatbrief/platforms/builder.py": {
-    "mtime": 1793385559.093104,
-    "seen": 1793385567.0863829,
-    "ast_hash": "add08864374754f650f94c8a03dd5adb",
+    "mtime": 1793429320.2307613,
+    "seen": 1793429329.3393068,
+    "ast_hash": "1f3042cbcffb375b8f6f9ff971d5d72e",
     "semantic_hash": ""
   },
   "src/chatbrief/platforms/telegram/__init__.py": {
@@ -273,15 +273,15 @@
     "semantic_hash": "97437ca71c6ec1ec92510c7e1f3647b1"
   },
   "src/chatbrief/platforms/telegram/telegram_bot.py": {
-    "mtime": 1793385559.093104,
-    "seen": 1793385567.0863912,
-    "ast_hash": "a1a564310a8d2bc690dbb4cafedd1d36",
+    "mtime": 1793429327.4507864,
+    "seen": 1793429329.3393157,
+    "ast_hash": "011a6a9633352ece2da9419b48742f18",
     "semantic_hash": ""
   },
   "src/chatbrief/platforms/telegram/telegram_sender.py": {
-    "mtime": 1793385559.093104,
-    "seen": 1793385567.0863938,
-    "ast_hash": "94b5934a92310c074a9e3aa2742caf71",
+    "mtime": 1793428193.4216747,
+    "seen": 1793429329.3393188,
+    "ast_hash": "f075e3bc00530f3f986fd960381cc404",
     "semantic_hash": ""
   },
   "src/chatbrief/platforms/telegram/telegram_source.py": {
@@ -297,21 +297,21 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "src/chatbrief/scheduler.py": {
-    "mtime": 1789059290.919,
-    "seen": 1793378827.4745734,
-    "ast_hash": "d708e7ea62376f0e6ef6c8581aea02c3",
-    "semantic_hash": "d708e7ea62376f0e6ef6c8581aea02c3"
+    "mtime": 1793429327.4507864,
+    "seen": 1793429329.3393283,
+    "ast_hash": "b135b4d2e170991e215b22ad7028bc27",
+    "semantic_hash": ""
   },
   "src/chatbrief/storage.py": {
-    "mtime": 1789059387.308,
-    "seen": 1793378827.474622,
-    "ast_hash": "0ef7b513474dd91a16bd431d959da95b",
-    "semantic_hash": "0ef7b513474dd91a16bd431d959da95b"
+    "mtime": 1793428193.4236746,
+    "seen": 1793429329.3393314,
+    "ast_hash": "e9df5d8c8203b14a91546bf563f936a1",
+    "semantic_hash": ""
   },
   "src/chatbrief/summarizer.py": {
-    "mtime": 1793385559.093286,
-    "seen": 1793385567.0864086,
-    "ast_hash": "4a6b92089cb24a53509641f44d04fcc8",
+    "mtime": 1793428193.4276748,
+    "seen": 1793429329.3393345,
+    "ast_hash": "1ed4e766071a3ac5cff47f14c26e170b",
     "semantic_hash": ""
   },
   "src/chatbrief/ui_strings.py": {
@@ -321,9 +321,9 @@
     "semantic_hash": ""
   },
   "src/chatbrief/utils.py": {
-    "mtime": 1793427506.5641181,
-    "seen": 1793427515.1434581,
-    "ast_hash": "d645d3bb7ecb3cc35dd967ff301809cf",
+    "mtime": 1793428193.4246747,
+    "seen": 1793429329.3393412,
+    "ast_hash": "a43c4d2d1a6d852c536e0c6b2c604338",
     "semantic_hash": ""
   },
   "src/chatbrief/xml_escape.py": {
@@ -363,15 +363,15 @@
     "semantic_hash": ""
   },
   "tests/platform/test_message_source.py": {
-    "mtime": 1793386388.5643492,
-    "seen": 1793387520.301639,
+    "mtime": 1793429166.0221844,
+    "seen": 1793429329.3393672,
     "ast_hash": "d169757a775cc6f57e70f339e64c9936",
     "semantic_hash": ""
   },
   "tests/platform/test_telegram.py": {
-    "mtime": 1793427506.5651183,
-    "seen": 1793427515.143509,
-    "ast_hash": "801e832b5afdc537d78205599e008b55",
+    "mtime": 1793428193.4216747,
+    "seen": 1793429329.33937,
+    "ast_hash": "ce894fa9c2ce5597894571d318e215ad",
     "semantic_hash": ""
   },
   "tests/platform/test_telegram_sender.py": {
@@ -387,21 +387,21 @@
     "semantic_hash": ""
   },
   "tests/test_command_service.py": {
-    "mtime": 1793385559.0942862,
-    "seen": 1793385567.0864484,
-    "ast_hash": "3259f8ea19dd151a5befca6d1afefb82",
+    "mtime": 1793428193.4246747,
+    "seen": 1793429329.3393788,
+    "ast_hash": "12ea36734a9c4367e6bf822abcd9228b",
     "semantic_hash": ""
   },
   "tests/test_config.py": {
-    "mtime": 1793386388.566349,
-    "seen": 1793387520.3016706,
+    "mtime": 1793429166.0231843,
+    "seen": 1793429329.3393817,
     "ast_hash": "a14655be6b84e879ecab69fb20cb4ad2",
     "semantic_hash": ""
   },
   "tests/test_formatter.py": {
-    "mtime": 1793427506.5661182,
-    "seen": 1793427515.1435401,
-    "ast_hash": "96ab935d7638f04614a10fc1dafa7336",
+    "mtime": 1793428193.4276748,
+    "seen": 1793429329.3393877,
+    "ast_hash": "dbc64c554842892adddec071ce5aa9cc",
     "semantic_hash": ""
   },
   "tests/test_grouper.py": {
@@ -411,15 +411,15 @@
     "semantic_hash": ""
   },
   "tests/test_mcp_server.py": {
-    "mtime": 1793427506.5671184,
-    "seen": 1793427515.1435506,
-    "ast_hash": "b186fa09784a8c36580cb72a0df0f8fe",
+    "mtime": 1793428193.4226747,
+    "seen": 1793429329.3393943,
+    "ast_hash": "1690863daa15d446de4c46603c2b8ee2",
     "semantic_hash": ""
   },
   "tests/test_scheduler.py": {
-    "mtime": 1793427506.5681183,
-    "seen": 1793427515.1435554,
-    "ast_hash": "5c67664590b78b50a4951864215fa36b",
+    "mtime": 1793428193.4246747,
+    "seen": 1793429329.3393972,
+    "ast_hash": "c7850409e0cb2021d25cc032e20b3022",
     "semantic_hash": ""
   },
   "tests/test_storage.py": {
@@ -435,9 +435,9 @@
     "semantic_hash": ""
   },
   "tests/test_telegram_bot.py": {
-    "mtime": 1793427506.5691185,
-    "seen": 1793427515.1435702,
-    "ast_hash": "f9cebfcb329ae57c52db9c88e8bb050a",
+    "mtime": 1793428193.4306748,
+    "seen": 1793429329.339406,
+    "ast_hash": "a795832568cd2e5ac5e426ed727541eb",
     "semantic_hash": ""
   },
   "tests/test_ui_strings.py": {
@@ -627,9 +627,9 @@
     "semantic_hash": ""
   },
   "tests/test_digest.py": {
-    "mtime": 1793385559.0952861,
-    "seen": 1793385567.0864532,
-    "ast_hash": "04d86ef52bcaebe120d52591689a7ee4",
+    "mtime": 1793428193.4276748,
+    "seen": 1793429329.3393848,
+    "ast_hash": "5d17f4eed2f76f7daa4bdcbcf7e9cb5c",
     "semantic_hash": ""
   },
   "docs/plans/completed/20260430-extensibility-architecture.md": {
@@ -642,6 +642,12 @@
     "mtime": 1793385559.0875635,
     "seen": 1793385567.086545,
     "ast_hash": "81abdcffdec07813ac8430ae469a8cb5",
+    "semantic_hash": ""
+  },
+  "src/chatbrief/commands/protocols.py": {
+    "mtime": 1793429514.5996342,
+    "seen": 1793429523.8264863,
+    "ast_hash": "7cc2ab804ec773a9709210a077a3e4cc",
     "semantic_hash": ""
   }
 }
