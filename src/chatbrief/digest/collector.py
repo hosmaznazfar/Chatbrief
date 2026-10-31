@@ -83,7 +83,8 @@ async def _apply_filters(
             result = await filter_instance.filter(channel_cfg, messages)
             if not isinstance(result, list):
                 logger.error(
-                    f"Filter {getattr(filter_instance, 'name', spec.class_path)!r} filter() returned"
+                    f"Filter {getattr(filter_instance, 'name', spec.class_path)!r} "
+                    "filter() returned"
                     f" {type(result).__name__} (expected list), skipping",
                 )
             else:
