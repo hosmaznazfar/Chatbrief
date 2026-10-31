@@ -129,8 +129,23 @@ The source-registration policy is now approved:
 - Private channels: a separate administrator-verification flow; an ordinary channel post is not sufficient proof of the human poster's identity.
 - The verified source owner controls private-source sharing. Bot access alone does not establish Chatbrief ownership.
 
-Continue the architecture decision process before Phase 2. The next open question is source
-onboarding: how a Chatbrief user registers a source with the central bot and how Chatbrief
-proves that the registering user is authorized to manage a private source. This needs to account
-for Telegram's different behavior for group messages and channel posts, where the initiating
-administrator may not be identifiable from an ordinary channel post.
+The source-registration decision above is approved. The remaining source-access policy
+decision is now also approved:
+
+- **Central-bot access is required for an active subscription.** A source accessible only
+  through a user's linked Telethon account may be used for an explicitly requested, one-time
+  historical backfill and summary.
+- If the central bot cannot access that source, Chatbrief must not activate an ongoing
+  subscription. Telethon must not be used as a continuous collector or automatic fallback.
+- Once central-bot access is established, the user may activate an ongoing subscription;
+  continuous collection then uses the central Bot API.
+- This keeps the meaning of an active subscription consistent: it receives ongoing updates,
+  rather than only a historical snapshot.
+
+The implementation plan and this handover now record this decision. No application code,
+database schema, or migrations have changed. These are approved target-architecture rules,
+not implemented capabilities.
+
+Continue with the next architecture/design step before Phase 2; do not begin application
+implementation until the remaining design decisions and the Phase 1 migration proposal have
+been reviewed.
