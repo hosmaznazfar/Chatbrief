@@ -38,7 +38,8 @@ def test_parse_schedule_time_invalid(sample_config, mock_logger):
 
     assert scheduler._parse_schedule_time() == (8, 0)
     mock_logger.warning.assert_called_once_with(
-        "Invalid schedule time 'invalid', using default 08:00"
+        "Invalid schedule time %r, using default 08:00",
+        "invalid",
     )
 
 
