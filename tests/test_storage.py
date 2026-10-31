@@ -1,5 +1,7 @@
 """Tests for src/storage.py"""
 
+# pylint: disable=import-outside-toplevel
+
 import os
 import uuid
 from datetime import datetime, timezone
