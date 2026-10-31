@@ -70,7 +70,7 @@ class McpConfig:
 
 
 @dataclass
-class Settings:
+class Settings:  # pylint: disable=too-many-instance-attributes
     """Application settings."""
 
     schedule_time: str
@@ -98,7 +98,7 @@ class Settings:
 
 
 @dataclass
-class Config:
+class Config:  # pylint: disable=too-many-instance-attributes
     """Complete application configuration."""
 
     platform: Platform
