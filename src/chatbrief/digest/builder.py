@@ -44,7 +44,7 @@ async def _get_channel_urls(
     for channel_config in config.channels:
         try:
             url = await source.get_channel_url(channel_config)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             logger.warning(
                 f"Could not get URL for {channel_config.name!r}: {type(e).__name__}: {e}"
             )
