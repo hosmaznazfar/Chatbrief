@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from telegram.error import TelegramError
 
-import chatbrief.platforms.telegram.telegram_sender as telegram_sender
+from chatbrief.platforms.telegram import telegram_sender
 from chatbrief.platforms.telegram.telegram_sender import TelegramMessageSender
 from chatbrief.utils import save_digest_message_ids
 
