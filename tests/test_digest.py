@@ -2,6 +2,7 @@
 
 # pylint: disable=import-outside-toplevel,too-few-public-methods
 
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,6 +22,7 @@ from chatbrief.digest.collector import (
 from chatbrief.digest.service import build_digest, generate_and_send_digest
 from chatbrief.digest.validators import validate_hours
 from chatbrief.grouper import GroupedPoint
+from chatbrief.message import Message
 
 
 def _make_source(sample_messages):
