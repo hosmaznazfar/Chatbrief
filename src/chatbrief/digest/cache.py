@@ -6,7 +6,6 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 _DIGEST_CACHE_PATH = Path("data/last_digest.json")
 
@@ -42,7 +41,7 @@ def write_last_digest(
         logger.exception("Caching digest failed")
 
 
-def read_last_digest() -> Optional[dict]:
+def read_last_digest() -> dict | None:
     """Read cached digest."""
     try:
         data = json.loads(_DIGEST_CACHE_PATH.read_text(encoding="utf-8"))
