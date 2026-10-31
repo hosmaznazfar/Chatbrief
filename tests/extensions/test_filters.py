@@ -188,7 +188,5 @@ async def test_min_length_zero_keeps_all():
 
 
 def test_regex_filter_invalid_pattern_raises():
-    import re
-
     with pytest.raises(re.error):
         RegexFilter(pattern="[unclosed")
