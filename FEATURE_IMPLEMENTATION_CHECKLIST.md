@@ -29,7 +29,6 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Run the relevant Ruff checks and formatter check.
 - [ ] Run Pyright and applicable Pylint/Bandit/Vulture checks.
 - [ ] Run pytest and record the exact result and coverage.
-- [ ] Build the Astro website if website files or shared CI are affected.
 - [ ] Review the complete diff, CI results, generated Graphify artifacts, and whitespace.
 - [ ] Distinguish passed, failed, skipped, and not-run checks.
 
