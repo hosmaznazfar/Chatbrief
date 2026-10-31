@@ -5,6 +5,7 @@ Telegram bot command handlers.
 import logging
 
 from telegram import BotCommand, Update
+from telegram.error import TelegramError
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from chatbrief.commands.models import CommandStatus
@@ -73,7 +74,7 @@ class TelegramBot:
         try:
             await self.app.bot.set_my_commands(commands)
             self.logger.info("✅ Bot command menu configured successfully")
-        except Exception as e:
+        except TelegramError as e:
             self.logger.error(f"Failed to set up bot menu: {e}")
 
     async def handle_digest(
