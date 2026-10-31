@@ -402,7 +402,7 @@ async def test_openai_provider_falls_back_when_reasoning_effort_rejected(mock_lo
         second_call_kwargs = provider.client.chat.completions.create.call_args_list[1][1]
         assert "reasoning_effort" not in second_call_kwargs
 
-        debug_calls = " ".join(str(c) for c in mock_logger.debug.call_args_list)
+        debug_calls = " ".join(map(str, mock_logger.debug.call_args_list))
         assert "reasoning_effort" in debug_calls.lower()
 
 
