@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-
-from chatbrief.message import Message
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
+
+from chatbrief.message import Message
 
 if TYPE_CHECKING:
     import aiosqlite as _aiosqlite
@@ -169,7 +169,7 @@ class SQLiteBackend:
         self._conn: _aiosqlite.Connection | None = None
 
     async def initialize(self) -> None:
-        import aiosqlite
+        import aiosqlite  # pylint: disable=import-outside-toplevel  # Load only for SQLite backend.
 
         Path(self._path).parent.mkdir(parents=True, exist_ok=True)
         self._conn = await aiosqlite.connect(self._path)
@@ -270,7 +270,7 @@ class PostgresBackend:  # pragma: no cover
         self._pool: Any = None
 
     async def initialize(self) -> None:
-        import asyncpg
+        import asyncpg  # pylint: disable=import-outside-toplevel  # Load only for PostgreSQL backend.
 
         self._pool = await asyncpg.create_pool(self._url)
         try:
@@ -311,7 +311,6 @@ class PostgresBackend:  # pragma: no cover
         until: datetime | None = None,
         limit: int = 1000,
     ) -> list[Message]:
-        from chatbrief.message import Message as Msg
 
         if self._pool is None:
             raise RuntimeError("PostgresBackend not initialized; call initialize() first")
