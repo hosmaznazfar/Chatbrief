@@ -5,9 +5,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
-from openai import BadRequestError
-
 import pytest
+from openai import BadRequestError
 
 from chatbrief.ai_providers import (
     AnthropicProvider,
@@ -412,9 +411,6 @@ async def test_openai_provider_falls_back_when_reasoning_effort_rejected(mock_lo
 @pytest.mark.asyncio
 async def test_openai_provider_falls_back_to_max_tokens_without_reasoning_effort(mock_logger):
     """Retry with max_tokens when max_completion_tokens is rejected and reasoning_effort is None."""
-    import httpx
-    from openai import BadRequestError
-
     with patch("chatbrief.ai_providers.AsyncOpenAI"):
         provider = OpenAIProvider(api_key="sk-test", logger=mock_logger)
 
