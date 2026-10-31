@@ -1,5 +1,7 @@
 """Tests for digest collection, building, caching, and delivery."""
 
+# pylint: disable=import-outside-toplevel,too-few-public-methods
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -458,10 +460,6 @@ async def test_filter_initialization_failure_is_logged_and_skipped(
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_filter_chain_applies_in_order(sample_config, mock_logger):
-    from datetime import datetime, timezone
-
-    from chatbrief.message import Message
-
     messages = [
         Message(
             "hello job",
