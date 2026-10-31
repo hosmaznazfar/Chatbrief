@@ -567,134 +567,27 @@ def test_resolve_channel_unknown_lists_configured_names(sample_config):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_collect_channel_messages_prefers_storage(
+async def test_collect_channel_messages_uses_live_source_even_when_storage_enabled(
     sample_config, mock_logger, sample_messages
 ):
     source = _make_source(sample_messages)
     sample_config.storage = StorageConfig(enabled=True, backend="sqlite", path=":memory:")
-    backend = MagicMock()
-    backend.query_messages = AsyncMock(return_value=list(reversed(sample_messages)))
-    backend.close = AsyncMock()
 
     with patch.object(
         digest_collector,
         "create_storage",
         new_callable=AsyncMock,
-        return_value=backend,
-    ):
+    ) as create_storage:
         messages, origin = await collect_channel_messages(
             sample_config, mock_logger, source, "Test Channel", hours=12, limit=50
         )
 
-    assert origin == "storage"
-    assert messages == sample_messages
-    backend.query_messages.assert_awaited_once()
-    backend.close.assert_awaited_once()
-    source.connect.assert_not_awaited()
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_collect_channel_messages_falls_back_to_live_source(
-    sample_config, mock_logger, sample_messages
-):
-    source = _make_source(sample_messages)
-    sample_config.storage = StorageConfig(enabled=False)
-
-    with patch.object(
-        digest_collector,
-        "create_storage",
-        new_callable=AsyncMock,
-        return_value=None,
-    ):
-        messages, origin = await collect_channel_messages(
-            sample_config, mock_logger, source, "@test_channel", hours=6
-        )
-
     assert origin == "live"
     assert messages == sample_messages
+    create_storage.assert_not_awaited()
     source.connect.assert_awaited_once()
     source.fetch_channel_messages.assert_awaited_once()
     source.disconnect.assert_awaited_once()
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_collect_channel_messages_falls_back_when_storage_is_empty(
-    sample_config, mock_logger, sample_messages
-):
-    source = _make_source(sample_messages)
-    sample_config.storage = StorageConfig(enabled=True, backend="sqlite", path=":memory:")
-    backend = MagicMock()
-    backend.query_messages = AsyncMock(return_value=[])
-    backend.close = AsyncMock()
-
-    with patch.object(
-        digest_collector,
-        "create_storage",
-        new_callable=AsyncMock,
-        return_value=backend,
-    ):
-        messages, origin = await collect_channel_messages(
-            sample_config, mock_logger, source, "Test Channel"
-        )
-
-    assert origin == "live"
-    assert messages == sample_messages
-    backend.close.assert_awaited_once()
-    source.disconnect.assert_awaited_once()
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_collect_channel_messages_falls_back_when_storage_query_fails(
-    sample_config, mock_logger, sample_messages
-):
-    source = _make_source(sample_messages)
-    sample_config.storage = StorageConfig(enabled=True, backend="sqlite", path=":memory:")
-    backend = MagicMock()
-    backend.query_messages = AsyncMock(side_effect=RuntimeError("read failed"))
-    backend.close = AsyncMock()
-
-    with patch.object(
-        digest_collector,
-        "create_storage",
-        new_callable=AsyncMock,
-        return_value=backend,
-    ):
-        messages, origin = await collect_channel_messages(
-            sample_config, mock_logger, source, "Test Channel"
-        )
-
-    assert origin == "live"
-    assert messages == sample_messages
-    backend.close.assert_awaited_once()
-    source.disconnect.assert_awaited_once()
-    mock_logger.error.assert_called()
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_collect_channel_messages_storage_failure_falls_back_to_live(
-    sample_config, mock_logger, sample_messages
-):
-    source = _make_source(sample_messages)
-    sample_config.storage = StorageConfig(enabled=True, backend="sqlite", path=":memory:")
-
-    with patch.object(
-        digest_collector,
-        "create_storage",
-        new_callable=AsyncMock,
-        side_effect=RuntimeError("db down"),
-    ):
-        messages, origin = await collect_channel_messages(
-            sample_config, mock_logger, source, "Test Channel"
-        )
-
-    assert origin == "live"
-    assert messages == sample_messages
-    source.disconnect.assert_awaited_once()
-    mock_logger.error.assert_called()
 
 
 @pytest.mark.unit
