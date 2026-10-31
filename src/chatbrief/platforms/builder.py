@@ -2,7 +2,7 @@
 
 import logging
 
-from chatbrief.commands.service import CommandService
+from chatbrief.commands.protocols import CommandServiceProtocol
 from chatbrief.config.models import Config, Platform
 from chatbrief.platforms.base import Bot, MessageSender, MessageSource
 from chatbrief.platforms.telegram.telegram_bot import TelegramBot
@@ -37,7 +37,7 @@ class PlatformBuilder:
 
     def create_bot(
         self,
-        command_service: CommandService,
+        command_service: CommandServiceProtocol,
     ) -> Bot:
         """Create the bot for the configured platform."""
         if self.config.platform is Platform.TELEGRAM:
