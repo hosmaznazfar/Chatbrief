@@ -1,5 +1,7 @@
 """Tests for the MCP server module."""
 
+# pylint: disable=redefined-outer-name
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
