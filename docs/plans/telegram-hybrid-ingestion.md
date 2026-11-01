@@ -1182,6 +1182,13 @@ Use the **conservative bounded retry policy** for primary and optional media doc
 
 This approves the attempt count and backoff policy, not the final exception mapping or Telegram error-classification implementation. Those must be verified against the installed `python-telegram-bot` version and tested. Approved target behavior, not implemented.
 
+##### Telegram message deletion retry policy
+
+- Retry temporary Telegram message-deletion failures with bounded exponential backoff, starting at 1 minute and capped at 1 hour.
+- If Telegram provides `retry_after` longer than the calculated backoff, schedule the next attempt no earlier than that delay.
+- Stop retrying immediately for permanent deletion errors and when the 48-hour Telegram message-deletion window closes. Deletion is best effort; retries must not extend the user's export-availability expiry.
+- Persist cleanup-attempt state and the next retry due time in the durable cleanup record so retries survive process restarts. Retain that minimal record only while deletion remains actionable, then remove it under the approved cleanup-metadata retention policy.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
