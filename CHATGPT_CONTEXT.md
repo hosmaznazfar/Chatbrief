@@ -53,6 +53,7 @@ The approved future direction is documented in [docs/plans/telegram-hybrid-inges
 - Export-job persistence uses a hybrid relational design: separate job, delivery-attempt, and cleanup-task records, with JSON for evolving metadata/reports and no ZIP binaries in the database. Exact schema details remain open.
 - Export workers use database-backed renewable leases with atomic claims and stale-worker fencing, allowing bounded concurrent jobs for different users in the initial single application instance. Telegram send ambiguity still requires explicit `DeliveryUnknown` reconciliation; exact lease/concurrency values remain open.
 - Export queue scheduling is fair across users, with FIFO order within each user's queue; scheduling state must survive restarts and work with leased atomic claims. No priority tiers initially.
+- Export worker concurrency is configurable via a global export-specific setting (provisionally `export.max_concurrent_jobs`), with a conservative default chosen after resource inspection; it is separate from the per-user active-export rule and does not auto-scale.
 
 - Retain the existing `python-telegram-bot` and Telethon libraries and preserve the current implementation while evolving it incrementally.
 - Use the central Bot API integration as the default for continuous ingestion; ordinary Chatbrief users must not need to link a personal Telegram account.
