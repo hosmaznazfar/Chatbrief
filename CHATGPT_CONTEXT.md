@@ -49,6 +49,8 @@ The repository includes:
 
 The approved future direction is documented in [docs/plans/telegram-hybrid-ingestion.md](docs/plans/telegram-hybrid-ingestion.md). This is a plan, not implemented functionality.
 
+- The same plan also contains the approved personal data export design: two Telegram-delivered ZIPs (primary text plus optional media), durable per-user asynchronous jobs, 24-hour initial availability, authorization checks, cancellation, restart recovery, and explicit confirmed `/export retry` for ambiguous delivery. Export is planned, not implemented; the detailed plan is the source of truth.
+
 - Retain the existing `python-telegram-bot` and Telethon libraries and preserve the current implementation while evolving it incrementally.
 - Use the central Bot API integration as the default for continuous ingestion; ordinary Chatbrief users must not need to link a personal Telegram account.
 - Keep Telethon as an explicit, optional per-user integration for historical backfill from chats accessible to that user's account.
