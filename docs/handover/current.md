@@ -757,3 +757,21 @@ reconciliation cadence, and storage-specific behavior remain implementation deta
 approved target behavior, not implemented. Documentation-only: no application code, schema,
 migrations, or tests changed/run.
 Plan commit: `8826aede93e018e50f24c5afe16514d84dc0b491`.
+
+## Message expiry when associated media deletion fails — approved
+
+The user approved keeping message-content retention independent from binary-media deletion
+success:
+
+- Delete expired message content on schedule, including readable text, sender details, and
+  other user-facing content.
+- Retain only a minimal internal cleanup record needed to retry/reconcile media deletion,
+  containing an opaque storage reference, deletion state, and retry metadata.
+- Keep this record inaccessible through normal message and media APIs.
+- Remove it when storage confirms media deletion.
+- If deletion remains unsuccessful, retain the minimal record for later reconciliation.
+
+Exact cleanup-record fields and storage-specific confirmation semantics remain implementation
+details. This is approved target behavior, not implemented. Documentation-only: no application
+code, schema, migrations, or tests changed/run.
+Plan commit: `6e3c7b717647d624c9be4f527599659aa58e6757`.
