@@ -760,6 +760,178 @@ currently authorized to access them:
 - Generated export archives remain subject to the approved short-lived, user-bound access
   link and 24-hour initial expiry policy.
 
-Exact size limits, archive layout, and reporting format remain implementation details. This is
+Exact size limits remain open; the approved archive layout and reporting requirements are specified in the detailed design below. This is
 approved target behavior, not implemented. Documentation-only update: no application code,
 schema, migrations, or tests changed or run.
+
+#### Personal data export — detailed approved design
+
+This section consolidates the approved export decisions in this existing implementation plan.
+It supersedes any earlier wording that described these now-approved choices as undecided.
+It is a target specification, not evidence that export functionality is implemented.
+
+##### Scope and authorization
+
+Include the requesting user's preferences, schedules, subscriptions, delivery history,
+and **all currently accessible retained messages**, not only messages previously included
+in digests. Include actual retained binary media when the requester is authorized.
+
+- Include shared-source messages and media only while the requesting user is authorized
+  to access the corresponding source. Shared storage alone does not grant access.
+- Exclude other users' personal information, credentials (including Telethon sessions and
+  authentication secrets), internal filesystem paths/storage identifiers, and content the
+  requester is not authorized to access.
+- Apply existing retention rules and per-operation media access checks. Export does not
+  extend retention, delete source media, or modify subscriptions, messages, or account state.
+- Check authorization when selecting content and before every archive download.
+
+##### Archive structure
+
+Create a ZIP archive with this layout:
+
+```text
+chatbrief-export.zip
+├── README.txt
+├── export.json
+├── export-report.json
+└── media/
+    ├── images/
+    ├── videos/
+    ├── documents/
+    └── audio/
+```
+
+- `export.json`: structured personal data and authorized retained messages.
+- `media/`: actual retained media binaries that pass authorization, availability,
+  retention, and size checks.
+- `export-report.json`: export timestamp, completeness information, and omitted media
+  with reasons where known.
+- `README.txt`: archive structure and interpretation guidance.
+
+Use safe archive-relative filenames; never expose internal storage paths or identifiers.
+
+##### Size limits and omissions
+
+Use configurable export-size limits. When media cannot fit, prioritize content in this order:
+
+1. Structured personal data.
+2. Currently accessible retained messages.
+3. Binary media, using the remaining size budget.
+
+Omit media that is expired, unavailable, or over the size limit, and report omissions and
+reasons where known. Do not select unauthorized content. Never silently truncate JSON or
+produce a corrupt ZIP. The report must clearly state whether the export is complete or
+contains omissions.
+
+**Still unresolved:** behavior when structured data and messages alone exceed the configured
+limit. Do not silently truncate structured data; decide the precise policy after inspecting
+realistic data volumes and deployment/storage constraints.
+
+##### Snapshot and authorization revocation
+
+Record a fixed cutoff timestamp when the export request is accepted. Personal data and
+message scope is bounded by that timestamp; later-arriving messages are not included.
+Media availability is checked during generation and unavailable media is reported as omitted.
+
+If authorization for any source whose content has been selected for the export is revoked
+at any point before download, including while generation is running, invalidate the **entire**
+export:
+
+- Revoke its download link.
+- Schedule deletion of the archive and temporary files.
+- Notify the user that the export is unavailable because authorization changed.
+- Require a new export under current authorization.
+
+Do not serve a partial remainder of the archive after revocation.
+
+##### Generation workflow and concurrency
+
+Generate exports asynchronously:
+
+1. The user requests an export through the bot.
+2. Chatbrief creates and queues the job, records the cutoff timestamp, and acknowledges
+   the request without waiting for generation.
+3. A background worker collects eligible data and media.
+4. The worker builds the ZIP and completeness report.
+5. On success, the bot notifies the user and sends the temporary download link.
+6. The user can check status or cancel an eligible job.
+
+Allow at most one active export per user. Reject a new request while that user has an active
+export. Failed, cancelled, expired, and invalidated jobs must not permanently block a new
+request. Whether a ready export remains active until expiry is still to be decided.
+
+##### User-visible states and notifications
+
+Use these user-visible states:
+
+| State | Meaning |
+|---|---|
+| `Queued` | Waiting for a worker |
+| `Collecting` | Gathering personal data and messages |
+| `Packaging` | Building the ZIP and adding media |
+| `Ready` | Archive is available for download |
+| `Cancelled` | User cancelled the export |
+| `Failed` | Generation failed |
+| `Invalidated` | Authorization changed and the archive is unavailable |
+| `Expired` | Download period ended |
+
+Notify the user when an export becomes ready, fails, or is invalidated. The user can request
+the current status at any time. Internal cleanup/reconciliation states need not be exposed.
+
+##### Download-link security and expiry
+
+Use a short-lived, authenticated, user-bound download link:
+
+- Generate a cryptographically random, unguessable token.
+- Store only a hash of the token, never the raw token.
+- Bind the token to the requesting Chatbrief user and export job.
+- Require the same user to authenticate before downloading.
+- Recheck authorization before every download.
+- Allow repeated downloads until expiry or revocation, so interrupted downloads can be retried.
+- Never expose a permanent public storage URL.
+
+The initial expiry is configurable and defaults to **24 hours**. At expiry, the link becomes
+unusable and the generated archive is scheduled for deletion.
+
+##### Cancellation and cleanup
+
+Cancellation can stop a queued or in-progress job. If generation has already completed,
+cancellation revokes the link and schedules archive deletion.
+
+- Stop further collection and packaging as soon as practical.
+- Schedule deletion of partial archives and temporary files.
+- Repeated cancellation is idempotent.
+- Repeating cancellation for an already cancelled, expired, invalidated, or failed job
+  does not change its state.
+- If cancellation and completion race, make the competing transition atomic so only one
+  outcome wins.
+- Cancellation does not alter account data, subscriptions, messages, or retained source media.
+- A copy already downloaded by the user cannot be remotely deleted.
+
+Deletion is scheduled, not assumed to have succeeded synchronously.
+
+##### Remaining design work before implementation
+
+Resolve these points only after inspecting the existing architecture and deployment constraints:
+
+- Exact archive-size, item-count, generation-duration, and resource limits.
+- Policy when structured data/messages alone exceed the archive limit.
+- Whether a ready-but-unexpired export counts as active for concurrency.
+- Bot commands and interaction UX for requesting, checking, and cancelling exports.
+- Progress granularity and whether reliable percentages are possible.
+- Existing queue/worker model, job persistence, leases, crash recovery, and duplicate-worker
+  prevention.
+- Complete atomic state-transition matrix and authorization race handling through finalization.
+- Durable cleanup retries and reconciliation after crashes/restarts.
+- Exact export JSON/report schema, schema version, message fields, and media metadata.
+- Filename normalization/collision handling, archive path validation, and entry-count limits.
+- Storage location/access controls, encryption-at-rest, and audit logging.
+- Interactions with account deletion, source removal, retention cleanup, and shutdown.
+- Failure classification and retry behavior.
+
+Do not introduce new abstractions, schema, or application changes before inspecting the
+existing storage, authorization, worker/scheduler, bot, cleanup, and test boundaries.
+Implementation must proceed in small reviewable stages with tests and this plan updated
+alongside each stage. This documentation change does not alter application code, schema,
+migrations, or tests.
+
