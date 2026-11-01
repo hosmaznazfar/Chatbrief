@@ -667,3 +667,21 @@ This is an approved target policy, not implemented. Exact directory placement, p
 details, cleanup scheduling/recovery, and implementation mechanics remain to be specified.
 Documentation-only update: no application code, schema, migrations, or tests changed/run.
 Plan commit: `e1f98856a309803860f723510fefdbff7963c28c`.
+
+
+## Recovery cleanup for abandoned temporary media files — approved
+
+The user approved extending temporary-file cleanup beyond normal processing completion:
+
+- Run cleanup at application startup to identify and remove abandoned files in the
+  dedicated temporary directory.
+- Run periodic cleanup while the application is running.
+- Protect files belonging to active processing operations. Use a reliable mechanism to
+  distinguish active work from abandoned files (for example, operation ownership/leases
+  together with an age threshold); do not delete files simply because an operation is slow.
+- Restrict cleanup to Chatbrief's dedicated temporary directory.
+
+The exact active-operation tracking, age threshold, cleanup cadence, and failure handling
+remain implementation details. This is an approved target behavior, not implemented.
+Documentation-only update: no application code, schema, migrations, or tests changed/run.
+Plan commit: `6dfa7121f101c0ba000ddb04af0a1212820596e2`.
