@@ -935,3 +935,8 @@ The user approved filesystem-based protection for temporary personal-export arch
 - Inspect deployment filesystem, service-account, and host-encryption capabilities before implementation. Audit logging must not capture exported content or unnecessary personal data.
 
 Approved target behavior, not implemented. Documentation-only: no application code, schema, migrations, or tests changed.
+
+
+## Export behavior on account deletion — approved
+
+Account deletion cancels queued/running exports, removes staged files, and immediately invalidates Ready exports. Chatbrief best-effort deletes delivered primary and media Telegram messages within Telegram's deletion window using the approved retry policy. Any outstanding deletion task retains only the minimum destination/message metadata needed to finish or safely abandon cleanup without the deleted user record. Once cleanup is complete or no longer actionable, export job, attempt, and cleanup metadata are removed under the approved retention policy. Telegram deletion cannot revoke copies already downloaded or forwarded. This is approved target behavior, not implemented; documentation-only, with no application code, schema, migrations, or tests changed/run.
