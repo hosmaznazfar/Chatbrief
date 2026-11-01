@@ -791,13 +791,30 @@ in digests. Include actual retained binary media when the requester is authorize
 
 ##### Archive structure
 
-Create a ZIP archive with this layout:
+Create two separate ZIP archives and deliver them automatically in sequence when each
+is eligible and within Telegram's upload limit. The text archive is primary; the media
+archive is a separate optional companion.
+
+Primary archive, `chatbrief-export.zip`:
 
 ```text
 chatbrief-export.zip
 ├── README.txt
 ├── export.json
-├── export-report.json
+└── export-report.json
+```
+
+- `export.json`: structured personal data and authorized retained messages.
+- `export-report.json`: export timestamp, completeness information, and media omissions
+  with reasons where known.
+- `README.txt`: archive structure and interpretation guidance.
+
+Optional companion archive, `chatbrief-media.zip`:
+
+```text
+chatbrief-media.zip
+├── README.txt
+├── media-manifest.json
 └── media/
     ├── images/
     ├── videos/
@@ -805,31 +822,36 @@ chatbrief-export.zip
     └── audio/
 ```
 
-- `export.json`: structured personal data and authorized retained messages.
-- `media/`: actual retained media binaries that pass authorization, availability,
-  retention, and size checks.
-- `export-report.json`: export timestamp, completeness information, and omitted media
-  with reasons where known.
-- `README.txt`: archive structure and interpretation guidance.
+- `media/`: actual retained media binaries that pass authorization, availability, and
+  retention checks and fit within the media archive's size limit.
+- `media-manifest.json`: included media metadata and omissions/reasons where known, without
+  exposing internal storage paths or identifiers.
+- `README.txt`: media archive structure and interpretation guidance.
 
-Use safe archive-relative filenames; never expose internal storage paths or identifiers.
+Use safe archive-relative filenames in both archives; never expose internal storage paths
+or identifiers. Text data must not depend on the media archive being present.
 
 ##### Size limits and omissions
 
-Use configurable export-size limits. When media cannot fit, prioritize content in this order:
+Use separate configurable size limits for the primary text archive and optional media
+archive, each respecting Telegram's standard cloud Bot API `sendDocument` upload limit
+(currently 50 MB).
 
-1. Structured personal data.
-2. Currently accessible retained messages.
-3. Binary media, using the remaining size budget.
+- Always build and send the primary text archive first. It contains all eligible structured
+  personal data and retained messages; it does not contain binary media.
+- Build the companion media archive separately and automatically send it after the text
+  archive when eligible media is available and the completed ZIP fits its configured limit.
+- If media is expired, unavailable, unauthorized, or cannot fit, omit it from the media ZIP
+  and record omissions/reasons in the primary export report and media manifest where known.
+  If no media can be included, do not send an empty media archive.
+- Never let media size or availability prevent delivery of a valid text archive. Text is the
+  primary export; media is an optional companion.
+- Never silently truncate JSON or produce a corrupt ZIP. If structured data and messages
+  alone exceed the primary archive limit, fail clearly rather than silently dropping or
+  truncating personal data.
 
-Omit media that is expired, unavailable, or over the size limit, and report omissions and
-reasons where known. Do not select unauthorized content. Never silently truncate JSON or
-produce a corrupt ZIP. The report must clearly state whether the export is complete or
-contains omissions.
-
-**Still unresolved:** behavior when structured data and messages alone exceed the configured
-limit. Do not silently truncate structured data; decide the precise policy after inspecting
-realistic data volumes and deployment/storage constraints.
+Exact size limits and the policy for structured data/messages exceeding the primary limit
+remain to be confirmed after inspecting realistic data volumes and deployment constraints.
 
 ##### Snapshot and authorization revocation
 
@@ -859,21 +881,26 @@ Generate exports asynchronously:
 1. The user requests an export through the bot.
 2. Chatbrief creates and queues the job, records the cutoff timestamp, and acknowledges
    the request without waiting for generation.
-3. A background worker collects eligible data and media.
-4. The worker builds the ZIP and completeness report.
-5. Immediately before delivery, recheck authorization and upload the ZIP to the requesting
-   user's private Telegram chat with `sendDocument`.
-6. Once Telegram confirms delivery, persist the returned chat/message identifiers and
-   delivery timestamp, then delete the local ZIP and temporary files.
-7. The user can check status or cancel an eligible job.
+3. A background worker collects eligible structured data, messages, and media.
+4. Build the primary text ZIP and its completeness report; independently build the optional
+   media ZIP when eligible media is available.
+5. Immediately before delivery, recheck authorization and send the primary text ZIP to the
+   requesting user's private Telegram chat with `sendDocument`.
+6. After Telegram confirms the primary delivery, persist its chat/message identifiers and
+   delivery timestamp. If a media ZIP exists and fits its limit, recheck authorization and
+   send it as a separate document, then persist its delivery identifiers and timestamp.
+7. Remove local ZIPs and temporary files after their respective Telegram deliveries are
+   confirmed. The text export remains successful if the optional media archive is omitted
+   because it is unavailable or exceeds its size limit; report that outcome to the user.
+8. The user can check status or cancel an eligible job.
 
 Allow at most one active export per user. The concurrency restriction covers both
 background generation and the ready-for-download period:
 
 - `Queued`, `Collecting`, and `Packaging` exports are active and block another request.
-- A `Ready` export remains active and blocks another request until its Telegram message
-  reaches its 24-hour expiry or is revoked (for example, by cancellation or authorization
-  invalidation).
+- A `Ready` export remains active and blocks another request until its delivered Telegram
+  document messages reach their 24-hour expiry or are revoked (for example, by cancellation
+  or authorization invalidation).
 - `Cancelled`, `Failed`, `Invalidated`, and `Expired` exports do not block a new request.
 
 A user may therefore have only one export whose Telegram delivery is within its availability
@@ -889,7 +916,7 @@ Use these user-visible states:
 | `Queued` | Waiting for a worker |
 | `Collecting` | Gathering personal data and messages |
 | `Packaging` | Building the ZIP and adding media |
-| `Ready` | ZIP was delivered to the user's private Telegram chat and is within its availability period |
+| `Ready` | Primary text ZIP was delivered; optional media ZIP was also delivered when eligible and within limits |
 | `Cancelled` | User cancelled the export |
 | `Failed` | Generation failed |
 | `Invalidated` | Authorization changed and the archive is unavailable |
@@ -906,14 +933,16 @@ private chat. The user must have an available private bot conversation for deliv
 
 - Do not create a public URL or download token. The Telegram chat identity is resolved from
 the authenticated Chatbrief user; never accept an arbitrary destination chat from a command.
-- Persist the Telegram chat ID, sent message ID, returned document `file_id` when available,
-  and delivery/expiry timestamps as job metadata needed for status, cleanup, and recovery.
-- Keep the ZIP in local staging only until Telegram confirms successful delivery; then remove
-  the local archive and temporary files. Do not treat Telegram's `file_id` as a revocable
-  download token.
-- The initial configurable availability period defaults to **24 hours**. At expiry, attempt
-  to delete the bot's Telegram message and mark the export `Expired` when the expiry policy
-  is applied. Retry failed message-deletion attempts where possible.
+- Persist the Telegram chat ID and separate sent message IDs, returned document `file_id`
+  values when available, and delivery/expiry timestamps for the text and media documents as
+  job metadata needed for status, cleanup, and recovery.
+- Keep each ZIP in local staging only until Telegram confirms successful delivery of that
+  document; then remove that archive and its temporary files. Do not treat Telegram's
+  `file_id` as a revocable download token.
+- The initial configurable availability period defaults to **24 hours** for both delivered
+  documents. At expiry, attempt to delete each bot Telegram message and mark the export
+  `Expired` when the expiry policy is applied. Retry failed message-deletion attempts where
+  possible.
 - Telegram's Bot API only permits deleting messages sent less than 48 hours ago. A failed
   deletion may therefore become impossible after that window; document this as best-effort,
   not a guarantee that Telegram will erase the hosted file or all copies.
@@ -952,8 +981,9 @@ Resolve these points only after inspecting the existing architecture and deploym
 Use `/export` with subcommands rather than separate top-level commands:
 
 - `/export request` starts a new export.
-- `/export status` shows the current export state and, when ready, confirms Telegram delivery
-  and shows the message's expiry time.
+- `/export status` shows the current export state and, when ready, confirms primary text
+  delivery, whether the optional media archive was sent or omitted, and the message expiry
+  time(s).
 - `/export cancel` cancels generation or revokes a ready archive and schedules its deletion.
 
 If a request is blocked by an existing active export, explain its current state and, for a
