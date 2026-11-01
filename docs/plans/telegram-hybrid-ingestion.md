@@ -185,7 +185,9 @@ not implemented capabilities.
 - Track delivery progress within a multi-message digest. If delivery fails partway through, resume from the first message not yet confirmed delivered rather than resending the entire digest. Advance the digest group's successful boundary only after every message in the digest has been delivered. Account for ambiguous send outcomes, where the platform may have accepted a message even though the client did not receive confirmation, and minimize duplicate delivery where possible.
 - Use a configurable retry policy. Initial defaults: up to 3 retries after the initial attempt (4 total attempts), with delays of 1 minute, 5 minutes, and 15 minutes between retries.
 - Make the retry count and delay policy configurable so they can be changed later without redesigning the scheduler.
-- If all attempts fail, mark the delivery as failed, leave the successful digest boundary unchanged, and notify the user. A later retry/recovery must not silently skip the undelivered interval.
+- If all configured attempts fail, move the delivery into a pending-recovery state and notify the user. Preserve the already-generated digest and confirmed delivery progress; keep the successful digest boundary unchanged.
+- After retry exhaustion, do not retry continuously. Automatically resume delivery when the system detects that the relevant delivery service is operational again, continuing from the first message not yet confirmed delivered.
+- Retain the pending-recovery record until delivery completes or an explicitly designed user/admin resolution path handles it. Never silently discard it or skip its undelivered interval.
 - Make retries idempotent where possible. Telegram does not provide a universal idempotency key for sending messages, so an ambiguous network failure may still occasionally cause duplicate delivery; implementation must account for and minimize this risk.
 - The source archive's rolling retention remains independently bounded (14 days by default). If a scheduled digest has not run successfully for longer than the retained window, older messages may already have expired; the product must not imply they are still available.
 
