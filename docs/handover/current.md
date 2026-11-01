@@ -874,3 +874,15 @@ Exact size limits, archive layout, and reporting format remain implementation de
 Approved target behavior, not implemented. Documentation-only: no application code, schema,
 migrations, or tests changed/run.
 Plan commit: `829b2f969452e11e14c51ae1d9b42185dbad69bf`.
+
+
+## Export job metadata retention — approved
+
+The user selected immediate deletion of export-job records after their lifecycle ends:
+
+- Delete the job record and delivery-attempt history when a Ready export's availability expires.
+- For Cancelled, Failed, and Invalidated jobs, remove job/attempt records after required cleanup is complete or no longer actionable.
+- Preserve only the minimum durable cleanup/reconciliation records while outstanding work still needs them; remove them when completed or no longer actionable.
+- Do not retain archives, exported content, media manifests, or delivery history for long-term diagnostics.
+
+This minimizes retained personal metadata at the cost of long-term troubleshooting history. Deletion ordering must preserve crash recovery. Approved target behavior, not implemented. No application code, schema, migrations, or tests changed.
