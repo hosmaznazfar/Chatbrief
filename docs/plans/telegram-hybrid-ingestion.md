@@ -1000,6 +1000,31 @@ local staging cleanup.
 
 Deletion is scheduled, not assumed to have succeeded synchronously.
 
+
+
+##### Explicit recovery from ambiguous delivery
+
+Provide `/export retry` for a job whose primary or media document delivery is
+`DeliveryUnknown`. Do not make an automatic resend the default: Telegram may already
+have accepted the earlier document, so a retry can create a duplicate.
+
+- The command is available only when at least one document delivery for the current job
+  is unresolved as `DeliveryUnknown`.
+- Before retrying, explain which document has an uncertain outcome and that Telegram may
+  already have received it; ask the user to explicitly confirm the retry.
+- For an ambiguous primary delivery, regenerate and resend the primary text archive using
+  the original request cutoff and current authorization checks. Keep the same export job
+  and preserve the earlier attempt and its uncertainty in durable delivery history.
+- For an ambiguous media delivery, regenerate and resend only the media archive. Do not
+  regenerate or resend the already-confirmed primary text archive.
+- Recheck current authorization during regeneration and immediately before delivery, using
+  the existing invalidation policy. Do not reuse a staged archive from the ambiguous attempt.
+- Persist each retry as a distinct delivery attempt so status and audit history do not erase
+  the earlier uncertain result. Resolve the relevant delivery outcome only after the retry
+  has a confirmed result; if it is also ambiguous, retain `DeliveryUnknown`.
+- Keep the existing job and its original cutoff/expiry semantics; a retry must not silently
+  create a new export request or extend an already-established primary delivery expiry.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
@@ -1014,6 +1039,7 @@ Use `/export` with subcommands rather than separate top-level commands:
   delivery, the separate media outcome (`Sent`, `Omitted`, `Failed`, or `DeliveryUnknown`), and the expiry time(s)
   of any delivered Telegram messages.
 - `/export cancel` cancels generation or revokes a ready archive and schedules its deletion.
+- `/export retry` explicitly retries a primary or media document whose delivery is `DeliveryUnknown`, after warning the user that a duplicate may result and obtaining confirmation.
 
 If a request is blocked by an existing active export, explain its current state and, for a
 ready export, when its Telegram message is scheduled to expire. Exact argument parsing and bot-framework
