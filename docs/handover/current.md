@@ -940,3 +940,8 @@ Approved target behavior, not implemented. Documentation-only: no application co
 ## Export behavior on account deletion — approved
 
 Account deletion cancels queued/running exports, removes staged files, and immediately invalidates Ready exports. Chatbrief best-effort deletes delivered primary and media Telegram messages within Telegram's deletion window using the approved retry policy. Any outstanding deletion task retains only the minimum destination/message metadata needed to finish or safely abandon cleanup without the deleted user record. Once cleanup is complete or no longer actionable, export job, attempt, and cleanup metadata are removed under the approved retention policy. Telegram deletion cannot revoke copies already downloaded or forwarded. This is approved target behavior, not implemented; documentation-only, with no application code, schema, migrations, or tests changed/run.
+
+
+## Media export filenames — approved (Option A)
+
+Media ZIP entries use only the predefined media category directories. Archive filenames are derived from sanitized basenames after discarding source directory components; collisions receive deterministic suffixes and must never overwrite an existing entry. The original source filename remains available in the media manifest but is never used as an archive path. Reject names/paths that remain invalid after normalization. Exact sanitization and suffix rules, path validation, and entry-count limits remain implementation-design details. This is approved target behavior, not implemented; documentation-only, with no application code, schema, migrations, or tests changed/run.
