@@ -836,6 +836,10 @@ under **Personal data export — detailed approved design**. It is not implement
 - Generate asynchronously with durable export-job storage independent of optional
   message-history storage. The initial deployment is one application instance supporting
   multiple users concurrently, with per-user job isolation and one active export per user.
+- Use the approved hybrid relational persistence design: relational job, delivery-attempt,
+  and cleanup-task records for lifecycle/ownership/constraints; JSON columns for evolving
+  metadata and reports. Keep ZIP binaries out of the database. Exact columns, indexes,
+  transaction boundaries, and JSON schemas remain to be designed against source conventions.
 - Support `/export request`, `/export status`, `/export cancel`, and confirmed
   `/export retry` for ambiguous document delivery. Retry warns that Telegram may already
   have received the document, retries only the uncertain document, and preserves attempt
