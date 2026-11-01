@@ -197,7 +197,10 @@ not implemented capabilities.
 - In this mode, collect messages from the group's sources during the configured interval and deliver them together in the user's configured destination chat.
 - **Use copied messages, not Telegram forwards.** The delivered copies must not carry Telegram's forwarded-message header.
 - Add source attribution separately to each copied message or message batch, and include a source link where available. The copy presentation must make the originating source clear even though the native forwarded-message attribution is absent.
-- Exact attribution formatting, batching, media handling, and behavior for content that cannot be copied remain implementation-design details to verify against the Bot API's capabilities and limits.
+- Copy supported media along with text messages, preserving the original media where Telegram's Bot API permits it. This includes photos, videos, documents, audio, and voice messages; verify the exact supported copy behavior and limits during implementation design.
+- Add source attribution separately to copied media messages as well as text messages, with a source link where available.
+- If an individual message or media item cannot be copied, skip that item and notify the user that the raw result is incomplete. Never silently present a partial result as complete.
+- Exact attribution formatting, batching, per-media failure reporting, and Bot API capability/limit handling remain implementation-design details.
 
 ### One-time digest requests
 
@@ -427,3 +430,12 @@ Keep ordinary user recovery separate from operational diagnostics.
 - Ordinary users continue to use `/retry` only for their own pending deliveries; user-facing notifications and retry listings remain concise and non-technical.
 
 This is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
+
+
+### Media-aware AI summarization — future capability; design open
+
+- Preserve media type metadata on normalized messages and distinguish a message that merely has media metadata from one whose actual media content is available for AI analysis.
+- Plan for an optional per-digest-group summarization scope: text-only, or text plus supported image content. The latter may let a vision-capable model describe relevant images alongside message text.
+- Image analysis is a future capability, not part of the currently approved raw-copy behavior and not an implemented feature.
+- Do not assume that recording an image/media tag means the image bytes are retained or available to a model. Media download, storage, retention, access control, size/format limits, model capability, cost, and failure behavior remain open design decisions.
+- The existing rolling per-source message retention policy does not yet define binary media retention. Decide whether and how media files are retained separately before implementation.
