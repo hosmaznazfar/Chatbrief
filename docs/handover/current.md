@@ -814,3 +814,22 @@ Confirmation lifetime and interaction mechanics remain implementation details. A
 target behavior, not implemented. Documentation-only: no application code, schema,
 migrations, or tests changed/run.
 Plan commit: `4e31698d4c82db28ab884b12564918b57d5db5e7`.
+
+## Personal data export — approved
+
+The user approved a bot-accessible personal data export:
+
+- Include the user's preferences, schedules, subscriptions, delivery history, and messages
+  they are currently authorized to access.
+- Include shared-source messages only while the user remains authorized for those sources.
+- Exclude other users' personal information, credentials, Telethon sessions, and internal
+  storage paths or identifiers.
+- Provide a downloadable archive through a short-lived, user-bound access link.
+- Automatically expire and delete exports after a configurable period, initially 24 hours.
+- Exporting does not alter subscriptions, retention, or account state.
+- Enforce authorization both when selecting export content and when accessing the archive.
+
+Exact archive format, generation workflow, link mechanism, and expiry implementation remain
+design/implementation details. Approved target behavior, not implemented. Documentation-only:
+no application code, schema, migrations, or tests changed/run.
+Plan commit: `684b9da35e6ccbcfd79b6b6c7ab9e2159f451d25`.
