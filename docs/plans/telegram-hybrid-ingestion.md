@@ -744,3 +744,22 @@ Authorization must be enforced when selecting export content and when accessing 
 archive. Exact archive format, generation workflow, link mechanism, and expiry implementation
 remain design/implementation details. This is approved target behavior, not implemented.
 Documentation-only update: no application code, schema, migrations, or tests changed or run.
+
+#### Include retained media in personal exports — approved (Option B)
+
+Personal data exports include actual retained binary media files when the requesting user is
+currently authorized to access them:
+
+- Apply the existing media retention, source authorization, and per-operation media-access
+  checks. Shared storage does not grant access.
+- Include only media that remains retained and available at export time.
+- Apply configurable export size limits.
+- Omit media that has expired, is unavailable, or exceeds export limits, and clearly report
+  the omission and its reason where known.
+- Do not expose internal storage paths or identifiers in the archive or report.
+- Generated export archives remain subject to the approved short-lived, user-bound access
+  link and 24-hour initial expiry policy.
+
+Exact size limits, archive layout, and reporting format remain implementation details. This is
+approved target behavior, not implemented. Documentation-only update: no application code,
+schema, migrations, or tests changed or run.
