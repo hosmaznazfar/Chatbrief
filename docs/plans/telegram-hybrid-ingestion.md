@@ -545,3 +545,25 @@ When preparing an image for AI analysis (including resizing to the preferred dim
 - Never modify the retained original media file. Perform transformations on a separate processing copy, such as a temporary working file, and apply the approved temporary-file cleanup/security requirements.
 
 These rules supplement the approved size, dimension, format, and provider-limit policies. This is an approved target behavior, not implemented. Documentation-only update: no application code, schema, migrations, or tests changed/run.
+
+
+#### Temporary processing files — approved
+
+Temporary files created while retrieving, resizing, or compressing media for an operation
+must follow this policy:
+
+- Use a dedicated temporary directory, separate from permanent/retained media storage.
+- Generate unpredictable temporary filenames. Never use Telegram-provided filenames
+  directly as filesystem paths.
+- Apply restrictive filesystem permissions so other local users cannot read temporary
+  originals or transformed copies.
+- Delete temporary downloaded originals and transformed copies after processing, on both
+  successful and failed processing paths.
+- Design cleanup to account for interrupted processing and application restarts, not only
+  normal completion (for example, by identifying and removing abandoned temporary files
+  safely).
+
+This is an approved target policy, not an implemented capability. Exact directory
+placement, permission details, cleanup scheduling/recovery, and implementation mechanics
+remain to be specified during implementation. No application code, schema, migrations,
+or tests have changed.
