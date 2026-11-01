@@ -817,22 +817,36 @@ Plan commit: `4e31698d4c82db28ab884b12564918b57d5db5e7`.
 
 ## Personal data export — approved
 
-The user approved a bot-accessible personal data export:
+The approved export target behavior is specified in
+[`docs/plans/telegram-hybrid-ingestion.md](../plans/telegram-hybrid-ingestion.md),
+under **Personal data export — detailed approved design**. It is not implemented.
 
-- Include the user's preferences, schedules, subscriptions, delivery history, and messages
-  they are currently authorized to access.
-- Include shared-source messages only while the user remains authorized for those sources.
-- Exclude other users' personal information, credentials, Telethon sessions, and internal
-  storage paths or identifiers.
-- Provide a downloadable archive through a short-lived, user-bound access link.
-- Automatically expire and delete exports after a configurable period, initially 24 hours.
-- Exporting does not alter subscriptions, retention, or account state.
-- Enforce authorization both when selecting export content and when accessing the archive.
+- Export the requesting user's preferences, schedules, subscriptions, delivery history,
+  and all currently accessible retained messages. Include actual retained media only when
+  it is available and the requester remains authorized.
+- Produce a primary text ZIP and a separate optional media ZIP. Deliver both directly to
+  the requesting user's private Telegram chat with Bot API `sendDocument`; do not use
+  public or user-bound web download links.
+- Record a fixed request cutoff, enforce source authorization during collection and before
+  each delivery, and invalidate the whole export if relevant authorization is revoked
+  before delivery.
+- The initial configurable availability period is 24 hours. Expiry and revocation trigger
+  best-effort deletion of the bot's Telegram message(s); copies already downloaded or
+  forwarded cannot be revoked.
+- Generate asynchronously with durable export-job storage independent of optional
+  message-history storage. The initial deployment is one application instance supporting
+  multiple users concurrently, with per-user job isolation and one active export per user.
+- Support `/export request`, `/export status`, `/export cancel`, and confirmed
+  `/export retry` for ambiguous document delivery. Retry warns that Telegram may already
+  have received the document, retries only the uncertain document, and preserves attempt
+  history.
+- Primary text delivery determines overall `Ready`; optional media delivery has its own
+  outcome. Restart recovery must not blindly resend an ambiguous Telegram delivery.
 
-Exact archive format, generation workflow, link mechanism, and expiry implementation remain
-design/implementation details. Approved target behavior, not implemented. Documentation-only:
-no application code, schema, migrations, or tests changed/run.
-Plan commit: `684b9da35e6ccbcfd79b6b6c7ab9e2159f451d25`.
+This is approved target behavior, not implemented functionality. The detailed plan is the
+source of truth for archive layout, state transitions, retries, cleanup, and remaining
+implementation decisions. Documentation-only: no application code, schema, migrations,
+or tests changed/run.
 
 ## Include retained media in personal exports — approved (Option B)
 
