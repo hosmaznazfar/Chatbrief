@@ -1273,7 +1273,7 @@ handler structure must follow the existing command conventions after source insp
 - Complete the atomic state-transition matrix and authorization race handling through
   finalization. Define durable cleanup retries and reconciliation after crashes/restarts.
 - Exact export JSON/report schema, schema version, message fields, and media metadata; exact relational columns, keys, indexes, JSON payload boundaries, and transaction constraints for the approved hybrid job schema.
-- Filename normalization/collision handling, archive path validation, and entry-count limits.
+- **Media archive filenames — approved (Option A):** Store files only under the predefined media category directories (`media/images/`, `media/videos/`, `media/documents/`, and `media/audio/`). Derive each archive filename from a sanitized basename, discarding all source directory components. Resolve collisions deterministically with a suffix and never overwrite an existing entry. Preserve the original source filename in the media manifest for reference, but never use it as an archive path. Reject a filename/path that remains invalid after normalization. Exact sanitization rules, collision suffix format, archive path validation, and entry-count limits must be defined during implementation design after inspecting the existing media/storage boundaries.
 - Interactions with source removal, retention cleanup, and shutdown.
 - Failure classification and retry behavior.
 
