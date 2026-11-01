@@ -25,6 +25,15 @@ This is a target architecture and implementation plan, not a statement that mult
 - Scope subscriptions, source permissions, digest preferences, schedules, and delivery records to the Chatbrief user identified by that Telegram user ID.
 - Treat the Telegram user ID as an external identity key; do not use usernames or display names as stable identifiers.
 
+
+### 0.1 Optional Telethon account-linking constraints
+
+- A linked Telethon account must be the **same Telegram account** as the Chatbrief identity established through the central bot. During linking, compare the authenticated Telethon user's numeric Telegram ID with the Chatbrief user's Telegram ID; reject a mismatch.
+- A Chatbrief user may have at most one active Telethon account/session link.
+- Replacing an existing link requires explicit user confirmation. The replacement flow must revoke and invalidate the previous session so it cannot continue to be used.
+- Linking and unlinking Telethon must not create, replace, or delete the user's Chatbrief identity, subscriptions, or digest preferences.
+- This is an approved target policy; implementation details for safely rotating session credentials and handling failed re-link attempts remain part of the session-lifecycle design.
+
 ### 1. Retain the current libraries and implementation
 
 - Keep `python-telegram-bot` for Bot API commands, updates, and message delivery.
