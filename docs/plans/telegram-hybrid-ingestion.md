@@ -444,3 +444,13 @@ This is an approved target behavior, not an implemented capability. No applicati
 - Image analysis is a future capability, not part of the currently approved raw-copy behavior and not an implemented feature.
 - Do not assume that recording an image/media tag means the image bytes are retained or available to a model. Media download, storage, retention, access control, size/format limits, model capability, cost, and failure behavior remain open design decisions.
 - The existing rolling per-source message retention policy does not yet define binary media retention. Decide whether and how media files are retained separately before implementation.
+
+### Media-file storage and retention — approved
+
+- Store retained binary media files separately from message records. Message metadata and the media-file lifecycle must remain distinct.
+- Apply a configurable media-retention period, initially **14 days**.
+- Delete a retained media file when its associated message expires. Media must not outlive the message record's retention lifecycle.
+- Do not download or persist media that is not needed for an enabled/selected product operation. Retrieve or retain media only when required for raw copying, supported AI media analysis, or another explicitly supported workflow; avoid unnecessary collection.
+- Enforce the same source-authorization rules for media access as for the associated message. Shared media storage must not grant access to users who are not authorized to read that source.
+- Keep media retention independently configurable from message retention, while ensuring message expiry triggers deletion of its associated media. The initial 14-day media default aligns with the current rolling message-retention default.
+- This policy defines the target behavior; exact storage backend, temporary-file handling, cleanup scheduling, deletion guarantees, and access-control implementation remain schema/implementation-design details.
