@@ -665,3 +665,21 @@ This policy applies to deletion triggered by message expiry, source removal, and
 cleanup. Exact retry counts, delays, reconciliation cadence, and storage-specific deletion
 semantics remain implementation details. This is approved target behavior, not implemented.
 Documentation-only update: no application code, schema, migrations, or tests changed or run.
+
+#### Message expiry when associated media deletion fails — approved
+
+A media-storage deletion failure must not extend message-content retention:
+
+- Delete expired message content on schedule according to the applicable retention policy.
+  This includes readable text, sender details, and other user-facing message content.
+- Preserve only a minimal internal cleanup record needed to retry and reconcile binary-media
+  deletion, including an opaque storage reference, deletion state, and retry metadata.
+- Keep this cleanup record inaccessible through normal message and media APIs.
+- Remove the cleanup record after storage confirms that the associated media has been deleted.
+- If deletion remains unsuccessful, retain the minimal record for later reconciliation rather
+  than losing track of potentially orphaned media.
+
+This separates message-content retention from reliable media-cleanup tracking. Exact cleanup
+record fields and storage-specific confirmation semantics remain implementation details.
+This is approved target behavior, not implemented. Documentation-only update: no application
+code, schema, migrations, or tests changed or run.
