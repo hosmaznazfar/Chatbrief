@@ -625,3 +625,24 @@ This is an approved target policy, not an implemented capability. Exact referenc
 invalidation, cache/job handling, and deletion coordination remain implementation details.
 Documentation-only update: no application code, schema, migrations, or tests have changed
 or been run.
+
+#### Source removal and retained media lifecycle — approved
+
+When a source is removed from Chatbrief:
+
+- Stop new ingestion and new media retrieval for that source.
+- Revoke subscriptions and source access immediately; the retention grace period does not
+  preserve user access.
+- Retain the source's remaining archived messages and associated retained media during the
+  configurable last-subscriber/source-archive grace period (14 days by default), consistent
+  with the approved source-retention policy.
+- If an authorized user subscribes again before the grace period expires, cancel pending
+  archive deletion and resume collection subject to the normal access rules.
+- If the grace period expires without an authorized subscription, delete the source's
+  remaining archived messages and associated retained media.
+
+This keeps source lifecycle, message retention, and media retention consistent. The existing
+rolling message-retention rule and message-expiry-triggered media deletion continue to apply
+independently. This is an approved target policy, not implemented. Exact deletion scheduling,
+coordination, and recovery behavior remain implementation details. Documentation-only
+update: no application code, schema, migrations, or tests have changed or been run.
