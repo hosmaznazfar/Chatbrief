@@ -465,3 +465,19 @@ All of the above are approved target requirements, not implemented features. No 
 - No tests or application checks were run.
 
 **Next design work:** continue resolving remaining architecture details one decision at a time. Do not start implementation or schema/migration work until the remaining decisions and Phase 1 migration proposal are reviewed and explicitly approved. Before any local work, inspect the working tree and preserve any uncommitted Graphify output; do not assume the local branch is synchronized.
+
+
+## Raw media copying approved; image-aware AI summarization remains open
+
+The user approved extending raw collection mode to copy supported media, not only text:
+
+- Copy supported photos, videos, documents, audio, and voice messages with the original media where the Bot API permits.
+- Add separate source attribution to copied media messages, including a source link where available.
+- If an item cannot be copied, skip it and notify the user that the raw result is incomplete. Never silently report a partial result as complete.
+- Exact Bot API support, batching, attribution formatting, and failure handling still require implementation-level verification.
+
+The user also wants a future capability to summarize images. The plan now records this as a separate, unresolved design area: preserve media-type metadata and distinguish a media tag from actual image content being available to a vision-capable model. A possible per-digest-group choice is text-only versus text plus supported image content.
+
+Image analysis is **not yet approved as a detailed behavior or implemented**. Media file download/storage/retention, access control, size and format limits, model capability/cost, and failure behavior remain open. In particular, the existing 14-day message-row retention policy does not yet define binary media-file retention.
+
+Plan update: `ff7f7489f0b42ef06d0e274aa38f69a1e8a090d5`. This was a documentation-only update; no application code, schema, migrations, or tests were changed/run.
