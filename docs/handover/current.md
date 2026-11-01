@@ -362,3 +362,13 @@ The user has approved requiring explicit timezone configuration before digest sc
 - Users may manually change their timezone at any time; the previously approved UTC-storage and local-time scheduling/display policy applies.
 
 This requirement is recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
+
+## Timezone changes preserve schedule wall-clock times — approved
+
+When a user explicitly changes their configured timezone:
+
+- Preserve the local clock time configured for each existing schedule. For example, a daily 07:00 schedule remains at 07:00 in the newly configured timezone.
+- Recalculate future schedule occurrences using the new timezone.
+- Do not alter past digest boundaries, completed executions, historical records, or stored UTC timestamps.
+
+This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
