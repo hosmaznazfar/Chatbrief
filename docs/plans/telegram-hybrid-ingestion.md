@@ -170,6 +170,8 @@ not implemented capabilities.
 
 - Users configure digest schedules independently for their own digest groups (each group may contain one or more subscribed source chats).
 - Support user-selected schedules such as every hour, daily, and a selected weekday/time (for example, Saturdays at 07:00). The scheduling model must be flexible enough for these patterns rather than assuming one global daily job.
+- Store a timezone per Chatbrief user and interpret that user's digest-group schedules in that timezone. Use an IANA timezone identifier so daylight-saving and other timezone-rule changes can be handled by timezone-aware scheduling rather than a fixed UTC offset.
+- The exact behavior for ambiguous or nonexistent local times during daylight-saving transitions, and the behavior when a user changes their timezone, remain to be specified in scheduling design.
 - For each scheduled digest group, summarize only the messages collected since that group's previous successful digest boundary, up to the current run. Do not repeatedly feed the entire retained 14-day archive to the AI on every scheduled run.
 - Advance the group's processed/digest boundary only after successful completion/delivery, with retry behavior designed so failures do not silently skip messages. Exact transaction/idempotency behavior remains part of implementation design.
 - The source archive's rolling retention remains independently bounded (14 days by default). If a scheduled digest has not run successfully for longer than the retained window, older messages may already have expired; the product must not imply they are still available.
