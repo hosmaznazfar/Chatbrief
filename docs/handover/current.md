@@ -337,4 +337,15 @@ The user has approved the DST transition policy for per-user local digest schedu
 
 The policy is recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
 
-The separate behavior when a user changes their configured timezone remains undecided.
+Timezone changes are now explicitly user-controlled; see the approved policy below.
+
+
+The timezone configuration and change policy is now approved:
+
+- Users explicitly configure their IANA timezone through Chatbrief bot commands.
+- Do not infer or automatically change it based on VPN/IP location, device location, Telegram metadata, or other environmental signals.
+- Normalize and store message timestamps and internal event timestamps in UTC.
+- Interpret schedules in the user's explicitly configured timezone and convert UTC timestamps to that timezone for digest and user-facing display.
+- When the user manually changes the timezone, apply it to all future schedule calculations and display conversions. Recalculate future schedule occurrences; never rewrite or shift stored UTC timestamps or historical records.
+
+This supersedes the earlier open question about timezone-change behavior. The policy is recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
