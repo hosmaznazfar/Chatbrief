@@ -707,3 +707,20 @@ other authorized subscribers. Exact request confirmation, workflow, deletion tra
 handling of legally required records remain design/implementation details. This is approved
 target behavior, not implemented. Documentation-only update: no application code, schema,
 migrations, or tests changed or run.
+
+#### Account-deletion confirmation flow — approved
+
+Account deletion requires an explicit two-step confirmation:
+
+1. The user initiates the request with `/delete_account`.
+2. The bot explains the consequences, including deletion of personal data and linked sessions,
+   immediate loss of access, and the possibility that shared archives remain temporarily for
+   other authorized subscribers.
+3. The bot requests explicit confirmation through a short-lived confirmation action.
+4. Deletion begins only after valid confirmation.
+5. If the user cancels or the confirmation expires, no deletion takes place.
+6. Once confirmed, deletion is irreversible. A returning user must create a new account.
+
+The confirmation lifetime and exact interaction mechanics remain implementation details.
+This is approved target behavior, not implemented. Documentation-only update: no application
+code, schema, migrations, or tests changed or run.
