@@ -882,8 +882,9 @@ Use these user-visible states:
 | `Invalidated` | Authorization changed and the archive is unavailable |
 | `Expired` | Download period ended |
 
-Notify the user when an export becomes ready, fails, or is invalidated. The user can request
-the current status at any time. Internal cleanup/reconciliation states need not be exposed.
+Notify the user only when an export becomes ready, fails, or is invalidated. Do not send
+notifications for each intermediate state transition; users can query the current state
+at any time with `/export status`. Internal cleanup/reconciliation states need not be exposed.
 
 ##### Download-link security and expiry
 
