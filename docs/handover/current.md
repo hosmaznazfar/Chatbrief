@@ -551,3 +551,25 @@ digest mode:
 This is an approved target behavior, not implemented. Documentation-only update; no
 application code, schema, migrations, or tests changed/run.
 Plan commit: `a28b532a64fad573c2820133fbac165c34cd7f15`.
+
+## Chatbrief-side image limits before provider upload — approved
+
+The user approved configurable image-processing limits enforced by Chatbrief before
+images are uploaded for AI analysis:
+
+- Maximum image file size.
+- Maximum image dimensions/resolution.
+- Maximum number of images included in one digest's AI image-analysis input.
+- Optional compression or resizing when an image exceeds a preferred processing size but
+  remains within hard limits and can be transformed safely.
+- Images exceeding a hard Chatbrief-side limit are skipped, with the omission explained
+  in the digest under the previously approved image-failure policy.
+
+These local limits are separate from provider/model-specific input constraints, which must
+also be checked against the selected provider's documented requirements. Exact numeric
+defaults, transformation formats/quality settings, and configuration interfaces remain
+open design details for implementation.
+
+This is an approved target behavior, not implemented. Documentation-only update:
+no application code, schema, migrations, or tests changed/run.
+Plan commit: `478de64c8dd8e3b83b4ef170aec2e208b40a9a6f`.
