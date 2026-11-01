@@ -355,7 +355,9 @@ This supersedes the earlier open question about timezone-change behavior. The po
 The user has approved requiring explicit timezone configuration before digest scheduling:
 
 - A Chatbrief user must configure a valid IANA timezone before creating any digest schedule.
-- Provide a bot command such as `/timezone Europe/Berlin`; the exact command UX and validation responses remain implementation details.
+- Provide a bot command such as `/timezone Europe/Berlin`.
+- Invoking `/timezone` without an argument displays the currently configured timezone and explains how to set or change it.
+- An invalid IANA timezone identifier returns a clear error with valid examples and leaves the existing timezone unchanged.
 - Do not silently default a user's scheduled digests to UTC when no timezone has been configured.
 - Users may manually change their timezone at any time; the previously approved UTC-storage and local-time scheduling/display policy applies.
 
