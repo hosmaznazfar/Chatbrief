@@ -59,6 +59,7 @@ The approved future direction is documented in [docs/plans/telegram-hybrid-inges
 - Telegram document delivery uses at most three attempts (initial plus two retries) for transient failures, with exponential backoff from 5 to 30 seconds and Telegram `retry_after` respected when longer. Permanent failures are not retried; ambiguous results remain `DeliveryUnknown` and require reconciliation.
 - Export-message deletion cleanup retries temporary failures with bounded exponential backoff from 1 minute to 1 hour, respects longer Telegram `retry_after` delays, and stops on permanent errors or the 48-hour deletion-window boundary. Persist next-retry state for restart recovery; this does not extend export availability.
 - Export progress is queried through `/export status` with named states only; send no intermediate-state notifications or percentages. Notify only on primary export `Ready`, `Failed`, or `Invalidated`.
+- Temporary export archives use a dedicated private staging directory (`0700` directories, `0600` files, Chatbrief service-account access only); rely on host disk encryption where available, add no application-managed archive-encryption keys initially, and delete temporary files promptly when no longer needed.
 
 - Retain the existing `python-telegram-bot` and Telethon libraries and preserve the current implementation while evolving it incrementally.
 - Use the central Bot API integration as the default for continuous ingestion; ordinary Chatbrief users must not need to link a personal Telegram account.
