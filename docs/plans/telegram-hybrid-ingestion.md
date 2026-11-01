@@ -1052,6 +1052,36 @@ column list, JSON schema, index definitions, foreign-key policy, migration layou
 transaction boundaries. Those must be finalized against the existing storage conventions
 and tested before implementation.
 
+##### Database-backed worker claims and leases
+
+Use **database-backed leases** to coordinate export workers without an external queue:
+
+- A worker claims a queued or recoverable job through an atomic database operation, ensuring
+  that only one valid lease holder owns a job at a time.
+- Persist the lease owner/worker identity, lease expiry, and a monotonically changing claim
+  generation or equivalent fencing value. A stale worker must not commit job transitions or
+  delivery-attempt results after its lease has been superseded.
+- Workers renew leases while performing long-running collection or packaging work. Exact
+  lease duration and renewal cadence remain implementation decisions.
+- If a worker exits or crashes without renewing, the lease expires and another worker can
+  reclaim the job. Recovery follows the approved restart rules, including partial-artifact
+  cleanup, the original request cutoff, and current authorization checks.
+- Keep claim, renewal, and state-change transactions short. Never hold a database
+  transaction or SQLite write lock during collection, archive generation, or Telegram calls.
+- Support bounded concurrent processing of different users' jobs in the initial application
+  instance. Preserve the per-user active-export rule. Choose the concurrency limit after
+  inspecting deployment resources and realistic export workloads.
+- A lease does not make Telegram side effects transactional. If a worker loses its lease
+  around a Telegram send, apply the existing ambiguity rules: do not blindly resend an
+  attempt whose outcome may be unknown; persist and reconcile it as `DeliveryUnknown`
+  where appropriate.
+- Keep coordination behind the export persistence boundary for SQLite initially and
+  PostgreSQL later. Do not introduce Redis, Celery, or an external queue initially.
+
+This approves the lease-based coordination model, not exact lease duration, heartbeat
+interval, concurrency limit, or database implementation details. Finalize those against
+the existing application lifecycle, SQLite behavior, and realistic workload.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
@@ -1081,9 +1111,7 @@ handler structure must follow the existing command conventions after source insp
 - Keep export orchestration and business logic behind a storage interface so a PostgreSQL
   implementation can be added later without changing export behavior. Do not introduce
   PostgreSQL-specific assumptions into the export workflow.
-- Initially run the export worker within the existing application lifecycle. Do not add
-  Redis, Celery, or another external queue unless deployment or operational requirements
-  demonstrate a need.
+- Run export workers within the existing application lifecycle and coordinate claims with the approved database-backed lease model. Support bounded concurrency across different users; do not add Redis, Celery, or another external queue initially.
 - The initial deployment target is one running application instance, **not one user**.
   It must support multiple Chatbrief users concurrently. Export jobs, status, cancellation,
   download tokens, and authorization must be isolated by Chatbrief user identity. The
@@ -1093,8 +1121,9 @@ handler structure must follow the existing command conventions after source insp
   command handling, or worker coordination. Keep the design extensible to multiple
   application instances/workers later, but do not require distributed execution initially.
 - **Single-instance, multi-user deployment and restart recovery.** The initial deployment
-  uses one Chatbrief application instance and an in-process worker, while supporting
-  multiple users concurrently. Per-user export limits and ownership remain isolated.
+  uses one Chatbrief application instance with in-process workers, database-backed leases,
+  and bounded concurrency, while supporting multiple users concurrently. Per-user export
+  limits and ownership remain isolated.
 - On application startup, leave durable `Queued` jobs queued for processing. Recover
   interrupted `Collecting` and `Packaging` jobs by cleaning up their partial attempt
   artifacts and safely restarting the export from the beginning, using the original
