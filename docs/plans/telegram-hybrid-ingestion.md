@@ -1189,6 +1189,14 @@ This approves the attempt count and backoff policy, not the final exception mapp
 - Stop retrying immediately for permanent deletion errors and when the 48-hour Telegram message-deletion window closes. Deletion is best effort; retries must not extend the user's export-availability expiry.
 - Persist cleanup-attempt state and the next retry due time in the durable cleanup record so retries survive process restarts. Retain that minimal record only while deletion remains actionable, then remove it under the approved cleanup-metadata retention policy.
 
+##### Temporary export archive staging protection
+
+- Use a dedicated private staging directory for temporary export archives and files.
+- Restrict directory permissions to `0700` and staged file permissions to `0600`, accessible only to the Chatbrief service account.
+- Rely on host-level disk encryption where available; do not add application-managed archive encryption keys for the initial implementation.
+- Delete staged archives and temporary files promptly after confirmed delivery or when generation, packaging, delivery, cancellation, or invalidation cleanup makes them unnecessary. Staging is temporary working storage, never the authoritative archive store.
+- Inspect the deployment's filesystem, service account, and host encryption capabilities before implementation. Define audit logging separately without recording exported content or unnecessary personal data.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
@@ -1258,9 +1266,6 @@ handler structure must follow the existing command conventions after source insp
   finalization. Define durable cleanup retries and reconciliation after crashes/restarts.
 - Exact export JSON/report schema, schema version, message fields, and media metadata; exact relational columns, keys, indexes, JSON payload boundaries, and transaction constraints for the approved hybrid job schema.
 - Filename normalization/collision handling, archive path validation, and entry-count limits.
-- Local staging-directory access controls, encryption-at-rest considerations, and audit
-  logging. The staging directory is temporary working storage, not the authoritative archive
-  store.
 - Interactions with account deletion, source removal, retention cleanup, and shutdown.
 - Failure classification and retry behavior.
 
