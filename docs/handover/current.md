@@ -438,6 +438,9 @@ The user approved a manual `/retry` command for pending digest deliveries:
 - The successful digest boundary advances only after the complete digest is delivered.
 - When automatic retries are exhausted and a delivery enters pending recovery, notify the affected user and include clear instructions for using `/retry`.
 - Include `/retry` in the bot's help/command guidance so it is discoverable.
-- The UX when multiple pending deliveries exist is still open: decide whether `/retry` lists/selects pending deliveries or uses another deterministic interaction.
+- If exactly one delivery is pending, `/retry` retries it directly.
+- If multiple deliveries are pending, `/retry` lists them with stable user-facing IDs; `/retry <id>` selects the intended delivery.
+- A pending-recovery notification must include the delivery ID and exact `/retry <id>` instruction when selection is needed. If only one delivery is pending, it may simply tell the user to run `/retry`.
+- IDs must be user-facing selection identifiers, not exposed internal database identifiers, and must never reveal another user's data.
 
 This is an approved target behavior, not implemented. No application code, schema, or migrations have changed. The plan was updated in commit `20bc89d34a3e9320a40596ad3f5026e56bca9dcc`. No tests were run.
