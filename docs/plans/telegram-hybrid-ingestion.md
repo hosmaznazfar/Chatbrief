@@ -897,9 +897,12 @@ Generate exports asynchronously:
    a separate outcome (`Sent`, `Omitted`, `Failed`, or `DeliveryUnknown`) without changing
    the successful primary export's `Ready` state. If Telegram may have accepted the media
    document but Chatbrief cannot durably record its message identifier, do not blindly
-   resend it. Reconcile the outcome where possible and show unresolved uncertainty in
-   `/export status`. An explicit user action is required to request a fresh media delivery
-   when the outcome cannot be established; explain that this may produce a duplicate.
+   resend it. Delete the local staged media ZIP and temporary files after preserving
+   durable attempt metadata; do not retain the archive while waiting for reconciliation.
+   Reconcile the outcome where possible and show unresolved uncertainty in `/export status`.
+   An explicit user action is required to request a fresh media delivery when the outcome
+   cannot be established; regenerate the media archive under current authorization and
+   explain that this may produce a duplicate.
 8. Remove local ZIPs and temporary files after their respective Telegram deliveries are
    confirmed, or after the corresponding failure/omission cleanup is complete. A media
    upload failure does not fail the text export and does not require the user to regenerate
@@ -1051,10 +1054,13 @@ handler structure must follow the existing command conventions after source insp
   the returned message identifier, persist/recover the attempt as `DeliveryUnknown`. Do not
   blindly resend the document, and do not mark the export `Ready` without confirmed delivery
   metadata. Reconcile the outcome where possible using available Telegram/application
-  evidence. Keep the unresolved job visible in status and block another export request
-  while reconciliation is pending. If delivery cannot be established, the user may
-  explicitly request a fresh export; that explicit action acknowledges the possibility
-  of a duplicate Telegram document and resolves the per-user block. Do not silently
+  evidence. Delete the local staged ZIP and temporary files after preserving durable
+  delivery-attempt metadata; do not retain sensitive archives while waiting for
+  reconciliation. Keep the unresolved job visible in status and block another export
+  request while reconciliation is pending. If delivery cannot be established, the user
+  may explicitly request a fresh export; regenerate it using the original cutoff where
+  still valid and current authorization, and explain that this may produce a duplicate
+  Telegram document. That explicit action resolves the per-user block. Do not silently
   convert an ambiguous attempt into success or failure.
 - Design queue claiming, worker leases, atomic state transitions, and duplicate-worker
   prevention consistently with the initial single-instance deployment while keeping
