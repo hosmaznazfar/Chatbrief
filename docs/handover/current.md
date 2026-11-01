@@ -628,3 +628,21 @@ The user approved the initial image formats for AI image analysis:
 This is an approved target scope, not implemented. The plan was updated in commit
 `33875a39b6422ddbbcf0de156cb88c1e2e9fe443`. Documentation-only change: no application code,
 schema, migrations, or tests changed/run.
+
+
+## Safe image transformations for AI analysis — approved
+
+The user approved the image-transformation policy:
+
+- Preserve the original format when resizing/compression can be done safely in that format.
+- Convert PNG or WebP to JPEG only when needed for selected provider/model compatibility
+  or to reduce image size.
+- Preserve transparency where supported. Do not silently flatten transparent content onto
+  an arbitrary background. If conversion to a format without transparency is necessary,
+  use an explicitly defined safe policy or skip/report the image.
+- Never modify the retained original media file. Transform a separate processing copy and
+  apply appropriate temporary-file cleanup/security handling.
+
+This is an approved target behavior, not implemented. The plan was updated in commit
+`94ac07237d4ac9d3099efc68e5fb1d5518a15cfe`. Documentation-only change: no application code,
+schema, migrations, or tests changed/run.
