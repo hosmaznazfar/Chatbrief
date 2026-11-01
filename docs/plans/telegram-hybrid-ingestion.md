@@ -454,3 +454,13 @@ This is an approved target behavior, not an implemented capability. No applicati
 - Enforce the same source-authorization rules for media access as for the associated message. Shared media storage must not grant access to users who are not authorized to read that source.
 - Keep media retention independently configurable from message retention, while ensuring message expiry triggers deletion of its associated media. The initial 14-day media default aligns with the current rolling message-retention default.
 - This policy defines the target behavior; exact storage backend, temporary-file handling, cleanup scheduling, deletion guarantees, and access-control implementation remain schema/implementation-design details.
+
+### AI image-analysis failures and omissions — approved
+
+- In the **AI text + images** mode, an image that cannot be analyzed must not fail the entire digest. Continue using the available message text and any images that were analyzed successfully.
+- Skip an image when it cannot be retrieved, its format/content is unsupported by the selected AI provider, it exceeds the provider's input limits (for example, file-size, resolution, or other documented constraints), or image analysis otherwise fails.
+- Include a concise user-visible note in the digest whenever one or more images were skipped. Explain the reason when it is known, distinguishing provider format/support limitations and provider input-limit violations from retrieval or processing failures. Do not imply that all images were analyzed.
+- Keep sensitive or low-level technical failure details, including raw provider errors, in application logs with normal secret-redaction protections; do not expose raw exceptions or provider response payloads in the digest.
+- Provider-specific supported formats, limits, and error classification must be verified for the selected model/provider during implementation. Do not invent or assume universal limits.
+  
+This is an approved target behavior, not an implemented capability. No application code, schema, migrations, or tests have changed.
