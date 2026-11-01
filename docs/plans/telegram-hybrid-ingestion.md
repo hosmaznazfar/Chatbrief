@@ -1169,6 +1169,19 @@ Use **immediate deletion of export-job records when the export's availability pe
 
 The exact transaction ordering and deletion implementation must preserve crash recovery: do not remove the final durable cleanup/reconciliation record before its work is complete or safely abandoned. This is an approved retention policy, not yet implemented.
 
+##### Automatic Telegram delivery retry limits
+
+Use the **conservative bounded retry policy** for primary and optional media document delivery:
+
+- Allow at most **three attempts per document**: one initial attempt and up to two automatic retries.
+- Retry only failures classified as transient. Do not retry permanent failures, including Telegram rejection because an archive exceeds the applicable upload-size limit.
+- Use exponential backoff between retries, starting at 5 seconds and capped at 30 seconds.
+- When Telegram supplies a `retry_after` delay, respect it whenever it is longer than the locally calculated backoff. Do not retry before Telegram's requested delay.
+- Exhausting the attempt budget makes primary delivery `Failed`; for optional media, record media delivery as `Failed` without changing an already-`Ready` primary export.
+- Preserve each attempt as a distinct durable delivery-attempt record. An outcome that may have succeeded but cannot be confirmed remains `DeliveryUnknown` and must follow the explicit reconciliation/retry policy; it is not treated as an ordinary transient failure and must not be blindly resent.
+
+This approves the attempt count and backoff policy, not the final exception mapping or Telegram error-classification implementation. Those must be verified against the installed `python-telegram-bot` version and tested. Approved target behavior, not implemented.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
