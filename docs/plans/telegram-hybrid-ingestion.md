@@ -169,6 +169,7 @@ not implemented capabilities.
 ### Scheduled digest configuration
 
 - Users configure digest schedules independently for their own digest groups (each group may contain one or more subscribed source chats).
+- Require each user to configure a valid IANA timezone explicitly before allowing them to create a digest schedule. Provide a bot command such as `/timezone Europe/Berlin`; users may change the configured timezone manually at any time. Do not silently default scheduled digests to UTC when the user has not configured a timezone.
 - Support user-selected schedules such as every hour, daily, and a selected weekday/time (for example, Saturdays at 07:00). The scheduling model must be flexible enough for these patterns rather than assuming one global daily job.
 - Store a timezone per Chatbrief user, configured explicitly by that user through bot commands. Use an IANA timezone identifier so daylight-saving and other timezone-rule changes can be handled by timezone-aware scheduling rather than a fixed UTC offset.
 - Never infer or automatically change a user's configured timezone from IP address, VPN exit location, device location, Telegram metadata, or other environmental signals. The configured timezone remains in effect until the user explicitly changes it.
