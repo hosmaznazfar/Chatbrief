@@ -945,3 +945,8 @@ Account deletion cancels queued/running exports, removes staged files, and immed
 ## Media export filenames — approved (Option A)
 
 Media ZIP entries use only the predefined media category directories. Archive filenames are derived from sanitized basenames after discarding source directory components; collisions receive deterministic suffixes and must never overwrite an existing entry. The original source filename remains available in the media manifest but is never used as an archive path. Reject names/paths that remain invalid after normalization. Exact sanitization and suffix rules, path validation, and entry-count limits remain implementation-design details. This is approved target behavior, not implemented; documentation-only, with no application code, schema, migrations, or tests changed/run.
+
+
+## Oversized primary export — approved (Option A)
+
+If the complete primary text export alone exceeds the configured archive/upload limit, fail the export clearly and explain that it exceeds the supported limit. Never truncate, split, or silently omit primary structured data/messages. Narrowing export scope is not part of the initial design unless separately approved. This is approved target behavior, not implemented; documentation-only, with no application code, schema, migrations, or tests changed/run.
