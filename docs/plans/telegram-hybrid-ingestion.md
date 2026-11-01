@@ -856,9 +856,16 @@ Generate exports asynchronously:
 5. On success, the bot notifies the user and sends the temporary download link.
 6. The user can check status or cancel an eligible job.
 
-Allow at most one active export per user. Reject a new request while that user has an active
-export. Failed, cancelled, expired, and invalidated jobs must not permanently block a new
-request. Whether a ready export remains active until expiry is still to be decided.
+Allow at most one active export per user. The concurrency restriction covers both
+background generation and the ready-for-download period:
+
+- `Queued`, `Collecting`, and `Packaging` exports are active and block another request.
+- A `Ready` export remains active and blocks another request until its download link expires
+  or is revoked (for example, by cancellation or authorization invalidation).
+- `Cancelled`, `Failed`, `Invalidated`, and `Expired` exports do not block a new request.
+
+A user may therefore have only one export whose download link is still valid. This prevents
+multiple simultaneously downloadable archives from accumulating for the same user.
 
 ##### User-visible states and notifications
 
@@ -916,7 +923,6 @@ Resolve these points only after inspecting the existing architecture and deploym
 
 - Exact archive-size, item-count, generation-duration, and resource limits.
 - Policy when structured data/messages alone exceed the archive limit.
-- Whether a ready-but-unexpired export counts as active for concurrency.
 - Bot commands and interaction UX for requesting, checking, and cancelling exports.
 - Progress granularity and whether reliable percentages are possible.
 - Existing queue/worker model, job persistence, leases, crash recovery, and duplicate-worker
