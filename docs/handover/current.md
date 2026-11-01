@@ -720,3 +720,22 @@ This is an approved target policy, not implemented. Exact reference invalidation
 cache/job handling, and deletion coordination remain implementation details.
 Documentation-only update: no application code, schema, migrations, or tests changed/run.
 Plan commit: `1a12f75a64b9ff661746e8e8643f3ccb49a99335`.
+
+## Source removal and retained media lifecycle — approved
+
+The user approved the source-removal policy:
+
+- Stop new ingestion and media retrieval for the removed source.
+- Revoke subscriptions and source access immediately; the grace period is retention only,
+  not continued user access.
+- Retain remaining archived messages and associated media during the configurable
+  last-subscriber/source-archive grace period (14 days by default).
+- An authorized resubscription before expiry cancels pending deletion and resumes collection
+  under the normal access rules.
+- If the grace period expires without an authorized subscription, delete remaining source
+  messages and associated retained media.
+
+The rolling per-message retention rule and message-expiry-triggered media deletion continue
+to apply independently. This is an approved target policy, not implemented. Documentation-
+only update: no application code, schema, migrations, or tests changed/run.
+Plan commit: `38d5559f9f178b76b1301f9eeaf504df69cce2ab`.
