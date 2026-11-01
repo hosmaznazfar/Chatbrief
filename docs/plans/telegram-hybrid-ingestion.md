@@ -961,9 +961,13 @@ the authenticated Chatbrief user; never accept an arbitrary destination chat fro
   documents. At expiry, attempt to delete each bot Telegram message and mark the export
   `Expired` when the expiry policy is applied. Retry failed message-deletion attempts where
   possible.
-- Telegram's Bot API only permits deleting messages sent less than 48 hours ago. A failed
-  deletion may therefore become impossible after that window; document this as best-effort,
-  not a guarantee that Telegram will erase the hosted file or all copies.
+- Telegram's Bot API only permits deleting messages sent less than 48 hours ago. Retry
+  temporary deletion failures automatically while deletion remains possible; stop retrying
+  once Telegram's 48-hour deletion window has passed or the failure is otherwise permanent.
+  Persist deletion/cleanup outcomes and pending retry state durably so application restarts
+  do not lose track of outstanding cleanup. A deletion failure must not extend the export's
+  user-facing availability period or keep it in `Ready` indefinitely. Treat deletion as
+  best-effort, not a guarantee that Telegram will erase the hosted file or all copies.
 - Chatbrief cannot revoke a file the user has already downloaded, forwarded, or otherwise
   copied. Do not promise remote deletion of user-held copies.
 - Recheck source authorization immediately before delivery. After delivery, a later
