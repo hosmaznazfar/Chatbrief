@@ -481,3 +481,14 @@ The user also wants a future capability to summarize images. The plan now record
 Image analysis is **not yet approved as a detailed behavior or implemented**. Media file download/storage/retention, access control, size and format limits, model capability/cost, and failure behavior remain open. In particular, the existing 14-day message-row retention policy does not yet define binary media-file retention.
 
 Plan update: `ff7f7489f0b42ef06d0e274aa38f69a1e8a090d5`. This was a documentation-only update; no application code, schema, migrations, or tests were changed/run.
+
+
+## Digest processing modes clarified and approved
+
+The user confirmed that the previously discussed no-AI raw collection mode remains a distinct option alongside the two AI modes. Each digest group has three target modes:
+
+1. **Raw collection (no AI):** copy supported messages and media to the configured destination with separate source attribution.
+2. **AI text-only:** summarize message text without analyzing image contents. This is the default AI mode.
+3. **AI text + images:** summarize text and analyze available image content using a vision-capable model, incorporating relevant visual information.
+
+Raw collection is not an AI summarization scope. The two AI modes are separate choices within AI summarization. Media-file availability, storage/retention, access control, model support/cost, and failure handling remain open design details. No application code, schema, migrations, or tests were changed/run.
