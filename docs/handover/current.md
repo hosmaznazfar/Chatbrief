@@ -416,3 +416,14 @@ For digests delivered as multiple Telegram messages:
 - Account for ambiguous send outcomes and minimize duplicate delivery where possible.
 
 This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
+
+## Digest retry exhaustion and pending recovery — approved
+
+After all configured delivery attempts are exhausted:
+
+- Move the digest delivery into a pending-recovery state and notify the user.
+- Preserve the generated digest and confirmed per-message delivery progress; do not advance the successful digest boundary.
+- Do not retry continuously after exhaustion. Automatically resume when the system detects that the relevant delivery service is operational again, continuing from the first message not yet confirmed delivered.
+- Retain the recovery record until delivery completes or an explicitly designed user/admin resolution path handles it. Never silently discard the undelivered interval.
+
+This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
