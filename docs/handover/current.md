@@ -163,3 +163,13 @@ The Chatbrief user-identity decision is now approved:
 
 This is an approved target-architecture decision, not an implemented capability. No
 application code, database schema, or migrations have changed.
+
+The Telethon account-linking constraints are now approved:
+
+- The linked Telethon account must be the same Telegram account as the Chatbrief identity. Linking verifies that the authenticated Telethon numeric user ID matches the Telegram user ID obtained through the central bot.
+- Each Chatbrief user may have at most one active Telethon link.
+- Replacing an existing link requires explicit confirmation and must revoke/invalidate the previous session.
+- Linking or unlinking Telethon does not create, replace, or delete the Chatbrief identity, subscriptions, or digest preferences.
+- Safe credential rotation and failed re-link behavior remain to be designed before implementation.
+
+These are approved target-architecture rules, not implemented capabilities. No application code, database schema, or migrations have changed.
