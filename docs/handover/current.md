@@ -970,3 +970,8 @@ The primary archive's `export.json` includes a top-level integer `schema_version
 ## Personal export report schema version — approved (Option A)
 
 The primary archive's `export-report.json` has its own top-level integer `schema_version`, starting at `1`. It is versioned independently from both `export.json` and the Chatbrief application release, and is incremented for incompatible report-format changes. This lets report consumers evolve independently from consumers of the primary data document. Exact report fields and compatibility rules remain part of detailed schema design. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Personal media manifest schema version — approved (Option A)
+
+The optional media archive's `media-manifest.json` has its own top-level integer `schema_version`, starting at `1`. It is versioned independently from `export.json`, `export-report.json`, and the Chatbrief application release, and is incremented for incompatible manifest-format changes. This lets media consumers evolve independently from both primary-archive documents. Exact manifest fields and compatibility rules remain part of detailed schema design. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
