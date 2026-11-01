@@ -55,6 +55,7 @@ The approved future direction is documented in [docs/plans/telegram-hybrid-inges
 - Export queue scheduling is fair across users, with FIFO order within each user's queue; scheduling state must survive restarts and work with leased atomic claims. No priority tiers initially.
 - Export worker concurrency is configurable via a global export-specific setting (provisionally `export.max_concurrent_jobs`), with a conservative default chosen after resource inspection; it is separate from the per-user active-export rule and does not auto-scale.
 - Export workers shut down cooperatively: stop new claims, allow a bounded grace period, stop at safe checkpoints, and preserve durable recovery/cleanup state. Never blindly resend an ambiguous Telegram delivery after shutdown.
+- Export-job metadata is deleted when its lifecycle ends: on Ready expiry, or after cleanup for Cancelled/Failed/Invalidated jobs. Retain only minimal durable cleanup/reconciliation records while actionable; do not keep archives or long-term delivery history.
 
 - Retain the existing `python-telegram-bot` and Telethon libraries and preserve the current implementation while evolving it incrementally.
 - Use the central Bot API integration as the default for continuous ingestion; ordinary Chatbrief users must not need to link a personal Telegram account.
