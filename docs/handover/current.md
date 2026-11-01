@@ -505,3 +505,27 @@ The user approved starting AI media analysis with images only while designing th
 - This extensibility requirement does not mean implementing all media processors now. Raw collection still aims to copy all supported media types under its separate approved behavior.
 
 The plan also notes that media-file storage/retention, access control, model capability/cost, limits, and failure policy remain open. No application code, schema, migrations, or tests were changed/run.
+
+## Media-file storage and retention — approved
+
+The user approved a separate media-file retention policy, now recorded in
+`docs/plans/telegram-hybrid-ingestion.md`:
+
+- Store retained binary media separately from message records.
+- Make media retention configurable, initially **14 days**.
+- Delete a retained media file when its associated message expires; media must not outlive
+  its message's retention lifecycle.
+- Avoid downloading or persisting media that is not needed for an enabled/selected
+  operation. Retrieve or retain it only when required for raw copying, supported AI image
+  analysis, or another explicitly supported workflow.
+- Apply the same source-authorization rules to media access as to the associated message.
+  Shared storage must not imply shared access.
+
+Media retention is independently configurable from message retention, while message
+expiry triggers deletion of associated media. Exact storage backend, temporary-file
+handling, cleanup scheduling, deletion guarantees, and access-control implementation
+remain design details.
+
+This is an approved target policy, not an implemented capability. The update was
+documentation-only: no application code, schema, migrations, or tests were changed/run.
+Plan commit: `5a766184b53ef96bdee71c986926bee6b680baac`.
