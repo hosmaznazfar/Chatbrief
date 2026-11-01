@@ -182,6 +182,7 @@ not implemented capabilities.
 - For each scheduled digest group, summarize only the messages collected since that group's previous successful digest boundary, up to the current run. Do not repeatedly feed the entire retained 14-day archive to the AI on every scheduled run.
 - Advance the group's processed/digest boundary only after the complete digest has been delivered successfully. If delivery fails, keep the previous successful boundary unchanged.
 - Persist or otherwise retain the already-generated digest for delivery retries; retry delivery without regenerating the AI summary.
+- Track delivery progress within a multi-message digest. If delivery fails partway through, resume from the first message not yet confirmed delivered rather than resending the entire digest. Advance the digest group's successful boundary only after every message in the digest has been delivered. Account for ambiguous send outcomes, where the platform may have accepted a message even though the client did not receive confirmation, and minimize duplicate delivery where possible.
 - Use a configurable retry policy. Initial defaults: up to 3 retries after the initial attempt (4 total attempts), with delays of 1 minute, 5 minutes, and 15 minutes between retries.
 - Make the retry count and delay policy configurable so they can be changed later without redesigning the scheduler.
 - If all attempts fail, mark the delivery as failed, leave the successful digest boundary unchanged, and notify the user. A later retry/recovery must not silently skip the undelivered interval.
