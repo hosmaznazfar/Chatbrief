@@ -702,3 +702,21 @@ This is an approved target security policy, not implemented. Exact enforcement b
 and implementation mechanics remain to be designed. Documentation-only update: no
 application code, schema, migrations, or tests changed/run.
 Plan commit: `941d091bf18fbe1f84c2c659ea4d77cf3ab05e1b`.
+
+## Shared media behavior when one user's access is revoked — approved
+
+The user approved the shared-archive revocation policy:
+
+- Revoke the affected user's media access immediately.
+- Do not delete shared retained media solely because one user's access was revoked when
+  other users remain authorized to access it.
+- Block the revoked user from using queued jobs, cached references, or previously obtained
+  storage identifiers to retrieve or process the media.
+- Delete media according to the existing retention/message-deletion lifecycle, or when no
+  longer needed by any authorized workflow. Message expiry still triggers deletion of its
+  associated media.
+
+This is an approved target policy, not implemented. Exact reference invalidation,
+cache/job handling, and deletion coordination remain implementation details.
+Documentation-only update: no application code, schema, migrations, or tests changed/run.
+Plan commit: `1a12f75a64b9ff661746e8e8643f3ccb49a99335`.
