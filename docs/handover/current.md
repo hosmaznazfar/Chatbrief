@@ -886,3 +886,17 @@ The user selected immediate deletion of export-job records after their lifecycle
 - Do not retain archives, exported content, media manifests, or delivery history for long-term diagnostics.
 
 This minimizes retained personal metadata at the cost of long-term troubleshooting history. Deletion ordering must preserve crash recovery. Approved target behavior, not implemented. No application code, schema, migrations, or tests changed.
+
+
+## Export Telegram delivery retry limits — approved
+
+The user approved a conservative bounded retry policy for each primary or optional media document:
+
+- At most three attempts total: one initial attempt and up to two automatic retries.
+- Retry only transient failures, with exponential backoff starting at 5 seconds and capped at 30 seconds.
+- Respect Telegram's `retry_after` whenever it exceeds the calculated backoff.
+- Do not retry permanent failures, including upload-size rejection.
+- Exhausted primary attempts produce `Failed`; exhausted media attempts produce media `Failed` without changing a successfully delivered primary export.
+- Preserve attempts independently. Ambiguous outcomes remain `DeliveryUnknown` and follow explicit reconciliation; never treat them as ordinary transient failures or blindly resend.
+
+Exact exception classification must be verified against the installed `python-telegram-bot` version. Approved target behavior, not implemented. No application code, schema, migrations, or tests changed.
