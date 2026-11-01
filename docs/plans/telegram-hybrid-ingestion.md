@@ -567,3 +567,23 @@ This is an approved target policy, not an implemented capability. Exact director
 placement, permission details, cleanup scheduling/recovery, and implementation mechanics
 remain to be specified during implementation. No application code, schema, migrations,
 or tests have changed.
+
+
+#### Recovery cleanup for abandoned temporary files — approved
+
+Temporary-file cleanup must cover both normal operation and interrupted processing:
+
+- Run a cleanup pass at application startup to identify and remove abandoned files in the
+  dedicated temporary directory.
+- Also run periodic cleanup while the application is running so abandoned files do not
+  accumulate until the next restart.
+- Protect files belonging to active processing operations. Cleanup must distinguish active
+  work from abandoned files using a reliable mechanism (for example, operation ownership/
+  leases together with an age threshold); it must not delete a file merely because an
+  operation is taking longer than expected.
+- Keep cleanup scoped to Chatbrief's dedicated temporary directory and avoid touching
+  unrelated files.
+
+This is an approved target behavior, not implemented. The exact active-operation tracking,
+age threshold, cleanup cadence, and failure handling remain implementation details. No
+application code, schema, migrations, or tests have changed.
