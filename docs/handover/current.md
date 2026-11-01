@@ -685,3 +685,20 @@ The exact active-operation tracking, age threshold, cleanup cadence, and failure
 remain implementation details. This is an approved target behavior, not implemented.
 Documentation-only update: no application code, schema, migrations, or tests changed/run.
 Plan commit: `6dfa7121f101c0ba000ddb04af0a1212820596e2`.
+
+## Media access authorization at every operation — approved
+
+The user approved enforcing source authorization for media at every access/processing
+boundary, not only when a digest is requested:
+
+- Check authorization before downloading or retrieving media.
+- Check authorization before reading, processing, or sending retained media.
+- Never expose permanent/temporary media paths or internal storage identifiers to users.
+- Prevent one user's authorization context from being reused to retrieve another user's media.
+- Recheck authorization for delayed/queued jobs so revocation after job creation prevents
+  subsequent media access or delivery.
+
+This is an approved target security policy, not implemented. Exact enforcement boundaries
+and implementation mechanics remain to be designed. Documentation-only update: no
+application code, schema, migrations, or tests changed/run.
+Plan commit: `941d091bf18fbe1f84c2c659ea4d77cf3ab05e1b`.
