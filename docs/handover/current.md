@@ -840,6 +840,7 @@ under **Personal data export — detailed approved design**. It is not implement
   and cleanup-task records for lifecycle/ownership/constraints; JSON columns for evolving
   metadata and reports. Keep ZIP binaries out of the database. Exact columns, indexes,
   transaction boundaries, and JSON schemas remain to be designed against source conventions.
+- Coordinate worker claims with database-backed leases: atomic claims, renewable expiry, stale-worker fencing, and bounded concurrency across different users. A lease does not make Telegram sends transactional; ambiguous delivery must follow the existing `DeliveryUnknown` recovery policy. Exact lease and concurrency values remain open.
 - Support `/export request`, `/export status`, `/export cancel`, and confirmed
   `/export retry` for ambiguous document delivery. Retry warns that Telegram may already
   have received the document, retries only the uncertain document, and preserves attempt
