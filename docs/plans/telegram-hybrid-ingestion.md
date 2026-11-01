@@ -412,3 +412,18 @@ Provide a user-facing `/retry` command so a user can request recovery of a diges
 - Pending-recovery notifications must include the delivery identifier and the exact `/retry <id>` command when the user needs to select among multiple pending deliveries. When only one delivery is pending, the notification may simply instruct the user to run `/retry`. The identifier must be sufficient to select the intended pending delivery and must not expose internal database identifiers or another user's data.
 
 This is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
+
+
+## Delivery status and diagnostics command — approved
+
+Keep ordinary user recovery separate from operational diagnostics.
+
+- Provide `/status <id>` as an **administrator-only** command for inspecting a pending or failed delivery.
+- Do not publish or advertise `/status` in ordinary user-facing bot help, command menus, or recovery notifications.
+- Enforce administrator authorization server-side on every invocation using an explicitly configured allowlist of Telegram administrator user IDs. Hiding the command is not an authorization control.
+- Unauthorized users must not receive delivery details or learn whether another user's delivery identifier exists.
+- The administrator-facing response may show sanitized operational details, such as delivery state, attempt count, last-attempt time, and a safe high-level failure category. Do not expose raw exception text, stack traces, credentials, tokens, or sensitive API response data through the bot.
+- Keep full technical errors and stack traces in application terminal logs, subject to normal secret-redaction rules. The bot is not a remote terminal/log viewer.
+- Ordinary users continue to use `/retry` only for their own pending deliveries; user-facing notifications and retry listings remain concise and non-technical.
+
+This is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
