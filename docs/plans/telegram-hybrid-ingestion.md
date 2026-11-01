@@ -683,3 +683,27 @@ This separates message-content retention from reliable media-cleanup tracking. E
 record fields and storage-specific confirmation semantics remain implementation details.
 This is approved target behavior, not implemented. Documentation-only update: no application
 code, schema, migrations, or tests changed or run.
+
+#### User-requested account/data deletion — approved
+
+Users must be able to request deletion of their own Chatbrief data through the bot:
+
+- Revoke the requesting user's access and subscriptions immediately.
+- Stop collection for any source for which that user was the last authorized subscriber,
+  applying the existing source lifecycle and retention rules.
+- Delete the user's personal preferences, schedules, delivery/recovery records, and other
+  user-specific data.
+- Revoke any linked Telethon session and delete its stored credentials/session data.
+- Do not delete shared source messages or media still needed by other authorized subscribers.
+  Shared archives follow the existing source lifecycle and retention rules when no authorized
+  subscribers remain.
+- Track deletion work until it completes, including failed cleanup, without retaining
+  unnecessary personal data.
+- Clearly explain what is deleted immediately and what shared data may remain temporarily
+  under the existing retention policy.
+
+This provides user control without destroying shared archives still legitimately needed by
+other authorized subscribers. Exact request confirmation, workflow, deletion tracking, and
+handling of legally required records remain design/implementation details. This is approved
+target behavior, not implemented. Documentation-only update: no application code, schema,
+migrations, or tests changed or run.
