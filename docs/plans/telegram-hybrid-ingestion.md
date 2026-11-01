@@ -898,6 +898,14 @@ Generate exports asynchronously:
    the primary archive; show the media outcome in `/export status`.
 9. The user can check status or cancel an eligible job.
 
+**Optional media upload retries:** Retry transient Telegram/network failures for the
+media companion a small, bounded number of times. Do not retry permanent failures, such as
+Telegram rejecting the file because it exceeds the upload-size limit. Exhausting the retry
+policy leaves the primary export `Ready` and records the media outcome as `Failed`; it must
+not trigger regeneration or retransmission of the primary text archive. The exact attempt
+count, backoff, and handling of Telegram-provided retry delays remain to be specified during
+implementation design.
+
 Allow at most one active export per user. The concurrency restriction covers both
 background generation and the ready-for-download period:
 
