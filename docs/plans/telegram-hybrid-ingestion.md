@@ -126,6 +126,16 @@ A Telegram group/supergroup is a source chat. A `DigestGroupConfig` grouping is 
 - Provide disconnect/revocation and session deletion flows.
 - Define retention, backup, key management, and recovery behavior before enabling multi-user session storage in production.
 
+### 10.1 Message edits, deletions, and overlapping backfill
+
+- When Telegram reports an edit to an already archived source message, update the existing archived record to the latest known message content and metadata. Do not create a second logical message for the edit.
+- When Telegram explicitly reports that a source message was deleted, reflect that deletion in the archive (for example, by marking the record deleted or removing it according to the eventual retention/audit design).
+- Do not claim complete deletion detection: only apply deletion handling when the relevant Telegram integration actually receives reliable deletion information. Absence of a deletion event must not be interpreted as proof that a message still exists.
+- When Telethon historical backfill overlaps with a message already collected through the Bot API, reconcile both observations against the same stable source-message identity and update the existing record rather than inserting a duplicate.
+- The exact soft-delete versus hard-delete representation, edit history/audit requirements, and conflict-resolution rules remain schema/design decisions for the migration proposal.
+
+This is an approved behavior direction; implementation and persistence semantics are not yet designed or implemented.
+
 ### 11. Central bot access loss and restoration
 
 - If the central bot loses access to a private source, mark it inaccessible and suspend live Bot API ingestion.
