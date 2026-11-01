@@ -841,6 +841,7 @@ under **Personal data export — detailed approved design**. It is not implement
   metadata and reports. Keep ZIP binaries out of the database. Exact columns, indexes,
   transaction boundaries, and JSON schemas remain to be designed against source conventions.
 - Coordinate worker claims with database-backed leases: atomic claims, renewable expiry, stale-worker fencing, and bounded concurrency across different users. A lease does not make Telegram sends transactional; ambiguous delivery must follow the existing `DeliveryUnknown` recovery policy. Exact lease and concurrency values remain open.
+- Schedule queued jobs fairly across users while preserving FIFO order within each user's queue. Keep scheduling durable across restarts and coordinate selection with atomic leased claims; no priority tiers initially.
 - Support `/export request`, `/export status`, `/export cancel`, and confirmed
   `/export retry` for ambiguous document delivery. Retry warns that Telegram may already
   have received the document, retries only the uncertain document, and preserves attempt
