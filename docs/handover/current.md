@@ -266,3 +266,25 @@ archived messages.
 This is not a per-message TTL: messages are not automatically deleted 14 days after
 collection while an authorized subscription remains active. The 14-day default and
 configurable grace-period behavior were already recorded in the architecture plan.
+
+## Retention policy clarification — rolling message window
+
+The user has clarified that the archive must also have a rolling per-source message
+retention limit to prevent unbounded database growth. The architecture plan now records
+two independent policies:
+
+- **Rolling message retention:** keep only the most recent 14 days of messages per source
+  by default, deleting older message records even while subscriptions remain active.
+  This duration is configurable. Digest lookback and AI inputs must use only retained data.
+- **Last-subscriber source grace period:** when the last authorized subscription ends,
+  retain the source's remaining archive for a configurable 14-day grace period by default.
+  A timely resubscription cancels full-source deletion, but cannot restore messages already
+  removed by rolling retention. If the grace period expires without resubscription, delete
+  the source's remaining archived messages and archive data.
+
+These are separate controls: the source grace period does not extend individual message
+lifetimes. Collection coverage for the retained window must be tracked independently so
+pruning old messages does not falsely imply complete recent coverage.
+
+This is an approved retention direction, not implemented behavior. No application code,
+database schema, or migrations have changed.
