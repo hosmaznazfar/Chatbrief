@@ -833,3 +833,22 @@ Exact archive format, generation workflow, link mechanism, and expiry implementa
 design/implementation details. Approved target behavior, not implemented. Documentation-only:
 no application code, schema, migrations, or tests changed/run.
 Plan commit: `684b9da35e6ccbcfd79b6b6c7ab9e2159f451d25`.
+
+## Include retained media in personal exports — approved (Option B)
+
+The user selected Option B: include actual retained binary media in personal exports when
+the user is currently authorized to access it.
+
+- Enforce existing media retention, source authorization, and per-operation access checks;
+  shared storage does not grant access.
+- Include only media retained and available at export time.
+- Apply configurable export size limits.
+- Omit expired, unavailable, or over-limit media and clearly report omissions and reasons
+  where known.
+- Never expose internal storage paths or identifiers.
+- Apply the approved user-bound download link and 24-hour initial export expiry.
+
+Exact size limits, archive layout, and reporting format remain implementation details.
+Approved target behavior, not implemented. Documentation-only: no application code, schema,
+migrations, or tests changed/run.
+Plan commit: `829b2f969452e11e14c51ae1d9b42185dbad69bf`.
