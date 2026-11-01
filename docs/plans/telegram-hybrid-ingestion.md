@@ -435,7 +435,9 @@ This is an approved target behavior, not an implemented capability. No applicati
 ### Media-aware AI summarization — future capability; design open
 
 - Preserve media type metadata on normalized messages and distinguish a message that merely has media metadata from one whose actual media content is available for AI analysis.
-- Plan for an optional per-digest-group summarization scope: text-only, or text plus supported image content. The latter may let a vision-capable model describe relevant images alongside message text.
+- Keep three distinct per-digest-group modes: **raw collection (no AI)**, **AI text-only summarization**, and **AI text-plus-images summarization**.
+- Raw collection remains the previously approved no-AI mode: copy supported messages/media with separate source attribution; it is not an AI summarization scope.
+- For AI modes, text-only is the default. Text-plus-images may let a vision-capable model describe relevant available images alongside message text.
 - Image analysis is a future capability, not part of the currently approved raw-copy behavior and not an implemented feature.
 - Do not assume that recording an image/media tag means the image bytes are retained or available to a model. Media download, storage, retention, access control, size/format limits, model capability, cost, and failure behavior remain open design decisions.
 - The existing rolling per-source message retention policy does not yet define binary media retention. Decide whether and how media files are retained separately before implementation.
