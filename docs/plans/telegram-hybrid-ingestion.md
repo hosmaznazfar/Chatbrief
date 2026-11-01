@@ -932,7 +932,7 @@ Use `/export` with subcommands rather than separate top-level commands:
 If a request is blocked by an existing active export, explain its current state and, for a
 ready export, when its download link expires. Exact argument parsing and bot-framework
 handler structure must follow the existing command conventions after source inspection.
-- Progress granularity and whether reliable percentages are possible.
+- Show state-based progress only, using the existing user-visible states (`Queued`, `Collecting`, `Packaging`, and `Ready`). Do not display numeric percentages because total work cannot be estimated reliably in advance, particularly with variable message and media availability. Users can query the current state with `/export status`; automatic progress-notification cadence remains a separate design decision.
 - Existing queue/worker model, job persistence, leases, crash recovery, and duplicate-worker
   prevention.
 - Complete atomic state-transition matrix and authorization race handling through finalization.
