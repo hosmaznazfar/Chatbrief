@@ -405,3 +405,14 @@ The scheduled digest delivery policy is approved:
 - Make retries idempotent where possible. Telegram has no universal idempotency key for sending messages, so ambiguous network failures can still occasionally produce duplicate delivery; implementation should minimize and account for this risk.
 
 This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
+
+## Partial digest delivery recovery — approved
+
+For digests delivered as multiple Telegram messages:
+
+- Track which messages have been confirmed delivered.
+- If an attempt fails partway through, resume from the first message not yet confirmed delivered instead of resending the whole digest.
+- Advance the digest group's successful boundary only after every message has been delivered.
+- Account for ambiguous send outcomes and minimize duplicate delivery where possible.
+
+This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
