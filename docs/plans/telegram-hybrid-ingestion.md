@@ -177,8 +177,10 @@ not implemented capabilities.
 ### Raw collection mode (no AI summarization)
 
 - Offer a per-digest-group mode that does not invoke an AI model.
-- In this mode, collect messages from the group's sources during the configured interval and deliver them together in the user's configured destination chat, preserving useful source attribution and message links where available.
-- The exact presentation/delivery mechanism (forwarding versus formatted/batched copies, and media handling) remains to be designed against Telegram API capabilities and limits.
+- In this mode, collect messages from the group's sources during the configured interval and deliver them together in the user's configured destination chat.
+- **Use copied messages, not Telegram forwards.** The delivered copies must not carry Telegram's forwarded-message header.
+- Add source attribution separately to each copied message or message batch, and include a source link where available. The copy presentation must make the originating source clear even though the native forwarded-message attribution is absent.
+- Exact attribution formatting, batching, media handling, and behavior for content that cannot be copied remain implementation-design details to verify against the Bot API's capabilities and limits.
 
 ### One-time digest requests
 
