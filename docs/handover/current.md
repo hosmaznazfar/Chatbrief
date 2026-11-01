@@ -392,3 +392,16 @@ If a user changes their timezone while a scheduled digest execution is already i
 - Do not cancel or restart the in-progress digest.
 
 This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
+
+## Scheduled digest delivery retries — approved
+
+The scheduled digest delivery policy is approved:
+
+- Advance a digest group's successful boundary only after the complete digest has been delivered.
+- On delivery failure, retain the previous successful boundary and retry delivery using the already-generated digest; do not regenerate the AI summary for each retry.
+- Retry policy is configurable. Initial defaults are 3 retries after the initial attempt (4 total attempts), with delays of 1 minute, 5 minutes, and 15 minutes.
+- Retry count and delays can be changed later through configuration.
+- If all attempts fail, mark delivery as failed, keep the boundary unchanged, and notify the user. Do not silently skip the undelivered interval.
+- Make retries idempotent where possible. Telegram has no universal idempotency key for sending messages, so ambiguous network failures can still occasionally produce duplicate delivery; implementation should minimize and account for this risk.
+
+This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
