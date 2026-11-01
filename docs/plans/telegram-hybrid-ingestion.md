@@ -587,3 +587,22 @@ Temporary-file cleanup must cover both normal operation and interrupted processi
 This is an approved target behavior, not implemented. The exact active-operation tracking,
 age threshold, cleanup cadence, and failure handling remain implementation details. No
 application code, schema, migrations, or tests have changed.
+
+#### Media access authorization at every operation — approved
+
+Enforce the same source-authorization rules for media as for its associated message at
+every media operation, not only when a user initially requests a digest:
+
+- Check the requesting user's authorization before downloading or retrieving media.
+- Check authorization before reading, processing, or sending retained media.
+- Do not expose permanent or temporary media paths or internal storage identifiers to users.
+- Ensure that one user's authorization or access context cannot be reused to retrieve another
+  user's media.
+- Recheck authorization when executing delayed or queued media jobs. A job created while a
+  user was authorized must not continue to access or deliver media if that authorization has
+  since been revoked.
+
+This is an approved target security policy, not an implemented capability. Exact enforcement
+boundaries, authorization representation, and implementation mechanics remain to be specified
+during implementation. Documentation-only update: no application code, schema, migrations,
+or tests have changed or been run.
