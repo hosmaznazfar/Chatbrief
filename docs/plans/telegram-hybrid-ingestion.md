@@ -724,3 +724,23 @@ Account deletion requires an explicit two-step confirmation:
 The confirmation lifetime and exact interaction mechanics remain implementation details.
 This is approved target behavior, not implemented. Documentation-only update: no application
 code, schema, migrations, or tests changed or run.
+
+#### Personal data export — approved
+
+Users must be able to request an export of their own Chatbrief data through the bot:
+
+- Include the user's preferences, schedules, subscriptions, delivery history, and messages
+  they are currently authorized to access.
+- Include shared-source messages only while the requesting user is currently authorized to
+  access the corresponding sources.
+- Exclude other users' personal information, credentials, Telethon sessions, and internal
+  storage paths or identifiers.
+- Provide the export as a downloadable archive through a short-lived, user-bound access link.
+- Automatically expire and delete generated exports after a configurable period, initially
+  24 hours.
+- Exporting must not change subscriptions, retention, or account state.
+
+Authorization must be enforced when selecting export content and when accessing the generated
+archive. Exact archive format, generation workflow, link mechanism, and expiry implementation
+remain design/implementation details. This is approved target behavior, not implemented.
+Documentation-only update: no application code, schema, migrations, or tests changed or run.
