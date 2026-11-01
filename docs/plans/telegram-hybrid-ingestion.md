@@ -606,3 +606,22 @@ This is an approved target security policy, not an implemented capability. Exact
 boundaries, authorization representation, and implementation mechanics remain to be specified
 during implementation. Documentation-only update: no application code, schema, migrations,
 or tests have changed or been run.
+
+#### Revocation when media is shared by multiple authorized users — approved
+
+When one Chatbrief user's authorization to a source is revoked, but the retained media
+belongs to a shared source archive that other users remain authorized to access:
+
+- Revoke the affected user's media access immediately.
+- Do not delete the shared media solely because one user's authorization was revoked;
+  preserve it for other currently authorized users and workflows.
+- Ensure the revoked user cannot retrieve or use the media through previously created
+  jobs, cached references, or previously obtained storage identifiers.
+- Delete retained media according to the existing message/media retention and deletion
+  lifecycle, or when it is no longer needed by any authorized workflow. Message expiry
+  continues to trigger deletion of its associated media.
+
+This is an approved target policy, not an implemented capability. Exact reference
+invalidation, cache/job handling, and deletion coordination remain implementation details.
+Documentation-only update: no application code, schema, migrations, or tests have changed
+or been run.
