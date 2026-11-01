@@ -529,3 +529,25 @@ remain design details.
 This is an approved target policy, not an implemented capability. The update was
 documentation-only: no application code, schema, migrations, or tests were changed/run.
 Plan commit: `5a766184b53ef96bdee71c986926bee6b680baac`.
+
+## AI image-analysis failure behavior — approved
+
+The user approved graceful handling when images cannot be analyzed in the AI text-plus-images
+digest mode:
+
+- Do not fail the entire digest because an image cannot be analyzed. Continue with available
+  text and images analyzed successfully.
+- Skip images that cannot be retrieved, are unsupported by the selected AI provider, exceed
+  that provider's input limits (such as file size, resolution, or other documented
+  constraints), or otherwise fail analysis.
+- Add a concise note to the digest when images were skipped. Explain the reason when known,
+  including provider format/support limitations and provider input-limit violations.
+  Never imply all images were analyzed if some were skipped.
+- Keep raw provider errors and low-level technical details in application logs, with normal
+  secret redaction; do not expose them in user-facing digests.
+- Verify supported formats and limits for the selected provider/model during implementation;
+  do not assume universal limits.
+
+This is an approved target behavior, not implemented. Documentation-only update; no
+application code, schema, migrations, or tests changed/run.
+Plan commit: `a28b532a64fad573c2820133fbac165c34cd7f15`.
