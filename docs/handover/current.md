@@ -775,3 +775,25 @@ Exact cleanup-record fields and storage-specific confirmation semantics remain i
 details. This is approved target behavior, not implemented. Documentation-only: no application
 code, schema, migrations, or tests changed/run.
 Plan commit: `6e3c7b717647d624c9be4f527599659aa58e6757`.
+
+## User-requested account/data deletion — approved
+
+The user approved a bot-accessible request to delete their own Chatbrief data:
+
+- Revoke the user's access and subscriptions immediately.
+- Stop collection for sources where they were the last authorized subscriber, following
+  existing source lifecycle/retention rules.
+- Delete personal preferences, schedules, delivery/recovery records, and other user-specific
+  data.
+- Revoke linked Telethon sessions and delete stored credentials/session data.
+- Preserve shared source messages/media still needed by other authorized subscribers; apply
+  existing source lifecycle/retention rules when no authorized subscribers remain.
+- Track deletion work through completion, including cleanup failures, without retaining
+  unnecessary personal data.
+- Explain immediate deletion versus shared data that may remain temporarily under existing
+  retention rules.
+
+Exact confirmation/workflow, deletion tracking, and legally required record handling remain
+design/implementation details. This is approved target behavior, not implemented.
+Documentation-only: no application code, schema, migrations, or tests changed/run.
+Plan commit: `8a9aea0ed0b6bf5a18da0e53ddca2f6b9ebbcf73`.
