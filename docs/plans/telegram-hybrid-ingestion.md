@@ -1156,6 +1156,19 @@ This approves cooperative shutdown and bounded graceful completion, not a numeri
 period or exact setting name. Those must be selected after reviewing the deployment
 environment, application lifecycle, and cancellation behavior of existing async operations.
 
+##### Export job metadata retention
+
+Use **immediate deletion of export-job records when the export's availability period expires**:
+
+- When a Ready export reaches its configured expiry and the expiry policy is applied, delete its job record and associated delivery-attempt history rather than retaining a separate operational history period.
+- For jobs that end without becoming Ready (Cancelled, Failed, or Invalidated), delete their job and attempt records as part of terminal cleanup once required local and Telegram cleanup work has completed or is no longer actionable.
+- Do not delete records while they are still needed to resolve an active or ambiguous delivery, enforce the per-user active-export rule, or drive pending cleanup/reconciliation.
+- Keep only the minimum durable cleanup-task information required to complete outstanding Telegram-message deletion or local staging cleanup. Remove that task when cleanup completes or becomes permanently non-actionable (including expiry of Telegram's deletion window).
+- Do not retain exported message content, archive binaries, media manifests, or unnecessary Telegram delivery identifiers for historical diagnostics. Remove associated cleanup metadata when it is no longer actionable.
+- This policy minimizes retained personal metadata. It intentionally gives up long-term export-job troubleshooting and delivery history after the export lifecycle has ended.
+
+The exact transaction ordering and deletion implementation must preserve crash recovery: do not remove the final durable cleanup/reconciliation record before its work is complete or safely abandoned. This is an approved retention policy, not yet implemented.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
