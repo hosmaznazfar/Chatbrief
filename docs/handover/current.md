@@ -239,3 +239,17 @@ Phase 1 migration proposal. Do not begin Phase 2 implementation until the design
 and migration proposal are approved. Before local work, synchronize the branch carefully
 and preserve any uncommitted Graphify output; the handover records post-rebase Graphify
 changes that were local and unreviewed.
+
+## Latest approved message lifecycle behavior
+
+The message edit/deletion behavior is now approved and recorded in
+`docs/plans/telegram-hybrid-ingestion.md`:
+
+- A reported edit updates the existing archived message; it does not create a second logical message.
+- A deletion is reflected only when the Telegram integration receives reliable explicit deletion information. Chatbrief must not claim it can detect every deletion.
+- Overlapping Bot API collection and Telethon backfill reconcile against the same stable source-message identity and update one record.
+- Soft-delete versus hard-delete representation, edit history, and conflict resolution remain open schema/design details.
+
+The user also raised the two-week message-retention default. The previously approved 14-day rule applies after the last authorized subscription ends. Clarification is pending on whether the user intends a different rule that expires every message 14 days after collection even while subscriptions remain active.
+
+No application code, schema, or migrations have changed.
