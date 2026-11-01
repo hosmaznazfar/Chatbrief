@@ -592,3 +592,23 @@ that exceed hard limits or cannot be processed safely.
 This is an approved target configuration, not implemented. Documentation-only update:
 no application code, schema, migrations, or tests changed/run.
 Plan commit: `6dac337899a7aa53ae10374239d54b013368f086`.
+
+
+## Deterministic image selection at the per-digest limit — approved
+
+The user approved how Chatbrief selects images when a digest has more eligible images than
+the configured maximum (initially 10):
+
+- Select the most recent images by their associated message timestamps, up to the configured
+  limit.
+- Preserve chronological order among the selected images when sending them to the AI.
+- Continue including all eligible message text; excluding images must not exclude their
+  associated message text.
+- Add a concise digest note stating how many images were omitted because the per-digest
+  image limit was reached.
+- Selection must be deterministic. If timestamps tie, implementation must use a stable
+  tie-breaker based on source-message identity so repeated processing selects the same set.
+
+This is an approved target behavior, not implemented. The plan was updated in commit
+`d89c927a39bfbf87348d844f166a6403430ecff4`. Documentation-only change: no application code,
+schema, migrations, or tests changed/run.
