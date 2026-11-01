@@ -492,3 +492,16 @@ The user confirmed that the previously discussed no-AI raw collection mode remai
 3. **AI text + images:** summarize text and analyze available image content using a vision-capable model, incorporating relevant visual information.
 
 Raw collection is not an AI summarization scope. The two AI modes are separate choices within AI summarization. Media-file availability, storage/retention, access control, model support/cost, and failure handling remain open design details. No application code, schema, migrations, or tests were changed/run.
+
+
+## Extensible AI media processing — approved direction
+
+The user approved starting AI media analysis with images only while designing the architecture so additional media capabilities can be added later without major restructuring.
+
+- Initial AI media analysis: images only (photos and image documents).
+- Video, audio, and voice-message analysis are deferred future capabilities, not part of the initial implementation scope.
+- Define a modular media-processing boundary with independently addable processors. Future examples include video/key-frame analysis, audio transcription and summarization, and voice-message processing.
+- Keep media-type detection/availability separate from media-specific processing. Unsupported or unavailable media must not break ordinary text summarization or supported image analysis; define an explicit omission/fallback behavior.
+- This extensibility requirement does not mean implementing all media processors now. Raw collection still aims to copy all supported media types under its separate approved behavior.
+
+The plan also notes that media-file storage/retention, access control, model capability/cost, limits, and failure policy remain open. No application code, schema, migrations, or tests were changed/run.
