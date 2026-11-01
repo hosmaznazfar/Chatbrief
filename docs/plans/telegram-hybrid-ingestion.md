@@ -464,3 +464,25 @@ This is an approved target behavior, not an implemented capability. No applicati
 - Provider-specific supported formats, limits, and error classification must be verified for the selected model/provider during implementation. Do not invent or assume universal limits.
   
 This is an approved target behavior, not an implemented capability. No application code, schema, migrations, or tests have changed.
+
+### Chatbrief-side image limits before provider upload — approved
+
+Before uploading images for AI analysis, Chatbrief must enforce configurable local
+processing limits to control resource use, processing time, and provider costs:
+
+- Configure a maximum image file size.
+- Configure maximum image dimensions/resolution.
+- Configure a maximum number of images included in one digest's AI image-analysis input.
+- Support optional compression or resizing when an image exceeds a preferred processing
+  size but remains within the applicable hard limits and can be transformed safely.
+- Skip an image that exceeds a hard Chatbrief-side limit and report the omission in the
+  digest, following the approved image-analysis failure/omission policy.
+
+These Chatbrief-side limits are distinct from provider/model-specific input constraints.
+Check the selected provider/model's documented requirements separately; do not assume
+that passing local limits guarantees provider acceptance. Exact numeric defaults, supported
+transformation formats/quality settings, and configuration interfaces remain to be designed
+and verified during implementation.
+
+This is an approved target behavior, not an implemented capability. No application code,
+schema, migrations, or tests have changed.
