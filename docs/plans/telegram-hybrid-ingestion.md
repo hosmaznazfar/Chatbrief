@@ -887,12 +887,16 @@ Generate exports asynchronously:
 5. Immediately before delivery, recheck authorization and send the primary text ZIP to the
    requesting user's private Telegram chat with `sendDocument`.
 6. After Telegram confirms the primary delivery, persist its chat/message identifiers and
-   delivery timestamp. If a media ZIP exists and fits its limit, recheck authorization and
-   send it as a separate document, then persist its delivery identifiers and timestamp.
-7. Remove local ZIPs and temporary files after their respective Telegram deliveries are
-   confirmed. The text export remains successful if the optional media archive is omitted
-   because it is unavailable or exceeds its size limit; report that outcome to the user.
-8. The user can check status or cancel an eligible job.
+   delivery timestamp. This establishes the overall export's `Ready` state.
+7. If a media ZIP exists and fits its limit, recheck authorization and send it as a separate
+   document, then persist its delivery identifiers and timestamp. Record media delivery as
+   a separate outcome (`Sent`, `Omitted`, or `Failed`) without changing the successful
+   primary export's `Ready` state.
+8. Remove local ZIPs and temporary files after their respective Telegram deliveries are
+   confirmed, or after the corresponding failure/omission cleanup is complete. A media
+   upload failure does not fail the text export and does not require the user to regenerate
+   the primary archive; show the media outcome in `/export status`.
+9. The user can check status or cancel an eligible job.
 
 Allow at most one active export per user. The concurrency restriction covers both
 background generation and the ready-for-download period:
@@ -922,9 +926,11 @@ Use these user-visible states:
 | `Invalidated` | Authorization changed and the archive is unavailable |
 | `Expired` | Download period ended |
 
-Notify the user only when an export becomes ready, fails, or is invalidated. Do not send
-notifications for each intermediate state transition; users can query the current state
-at any time with `/export status`. Internal cleanup/reconciliation states need not be exposed.
+Notify the user only when the primary export becomes `Ready`, fails, or is invalidated. A
+failure or omission of the optional media delivery does not change the overall export state
+or generate a separate terminal export notification. Show the media outcome in `/export
+status`; do not send notifications for intermediate state transitions. Internal cleanup and
+media-delivery details need not be exposed as top-level export states.
 
 ##### Telegram delivery, expiry, and revocation
 
@@ -982,8 +988,8 @@ Use `/export` with subcommands rather than separate top-level commands:
 
 - `/export request` starts a new export.
 - `/export status` shows the current export state and, when ready, confirms primary text
-  delivery, whether the optional media archive was sent or omitted, and the message expiry
-  time(s).
+  delivery, the separate media outcome (`Sent`, `Omitted`, or `Failed`), and the expiry time(s)
+  of any delivered Telegram messages.
 - `/export cancel` cancels generation or revokes a ready archive and schedules its deletion.
 
 If a request is blocked by an existing active export, explain its current state and, for a
