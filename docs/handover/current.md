@@ -923,3 +923,15 @@ The user approved completion-only notifications for personal export jobs:
 - Notify only when the primary export becomes `Ready`, `Failed`, or `Invalidated`.
 
 Approved target behavior, not implemented. Documentation-only: no application code, schema, migrations, or tests changed.
+
+
+## Temporary export archive staging protection — approved
+
+The user approved filesystem-based protection for temporary personal-export archives:
+
+- Use a dedicated private staging directory, with `0700` directory and `0600` file permissions, accessible only to the Chatbrief service account.
+- Rely on host-level disk encryption where available; do not introduce application-managed archive-encryption keys initially.
+- Delete staged archives and temporary files promptly when delivery or failure/cancellation/invalidation cleanup no longer needs them. Staging is temporary working storage, not authoritative archive storage.
+- Inspect deployment filesystem, service-account, and host-encryption capabilities before implementation. Audit logging must not capture exported content or unnecessary personal data.
+
+Approved target behavior, not implemented. Documentation-only: no application code, schema, migrations, or tests changed.
