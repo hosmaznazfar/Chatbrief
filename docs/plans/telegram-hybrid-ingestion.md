@@ -1042,8 +1042,16 @@ handler structure must follow the existing command conventions after source insp
 - Preserve `Ready` jobs, their original 24-hour expiry, and Telegram delivery identifiers
   across restarts. The local ZIP should already have been deleted after confirmed delivery.
   Resume/retry scheduled Telegram message deletion after expiry or invalidation; never extend
-  the original expiry on restart. If delivery outcome was ambiguous at a crash boundary,
-  reconcile it without blindly sending duplicate documents.
+  the original expiry on restart.
+- If Telegram may have accepted a document but Chatbrief crashed before durably recording
+  the returned message identifier, persist/recover the attempt as `DeliveryUnknown`. Do not
+  blindly resend the document, and do not mark the export `Ready` without confirmed delivery
+  metadata. Reconcile the outcome where possible using available Telegram/application
+  evidence. Keep the unresolved job visible in status and block another export request
+  while reconciliation is pending. If delivery cannot be established, the user may
+  explicitly request a fresh export; that explicit action acknowledges the possibility
+  of a duplicate Telegram document and resolves the per-user block. Do not silently
+  convert an ambiguous attempt into success or failure.
 - Design queue claiming, worker leases, atomic state transitions, and duplicate-worker
   prevention consistently with the initial single-instance deployment while keeping
   boundaries extensible to multiple instances/workers later.
