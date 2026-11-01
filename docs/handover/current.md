@@ -797,3 +797,20 @@ Exact confirmation/workflow, deletion tracking, and legally required record hand
 design/implementation details. This is approved target behavior, not implemented.
 Documentation-only: no application code, schema, migrations, or tests changed/run.
 Plan commit: `8a9aea0ed0b6bf5a18da0e53ddca2f6b9ebbcf73`.
+
+## Account-deletion confirmation flow — approved
+
+The user approved a two-step account-deletion flow:
+
+1. User initiates with `/delete_account`.
+2. Bot explains deletion consequences, immediate access loss, linked-session deletion, and
+   shared archives that may remain temporarily for other authorized subscribers.
+3. Bot requests explicit confirmation using a short-lived confirmation action.
+4. Deletion starts only after valid confirmation.
+5. Cancellation or confirmation expiry means no deletion.
+6. Confirmed deletion is irreversible; a returning user must create a new account.
+
+Confirmation lifetime and interaction mechanics remain implementation details. Approved
+target behavior, not implemented. Documentation-only: no application code, schema,
+migrations, or tests changed/run.
+Plan commit: `4e31698d4c82db28ab884b12564918b57d5db5e7`.
