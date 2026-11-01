@@ -108,6 +108,18 @@ A Telegram group/supergroup is a source chat. A `DigestGroupConfig` grouping is 
 - Revoking a user's authorization takes effect immediately. The grace period governs archive retention, not continued access for the revoked user.
 - Make the grace period configurable; do not hardcode 14 days into deletion logic.
 
+### 9.1 Rolling per-source message retention
+
+- Bound the shared message archive with a rolling retention window for each source. The default is **14 days**: retain messages collected within the most recent 14 days and automatically delete older message records, even while the source has active authorized subscribers.
+- Make this message-retention duration configurable; do not hardcode 14 days into cleanup logic.
+- Apply the rolling message-retention rule independently of subscription state. Active subscriptions do not cause an unlimited accumulation of raw source messages.
+- Keep the existing last-subscriber grace period as a separate source-lifecycle rule. When the last authorized subscription ends, start the configurable source-archive grace period (14 days by default). If an authorized user resubscribes before it expires, cancel full-source archive deletion; if it expires without an authorized subscriber, delete the source's remaining archived messages and source archive data.
+- The source grace period does not extend the age of individual messages: messages older than the rolling message-retention window are still deleted. Resubscription cannot recover messages already expired under that policy.
+- Digest lookback and AI summarization inputs must respect the retained archive window. Do not accumulate an unbounded raw-message corpus merely to provide context to the AI.
+- Track collection coverage for the retained window separately from message rows, so pruning old messages does not make incomplete recent collection appear complete.
+
+This is an approved retention direction; exact cleanup scheduling, transactional deletion behavior, indexes, and coverage bookkeeping belong in the schema and implementation design.
+
 ### 10. Telethon scope: explicit historical backfill only
 
 - Telethon is optional and is used only for historical backfill explicitly requested by a user.
