@@ -126,6 +126,19 @@ A Telegram group/supergroup is a source chat. A `DigestGroupConfig` grouping is 
 - Provide disconnect/revocation and session deletion flows.
 - Define retention, backup, key management, and recovery behavior before enabling multi-user session storage in production.
 
+### 11. Central bot access loss and restoration
+
+- If the central bot loses access to a private source, mark it inaccessible and suspend live Bot API ingestion.
+- Preserve existing subscriptions and sharing authorizations in a suspended state; do not cancel subscriptions merely because bot access was lost.
+- Preserve the shared archive. Access loss does not itself trigger archive deletion or change the configurable retention policy.
+- Notify affected subscribers that live updates are paused because the central bot cannot access the source. Notification delivery and retry behavior remain implementation-design details.
+- Do not use Telethon as a fallback collector. Telethon remains limited to explicit, user-requested historical backfill.
+- When central-bot access is restored, automatically resume live ingestion if at least one authorized subscription remains and the source's management/sharing rules permit it.
+- Restoring bot access does not bypass a frozen management state: if no current administrator can be verified, the existing no-admin policy still blocks new subscriptions and sharing-policy changes.
+- If all subscriptions end while ingestion is suspended, apply the normal last-subscription lifecycle and configurable archive-retention grace period.
+
+This is an approved target policy, not an implemented capability.
+
 ## Important constraints and risks
 
 - Bot API cannot backfill messages from before the bot had access or recover updates after Telegram's pending-update retention window expires.
