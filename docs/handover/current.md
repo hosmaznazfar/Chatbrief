@@ -444,3 +444,24 @@ The user approved a manual `/retry` command for pending digest deliveries:
 - IDs must be user-facing selection identifiers, not exposed internal database identifiers, and must never reveal another user's data.
 
 This is an approved target behavior, not implemented. No application code, schema, or migrations have changed. The plan was updated in commit `20bc89d34a3e9320a40596ad3f5026e56bca9dcc`. No tests were run.
+
+
+## Delivery recovery and diagnostics decisions — consolidated handover
+
+The user has now approved the complete target behavior for scheduled digest delivery failure and recovery. The detailed requirements are recorded in `docs/plans/telegram-hybrid-ingestion.md`. The decisions made in sequence are:
+
+1. **Retry policy:** configurable retry count and delays; initial default is 3 retries after the initial attempt (4 total attempts), delayed by 1 minute, 5 minutes, and 15 minutes. Retry the already-generated digest; do not regenerate the AI summary. Advance the digest group's successful boundary only after complete delivery.
+2. **Partial delivery:** persist confirmed per-message delivery progress. If a multi-message digest fails partway through, resume from the first message not confirmed delivered rather than resending the entire digest. Account for ambiguous Telegram send outcomes and minimize duplicates; Telegram does not provide a universal idempotency key.
+3. **Exhaustion and automatic recovery:** after all configured attempts fail, move the delivery into pending recovery, notify the user, preserve the generated digest and confirmed progress, and leave the successful boundary unchanged. Do not retry continuously after exhaustion. Automatically resume when the system detects that the relevant delivery service is operational again. Retain the recovery record until successful completion or an explicitly designed resolution path; never silently discard the interval.
+4. **User `/retry` command:** users can manually recover only their own pending deliveries. It resumes the saved digest from the first unconfirmed message; it does not generate a new summary, create a new interval, or reset progress. Include `/retry` in ordinary bot help.
+5. **Retry selection and notification IDs:** if the user has one pending delivery, `/retry` retries it directly. If multiple deliveries are pending, `/retry` lists them with stable user-facing IDs, and `/retry <id>` selects one. When selection is needed, the pending-recovery notification includes the ID and exact command. IDs are selection handles, not internal database IDs, and must not expose another user's data.
+6. **User-facing status versus diagnostics:** ordinary bot messages and retry listings stay concise and non-technical. Do not expose stack traces, raw exceptions, credentials, tokens, or sensitive API responses to users.
+7. **Administrator-only diagnostics:** provide `/status <id>` only for explicitly configured Telegram administrators. Do not include it in public/user help, command menus, or user recovery notifications. Enforce the administrator allowlist server-side on every invocation; merely hiding the command is insufficient. Unauthorized users must not obtain delivery details or discover whether another user's ID exists. An authorized administrator may see sanitized status, attempt count, last-attempt time, and a safe high-level failure category.
+8. **Terminal logging:** full technical errors and stack traces belong in application terminal logs, with normal secret-redaction protections. The bot must not act as a remote terminal or raw-log viewer.
+
+All of the above are approved target requirements, not implemented features. No application code, database schema, or migrations have changed. Documentation-only updates were made in this session:
+- Plan commit: `272bb536c922bc456cb1f82789daf4fb61070bd4`.
+- Handover update follows this plan update.
+- No tests or application checks were run.
+
+**Next design work:** continue resolving remaining architecture details one decision at a time. Do not start implementation or schema/migration work until the remaining decisions and Phase 1 migration proposal are reviewed and explicitly approved. Before any local work, inspect the working tree and preserve any uncommitted Graphify output; do not assume the local branch is synchronized.
