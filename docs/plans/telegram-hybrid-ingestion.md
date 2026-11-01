@@ -923,7 +923,15 @@ Resolve these points only after inspecting the existing architecture and deploym
 
 - Exact archive-size, item-count, generation-duration, and resource limits.
 - Policy when structured data/messages alone exceed the archive limit.
-- Bot commands and interaction UX for requesting, checking, and cancelling exports.
+Use `/export` with subcommands rather than separate top-level commands:
+
+- `/export request` starts a new export.
+- `/export status` shows the current export state and, when ready, its download link and expiry.
+- `/export cancel` cancels generation or revokes a ready archive and schedules its deletion.
+
+If a request is blocked by an existing active export, explain its current state and, for a
+ready export, when its download link expires. Exact argument parsing and bot-framework
+handler structure must follow the existing command conventions after source inspection.
 - Progress granularity and whether reliable percentages are possible.
 - Existing queue/worker model, job persistence, leases, crash recovery, and duplicate-worker
   prevention.
