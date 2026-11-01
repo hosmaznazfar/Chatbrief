@@ -217,3 +217,25 @@ The no-verifiable-administrator behavior for private channels and groups is now 
 - When a current administrator is verified again, restore management without requiring existing users to subscribe again.
 
 This is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
+
+## Latest approved architecture decision — central bot access loss
+
+The central-bot access-loss policy is now approved and recorded in
+`docs/plans/telegram-hybrid-ingestion.md`:
+
+- If the central bot loses access to a private source, mark it inaccessible and suspend live ingestion.
+- Preserve existing subscriptions and sharing permissions in a suspended state, along with the shared archive.
+- Notify affected subscribers that live updates are paused.
+- Do not use Telethon as a continuous fallback; it remains historical-backfill-only.
+- Automatically resume Bot API ingestion when access is restored, if at least one authorized subscription remains and the source's management/sharing rules permit it.
+- Access restoration does not bypass the no-verifiable-administrator freeze policy.
+- If all subscriptions end during the pause, apply the normal configurable archive-retention grace period.
+
+This is an approved target policy, not an implemented capability. No application code,
+database schema, or migrations have changed.
+
+**Next:** continue resolving the remaining architecture/design questions and review the
+Phase 1 migration proposal. Do not begin Phase 2 implementation until the design decisions
+and migration proposal are approved. Before local work, synchronize the branch carefully
+and preserve any uncommitted Graphify output; the handover records post-rebase Graphify
+changes that were local and unreviewed.
