@@ -884,8 +884,12 @@ Generate exports asynchronously:
 3. A background worker collects eligible structured data, messages, and media.
 4. Build the primary text ZIP and its completeness report; independently build the optional
    media ZIP when eligible media is available.
-5. Immediately before delivery, recheck authorization and send the primary text ZIP to the
-   requesting user's private Telegram chat with `sendDocument`.
+5. Immediately before each primary delivery attempt, recheck authorization and send the
+   primary text ZIP to the requesting user's private Telegram chat with `sendDocument`.
+   Retry transient Telegram/network failures a bounded number of times. Do not retry
+   permanent failures; if the retry policy is exhausted, mark the export `Failed` and
+   clean up local artifacts. The exact attempt count, backoff, and handling of
+   Telegram-provided retry delays remain to be specified during implementation design.
 6. After Telegram confirms the primary delivery, persist its chat/message identifiers and
    delivery timestamp. This establishes the overall export's `Ready` state.
 7. If a media ZIP exists and fits its limit, recheck authorization and send it as a separate
