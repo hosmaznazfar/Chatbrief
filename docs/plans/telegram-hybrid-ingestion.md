@@ -1082,6 +1082,27 @@ This approves the lease-based coordination model, not exact lease duration, hear
 interval, concurrency limit, or database implementation details. Finalize those against
 the existing application lifecycle, SQLite behavior, and realistic workload.
 
+##### Fair scheduling across users
+
+Use **per-user fair scheduling** for queued export work:
+
+- Preserve FIFO order among a given user's eligible queued jobs.
+- Select the next user fairly across users with eligible work, rather than using one global
+  FIFO queue that allows a single user's backlog to dominate.
+- Keep the scheduler's selection and job claim atomic with respect to competing workers,
+  using the approved database-backed claim/lease mechanism.
+- A user with an active export remains subject to the existing one-active-export rule;
+  fair scheduling does not bypass per-user eligibility or authorization checks.
+- Do not introduce user/job priority tiers or configurable priority weights initially.
+  The scheduling policy should remain simple and predictable.
+- Define the precise fairness mechanism (for example, persisted last-served ordering or a
+  monotonically increasing enqueue/dispatch sequence) during implementation after reviewing
+  the existing database and concurrency model. It must remain correct across process restarts
+  and must not rely solely on in-memory round-robin state.
+
+This approves fair rotation between users and FIFO within each user's queue, not a specific
+SQL query or fairness data structure.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
