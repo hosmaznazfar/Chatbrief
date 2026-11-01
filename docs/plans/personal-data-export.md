@@ -70,8 +70,8 @@ Include actual retained binary media when the requesting user is currently autho
   checks.
 - Include only media retained and available during export generation.
 - Apply configurable export-size limits.
-- Omit expired, unavailable, unauthorized, or over-limit media and report omissions and
-  reasons where known.
+- Do not select media the requester is not currently authorized to access. Omit expired,
+  unavailable, or over-limit media and report those omissions and reasons where known.
 - Do not delete or alter source media as a side effect of exporting.
 
 The existing media retention and authorization rules remain authoritative; export does not
@@ -107,7 +107,8 @@ Each export has a fixed cutoff timestamp recorded when its request is accepted.
 - Message inclusion is limited to messages retained and accessible under the applicable
   source authorization rules.
 - Media availability is checked during generation. Media that has expired, disappeared,
-  or cannot be included within the limit is omitted and reported.
+  or cannot be included within the limit is omitted and reported. Content for which the
+  requester lacks authorization is excluded at selection time.
 - Authorization is checked when selecting content and again before every archive download.
 
 If authorization for any included source is revoked after generation but before download,
@@ -178,12 +179,11 @@ unusable and the generated archive is scheduled for deletion.
 
 ## 9. Cancellation and race handling
 
-Cancellation is accepted while a job is queued, collecting, or packaging.
+Cancellation can stop a queued or in-progress job. If generation has already completed,
+  cancellation revokes the download link and schedules archive deletion.
 
 - Stop further collection and packaging as soon as practical.
 - Schedule deletion of partial archives and temporary files.
-- If generation has already completed, revoke the download link and schedule archive
-  deletion.
 - Repeated cancellation is idempotent.
 - Repeating cancellation for an already cancelled, expired, invalidated, or failed job
   does not change its state.
