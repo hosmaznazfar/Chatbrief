@@ -372,3 +372,13 @@ When a user explicitly changes their configured timezone:
 - Do not alter past digest boundaries, completed executions, historical records, or stored UTC timestamps.
 
 This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
+
+## Hourly schedule semantics — approved
+
+An hourly digest schedule uses elapsed-time scheduling:
+
+- Run every 60 elapsed minutes, not at each local clock-hour boundary.
+- Daylight-saving transitions must not skip or duplicate an hourly execution.
+- The user's configured timezone controls display of execution timestamps, not the elapsed 60-minute interval.
+
+This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
