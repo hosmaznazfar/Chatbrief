@@ -486,3 +486,22 @@ and verified during implementation.
 
 This is an approved target behavior, not an implemented capability. No application code,
 schema, migrations, or tests have changed.
+
+#### Initial Chatbrief-side image-limit defaults — approved
+
+The initial configurable defaults for AI image processing are:
+
+- Maximum original image file size: **20 MB**.
+- Maximum image width or height: **4096 pixels**.
+- Maximum images included in one digest's AI image-analysis input: **10**.
+- Preferred maximum dimension after resizing: **2048 pixels**.
+- JPEG compression quality when compression is needed: **85%**.
+
+Treat these as initial application defaults, not universal provider limits or immutable
+constraints. Keep them configurable. Provider/model-specific constraints remain separate
+and take precedence whenever they are stricter. Apply resizing/compression only when the
+image can be transformed safely; skip and report images that exceed hard limits or cannot
+be processed safely.
+
+This is an approved target configuration, not an implemented capability. No application
+code, schema, migrations, or tests have changed.
