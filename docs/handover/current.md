@@ -427,3 +427,17 @@ After all configured delivery attempts are exhausted:
 - Retain the recovery record until delivery completes or an explicitly designed user/admin resolution path handles it. Never silently discard the undelivered interval.
 
 This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
+
+
+## Manual pending-digest recovery command — approved
+
+The user approved a manual `/retry` command for pending digest deliveries:
+
+- A user may request retry only for their own pending-recovery deliveries.
+- Retry resumes the saved digest at the first message not confirmed delivered; it does not regenerate the AI summary or reset confirmed progress.
+- The successful digest boundary advances only after the complete digest is delivered.
+- When automatic retries are exhausted and a delivery enters pending recovery, notify the affected user and include clear instructions for using `/retry`.
+- Include `/retry` in the bot's help/command guidance so it is discoverable.
+- The UX when multiple pending deliveries exist is still open: decide whether `/retry` lists/selects pending deliveries or uses another deterministic interaction.
+
+This is an approved target behavior, not implemented. No application code, schema, or migrations have changed. The plan was updated in commit `20bc89d34a3e9320a40596ad3f5026e56bca9dcc`. No tests were run.
