@@ -843,6 +843,7 @@ under **Personal data export — detailed approved design**. It is not implement
 - Coordinate worker claims with database-backed leases: atomic claims, renewable expiry, stale-worker fencing, and bounded concurrency across different users. A lease does not make Telegram sends transactional; ambiguous delivery must follow the existing `DeliveryUnknown` recovery policy. Exact lease and concurrency values remain open.
 - Schedule queued jobs fairly across users while preserving FIFO order within each user's queue. Keep scheduling durable across restarts and coordinate selection with atomic leased claims; no priority tiers initially.
 - Bound simultaneous exports with a configurable, application-wide export concurrency setting (provisional `export.max_concurrent_jobs`), separate from the per-user active-export limit. Use a conservative default chosen after resource/workload inspection; no automatic scaling.
+- On shutdown, stop new claims, allow active exports a bounded configurable grace period, then request cooperative stops at safe checkpoints. Preserve durable state and cleanup; ambiguous Telegram sends remain `DeliveryUnknown`, and leases are released only after safe relinquishment or allowed to expire.
 - Support `/export request`, `/export status`, `/export cancel`, and confirmed
   `/export retry` for ambiguous document delivery. Retry warns that Telegram may already
   have received the document, retries only the uncertain document, and preserves attempt
