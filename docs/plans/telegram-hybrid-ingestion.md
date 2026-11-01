@@ -805,6 +805,10 @@ chatbrief-export.zip
 ```
 
 - `export.json`: structured personal data and authorized retained messages.
+  It must include a top-level integer `schema_version`, starting at `1`, that versions the
+  export document structure independently of the Chatbrief application release. Increment
+  it when a future format change is incompatible with consumers of the prior schema; keep
+  the exact field layout and compatibility rules for individual changes in the schema design.
 - `export-report.json`: export timestamp, completeness information, and media omissions
   with reasons where known.
 - `README.txt`: archive structure and interpretation guidance.
@@ -1272,7 +1276,7 @@ handler structure must follow the existing command conventions after source insp
   boundaries extensible to multiple instances/workers later.
 - Complete the atomic state-transition matrix and authorization race handling through
   finalization. Define durable cleanup retries and reconciliation after crashes/restarts.
-- Exact export JSON/report schema, schema version, message fields, and media metadata; exact relational columns, keys, indexes, JSON payload boundaries, and transaction constraints for the approved hybrid job schema.
+- Exact export JSON/report field schemas, message fields, and media metadata; define compatible versus incompatible field evolution under the approved `schema_version` contract. Exact relational columns, keys, indexes, JSON payload boundaries, and transaction constraints for the approved hybrid job schema.
 - **Media archive filenames — approved (Option A):** Store files only under the predefined media category directories (`media/images/`, `media/videos/`, `media/documents/`, and `media/audio/`). Derive each archive filename from a sanitized basename, discarding all source directory components. Resolve collisions deterministically with a suffix and never overwrite an existing entry. Preserve the original source filename in the media manifest for reference, but never use it as an archive path. Reject a filename/path that remains invalid after normalization. Exact sanitization rules, collision suffix format, archive path validation, and entry-count limits must be defined during implementation design after inspecting the existing media/storage boundaries.
 ##### Export invalidation when included source data is removed — approved (Option A)
 
