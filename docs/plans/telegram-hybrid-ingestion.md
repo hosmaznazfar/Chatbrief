@@ -1126,6 +1126,36 @@ This approves operator-configurable, globally bounded concurrency, not a numeric
 or a final configuration key until existing configuration conventions and deployment
 resources are inspected.
 
+##### Graceful worker shutdown
+
+Use **graceful cooperative shutdown** for the export worker lifecycle:
+
+- On application shutdown, stop claiming new export jobs immediately.
+- Allow active jobs a bounded, configurable grace period to finish normally.
+- When the grace period is exhausted, request cooperative cancellation at safe checkpoints.
+  Collection and packaging should stop promptly where possible and schedule cleanup of
+  partial archives and temporary files.
+- Do not forcibly abandon an in-flight Telegram send or other external side effect without
+  recording/reconciling its outcome. If shutdown or cancellation makes delivery confirmation
+  uncertain, preserve the attempt as `DeliveryUnknown` and follow the approved ambiguity
+  recovery policy; never blindly resend after restart.
+- Ensure workers stop renewing leases when they relinquish a job. Release a lease explicitly
+  only when the worker has safely stopped and durable state/artifact cleanup is consistent;
+  otherwise allow the lease to expire and let normal recovery take over.
+- On restart, apply the existing recovery rules: resume queued work, restart interrupted
+  collection/packaging with the original cutoff and current authorization, and preserve
+  confirmed delivery/expiry metadata and pending cleanup tasks.
+- The grace period is an application shutdown setting, separate from
+  `export.max_concurrent_jobs`. Its default and final configuration name must follow
+  existing application configuration conventions and deployment shutdown limits.
+- Shutdown must remain bounded: after the grace period and safe-stop handling, the
+  application may exit with durable state sufficient for recovery. Do not wait indefinitely
+  for a slow source or Telegram request.
+
+This approves cooperative shutdown and bounded graceful completion, not a numeric grace
+period or exact setting name. Those must be selected after reviewing the deployment
+environment, application lifecycle, and cancellation behavior of existing async operations.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
