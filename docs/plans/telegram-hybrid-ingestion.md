@@ -1197,6 +1197,14 @@ This approves the attempt count and backoff policy, not the final exception mapp
 - Delete staged archives and temporary files promptly after confirmed delivery or when generation, packaging, delivery, cancellation, or invalidation cleanup makes them unnecessary. Staging is temporary working storage, never the authoritative archive store.
 - Inspect the deployment's filesystem, service account, and host encryption capabilities before implementation. Define audit logging separately without recording exported content or unnecessary personal data.
 
+##### Export behavior on account deletion
+
+- Account deletion cancels any queued or running export and removes its staged archives and temporary files.
+- Immediately invalidate any `Ready` export. Best-effort delete its delivered primary and optional media Telegram messages while Telegram's deletion window remains open; use the approved bounded cleanup retry policy.
+- Account deletion must not leave an export available to the deleted user. Telegram deletion is best effort and cannot revoke copies already downloaded or forwarded.
+- If Telegram deletion remains pending after the account record is removed, retain only the minimum durable cleanup metadata needed to identify the bot-sent destination/messages and complete or safely abandon deletion. The cleanup task must remain actionable without relying on the deleted Chatbrief user record.
+- Once cleanup is complete or no longer actionable, remove the export job, delivery-attempt, and cleanup metadata under the approved export metadata-retention policy.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
@@ -1266,7 +1274,7 @@ handler structure must follow the existing command conventions after source insp
   finalization. Define durable cleanup retries and reconciliation after crashes/restarts.
 - Exact export JSON/report schema, schema version, message fields, and media metadata; exact relational columns, keys, indexes, JSON payload boundaries, and transaction constraints for the approved hybrid job schema.
 - Filename normalization/collision handling, archive path validation, and entry-count limits.
-- Interactions with account deletion, source removal, retention cleanup, and shutdown.
+- Interactions with source removal, retention cleanup, and shutdown.
 - Failure classification and retry behavior.
 
 Do not introduce new abstractions, schema, or application changes before inspecting the
