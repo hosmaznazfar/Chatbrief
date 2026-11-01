@@ -382,3 +382,13 @@ An hourly digest schedule uses elapsed-time scheduling:
 - The user's configured timezone controls display of execution timestamps, not the elapsed 60-minute interval.
 
 This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
+
+## Timezone changes during active digests — approved
+
+If a user changes their timezone while a scheduled digest execution is already in progress:
+
+- Allow the in-progress execution to finish under the schedule occurrence that triggered it.
+- Apply the new timezone only to future schedule occurrences.
+- Do not cancel or restart the in-progress digest.
+
+This is an approved target behavior recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is not implemented; no application code, database schema, or migrations have changed.
