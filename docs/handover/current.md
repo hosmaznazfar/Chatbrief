@@ -207,3 +207,13 @@ The same administrator registration, takeover, and permission-preservation polic
 - Existing sharing authorizations and subscriptions are preserved during takeover; the new manager may subsequently change the sharing policy.
 
 This clarifies and extends the earlier channel-specific takeover decision to private groups. It is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
+
+The no-verifiable-administrator behavior for private channels and groups is now approved:
+
+- If Chatbrief cannot verify any current Telegram administrator, freeze management operations for that private source.
+- While frozen, do not permit sharing-policy changes, new sharing authorizations, or new subscriptions.
+- Preserve existing authorized subscriptions and archived messages; do not revoke existing users solely because management is temporarily unavailable.
+- Continue or stop live ingestion according to the independent central-bot-access and authorized-subscription rules.
+- When a current administrator is verified again, restore management without requiring existing users to subscribe again.
+
+This is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
