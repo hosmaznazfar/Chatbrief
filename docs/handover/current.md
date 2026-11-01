@@ -960,3 +960,8 @@ Automatically retry only clearly transient failures, such as temporary network/s
 ## Export invalidation on source removal — approved (Option A)
 
 If a source or retained data item included in an export is removed, or retention cleanup deletes it, before all applicable Telegram deliveries complete, invalidate the entire export. Unrelated source removals do not affect the job. Do not deliver a partial archive or continue with a stale snapshot; stop remaining work and delete staging files. If the primary ZIP was already delivered while optional media delivery remains, invalidate the export and best-effort delete already-delivered export documents using the approved Telegram cleanup policy. Keep only minimum actionable cleanup metadata. A fresh request is required and uses a new cutoff/current authorization. This does not change the separately approved post-delivery revocation or account-deletion policies. Exact event hooks and race/cleanup integration remain implementation-design work. Approved target behavior, not implemented; documentation-only; no code, schema, migrations, or tests changed/run.
+
+
+## Personal export JSON schema version — approved (Option A)
+
+The primary archive's `export.json` includes a top-level integer `schema_version`, starting at `1`. It versions the exported document structure independently of the Chatbrief application release, so consumers can interpret retained exports after application upgrades. Increment it for incompatible format changes; exact fields and compatibility rules remain part of the detailed schema design. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
