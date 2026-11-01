@@ -912,3 +912,14 @@ The user approved bounded exponential retries for best-effort deletion of delive
 - Persist cleanup-attempt state and next retry time so cleanup survives restarts. Retain the minimal cleanup record only while deletion remains actionable.
 
 Approved target behavior, not implemented. Documentation-only: no application code, schema, migrations, or tests changed.
+
+
+## Export progress notifications — approved
+
+The user approved completion-only notifications for personal export jobs:
+
+- Do not send automatic notifications for intermediate states such as `Queued`, `Collecting`, or `Packaging`.
+- Users can query state-based progress through `/export status`; do not show percentages.
+- Notify only when the primary export becomes `Ready`, `Failed`, or `Invalidated`.
+
+Approved target behavior, not implemented. Documentation-only: no application code, schema, migrations, or tests changed.
