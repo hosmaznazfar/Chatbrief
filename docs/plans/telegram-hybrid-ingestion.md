@@ -946,6 +946,14 @@ handler structure must follow the existing command conventions after source insp
 - Initially run the export worker within the existing application lifecycle. Do not add
   Redis, Celery, or another external queue unless deployment or operational requirements
   demonstrate a need.
+- The initial deployment target is one running application instance, **not one user**.
+  It must support multiple Chatbrief users concurrently. Export jobs, status, cancellation,
+  download tokens, and authorization must be isolated by Chatbrief user identity. The
+  one-active-export rule applies independently per user; one user's export must never
+  globally block another user's export.
+- Do not assume a single-user process model in schemas, job ownership, authorization,
+  command handling, or worker coordination. Keep the design extensible to multiple
+  application instances/workers later, but do not require distributed execution initially.
 - Still to design after inspecting deployment constraints: queue claiming, worker leases,
   crash recovery, atomic transitions, and duplicate-worker prevention.
 - Complete atomic state-transition matrix and authorization race handling through finalization.
