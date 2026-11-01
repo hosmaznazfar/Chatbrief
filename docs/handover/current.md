@@ -349,3 +349,14 @@ The timezone configuration and change policy is now approved:
 - When the user manually changes the timezone, apply it to all future schedule calculations and display conversions. Recalculate future schedule occurrences; never rewrite or shift stored UTC timestamps or historical records.
 
 This supersedes the earlier open question about timezone-change behavior. The policy is recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
+
+## Timezone setup prerequisite — approved
+
+The user has approved requiring explicit timezone configuration before digest scheduling:
+
+- A Chatbrief user must configure a valid IANA timezone before creating any digest schedule.
+- Provide a bot command such as `/timezone Europe/Berlin`; the exact command UX and validation responses remain implementation details.
+- Do not silently default a user's scheduled digests to UTC when no timezone has been configured.
+- Users may manually change their timezone at any time; the previously approved UTC-storage and local-time scheduling/display policy applies.
+
+This requirement is recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
