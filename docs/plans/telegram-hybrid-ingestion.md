@@ -1025,6 +1025,33 @@ have accepted the earlier document, so a retry can create a duplicate.
 - Keep the existing job and its original cutoff/expiry semantics; a retry must not silently
   create a new export request or extend an already-established primary delivery expiry.
 
+##### Export-job relational schema direction
+
+Use a **hybrid relational design** for durable export-job persistence:
+
+- `export_jobs` stores the job's identity, owning Chatbrief user, lifecycle state,
+  original request cutoff, and lifecycle timestamps/expiry information.
+- `export_delivery_attempts` stores each primary-text or media-document delivery attempt,
+  its attempt number and outcome, relevant Telegram delivery identifiers, timestamps, and
+  retry/reconciliation information. Retries are new rows; never overwrite an earlier
+  ambiguous attempt.
+- `export_cleanup_tasks` stores durable pending cleanup work, including Telegram message
+  deletion and any required local staging cleanup/retry state.
+- Keep lifecycle, ownership, relationships, and fields needed for constraints or routine
+  queries in relational columns with appropriate keys and indexes.
+- Use JSON columns for variable or evolving metadata, archive reports/manifests, and other
+  structured payloads that do not need relational querying or integrity constraints.
+- Do not store ZIP binaries in the job database. Archives remain in protected temporary
+  staging only for the duration required by the approved generation/delivery workflow.
+- Keep the persistence behind the previously approved storage interface, independent of
+  optional message-history storage, with SQLite as the initial backend and a future
+  PostgreSQL implementation possible without changing export business logic.
+
+This approves the logical storage boundary and hybrid modeling approach, not the final
+column list, JSON schema, index definitions, foreign-key policy, migration layout, or
+transaction boundaries. Those must be finalized against the existing storage conventions
+and tested before implementation.
+
 ##### Remaining design work before implementation
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
@@ -1093,7 +1120,7 @@ handler structure must follow the existing command conventions after source insp
   boundaries extensible to multiple instances/workers later.
 - Complete the atomic state-transition matrix and authorization race handling through
   finalization. Define durable cleanup retries and reconciliation after crashes/restarts.
-- Exact export JSON/report schema, schema version, message fields, and media metadata.
+- Exact export JSON/report schema, schema version, message fields, and media metadata; exact relational columns, keys, indexes, JSON payload boundaries, and transaction constraints for the approved hybrid job schema.
 - Filename normalization/collision handling, archive path validation, and entry-count limits.
 - Local staging-directory access controls, encryption-at-rest considerations, and audit
   logging. The staging directory is temporary working storage, not the authoritative archive
