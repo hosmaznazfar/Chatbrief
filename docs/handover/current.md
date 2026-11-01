@@ -253,3 +253,16 @@ The message edit/deletion behavior is now approved and recorded in
 The user also raised the two-week message-retention default. The previously approved 14-day rule applies after the last authorized subscription ends. Clarification is pending on whether the user intends a different rule that expires every message 14 days after collection even while subscriptions remain active.
 
 No application code, schema, or migrations have changed.
+
+## Retention clarification — confirmed
+
+The user confirms the previously approved archive-retention policy without change:
+when the last authorized subscription to a source ends, retain that source's archived
+messages for a configurable grace period, **14 days by default**. If an authorized
+subscription resumes before expiry, cancel pending deletion and resume collection.
+If the grace period expires with no authorized subscribers, delete that source's
+archived messages.
+
+This is not a per-message TTL: messages are not automatically deleted 14 days after
+collection while an authorized subscription remains active. The 14-day default and
+configurable grace-period behavior were already recorded in the architecture plan.
