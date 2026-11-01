@@ -309,3 +309,20 @@ The user has clarified and approved this target product behavior; it is recorded
 Implementation details still to design include successful-boundary/idempotency semantics,
 raw message presentation and media handling, and flexible schedule representation.
 No application code, schema, or migrations have changed.
+
+
+## Raw collection presentation — approved
+
+The user selected **copied messages**, not Telegram forwards, for the per-digest-group
+raw collection mode:
+
+- Chatbrief delivers copies in the configured destination chat without Telegram's
+  forwarded-message header.
+- Source attribution must be added separately, with a source link where available.
+- Exact attribution formatting, batching, media handling, and behavior for content
+  that cannot be copied remain design details to verify against Telegram Bot API
+  capabilities and limits.
+
+This is an approved target behavior, not an implemented capability. The plan records
+the decision in `docs/plans/telegram-hybrid-ingestion.md`. No application code,
+database schema, or migrations have changed.
