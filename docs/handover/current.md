@@ -646,3 +646,24 @@ The user approved the image-transformation policy:
 This is an approved target behavior, not implemented. The plan was updated in commit
 `94ac07237d4ac9d3099efc68e5fb1d5518a15cfe`. Documentation-only change: no application code,
 schema, migrations, or tests changed/run.
+
+
+## Temporary media-processing files — approved
+
+The user approved the temporary-file handling policy for media retrieval and image
+transformation:
+
+- Use a dedicated temporary directory separate from permanent/retained media storage.
+- Generate unpredictable filenames; never use Telegram-provided filenames directly as
+  filesystem paths.
+- Apply restrictive filesystem permissions so other local users cannot read temporary
+  originals or transformed copies.
+- Delete temporary downloaded originals and transformed copies after processing, whether
+  processing succeeds or fails.
+- Ensure cleanup also handles interrupted processing and application restarts, including
+  safe identification/removal of abandoned temporary files.
+
+This is an approved target policy, not implemented. Exact directory placement, permission
+details, cleanup scheduling/recovery, and implementation mechanics remain to be specified.
+Documentation-only update: no application code, schema, migrations, or tests changed/run.
+Plan commit: `e1f98856a309803860f723510fefdbff7963c28c`.
