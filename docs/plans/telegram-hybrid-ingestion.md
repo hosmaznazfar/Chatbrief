@@ -735,14 +735,18 @@ Users must be able to request an export of their own Chatbrief data through the 
   access the corresponding sources.
 - Exclude other users' personal information, credentials, Telethon sessions, and internal
   storage paths or identifiers.
-- Provide the export as a downloadable archive through a short-lived, user-bound access link.
-- Automatically expire and delete generated exports after a configurable period, initially
-  24 hours.
+- Deliver the completed ZIP directly to the requesting user's private Telegram chat as a
+  document, rather than providing a web download link or using long-lived local archive storage.
+- Keep the generated ZIP in local staging only while it is being built and uploaded; remove
+  the local archive after Telegram confirms successful delivery.
+- Treat the Telegram document message as the user-facing export. Its initial configurable
+  availability period defaults to 24 hours; then attempt to delete the bot's message.
 - Exporting must not change subscriptions, retention, or account state.
 
-Authorization must be enforced when selecting export content and when accessing the generated
-archive. Exact archive format, generation workflow, link mechanism, and expiry implementation
-remain design/implementation details. This is approved target behavior, not implemented.
+Authorization must be enforced when selecting content and immediately before Telegram
+ delivery. Telegram cannot enforce Chatbrief authorization after delivery or revoke a copy
+already downloaded by the user. Exact staging, delivery, expiry, and cleanup mechanics remain
+design/implementation details. This is approved target behavior, not implemented.
 Documentation-only update: no application code, schema, migrations, or tests changed or run.
 
 #### Include retained media in personal exports — approved (Option B)
@@ -757,8 +761,8 @@ currently authorized to access them:
 - Omit media that has expired, is unavailable, or exceeds export limits, and clearly report
   the omission and its reason where known.
 - Do not expose internal storage paths or identifiers in the archive or report.
-- Generated export archives remain subject to the approved short-lived, user-bound access
-  link and 24-hour initial expiry policy.
+- The completed archive is delivered to the requesting user's private Telegram chat and
+  the bot's delivery message is subject to the 24-hour initial expiry policy.
 
 Exact size limits remain open; the approved archive layout and reporting requirements are specified in the detailed design below. This is
 approved target behavior, not implemented. Documentation-only update: no application code,
@@ -834,15 +838,19 @@ message scope is bounded by that timestamp; later-arriving messages are not incl
 Media availability is checked during generation and unavailable media is reported as omitted.
 
 If authorization for any source whose content has been selected for the export is revoked
-at any point before download, including while generation is running, invalidate the **entire**
+before Telegram delivery, including while generation is running, invalidate the **entire**
 export:
 
-- Revoke its download link.
-- Schedule deletion of the archive and temporary files.
+- Do not send the ZIP to Telegram.
+- Schedule deletion of the local archive and temporary files.
 - Notify the user that the export is unavailable because authorization changed.
 - Require a new export under current authorization.
 
-Do not serve a partial remainder of the archive after revocation.
+Recheck authorization immediately before sending. After Telegram accepts the document,
+Chatbrief cannot enforce later authorization changes on a copy the user can already access;
+if authorization is revoked before the 24-hour expiry, attempt to delete the bot's Telegram
+message, subject to Telegram's deletion limits. Do not imply that this can revoke a copy
+already downloaded by the user.
 
 ##### Generation workflow and concurrency
 
@@ -853,19 +861,24 @@ Generate exports asynchronously:
    the request without waiting for generation.
 3. A background worker collects eligible data and media.
 4. The worker builds the ZIP and completeness report.
-5. On success, the bot notifies the user and sends the temporary download link.
-6. The user can check status or cancel an eligible job.
+5. Immediately before delivery, recheck authorization and upload the ZIP to the requesting
+   user's private Telegram chat with `sendDocument`.
+6. Once Telegram confirms delivery, persist the returned chat/message identifiers and
+   delivery timestamp, then delete the local ZIP and temporary files.
+7. The user can check status or cancel an eligible job.
 
 Allow at most one active export per user. The concurrency restriction covers both
 background generation and the ready-for-download period:
 
 - `Queued`, `Collecting`, and `Packaging` exports are active and block another request.
-- A `Ready` export remains active and blocks another request until its download link expires
-  or is revoked (for example, by cancellation or authorization invalidation).
+- A `Ready` export remains active and blocks another request until its Telegram message
+  reaches its 24-hour expiry or is revoked (for example, by cancellation or authorization
+  invalidation).
 - `Cancelled`, `Failed`, `Invalidated`, and `Expired` exports do not block a new request.
 
-A user may therefore have only one export whose download link is still valid. This prevents
-multiple simultaneously downloadable archives from accumulating for the same user.
+A user may therefore have only one export whose Telegram delivery is within its availability
+period. This prevents multiple concurrently available export messages from accumulating for
+the same user.
 
 ##### User-visible states and notifications
 
@@ -876,7 +889,7 @@ Use these user-visible states:
 | `Queued` | Waiting for a worker |
 | `Collecting` | Gathering personal data and messages |
 | `Packaging` | Building the ZIP and adding media |
-| `Ready` | Archive is available for download |
+| `Ready` | ZIP was delivered to the user's private Telegram chat and is within its availability period |
 | `Cancelled` | User cancelled the export |
 | `Failed` | Generation failed |
 | `Invalidated` | Authorization changed and the archive is unavailable |
@@ -886,33 +899,44 @@ Notify the user only when an export becomes ready, fails, or is invalidated. Do 
 notifications for each intermediate state transition; users can query the current state
 at any time with `/export status`. Internal cleanup/reconciliation states need not be exposed.
 
-##### Download-link security and expiry
+##### Telegram delivery, expiry, and revocation
 
-Use a short-lived, authenticated, user-bound download link:
+Deliver the ZIP using the Telegram Bot API `sendDocument` method to the requesting user's
+private chat. The user must have an available private bot conversation for delivery.
 
-- Generate a cryptographically random, unguessable token.
-- Store only a hash of the token, never the raw token.
-- Bind the token to the requesting Chatbrief user and export job.
-- Require the same user to authenticate before downloading.
-- Recheck authorization before every download.
-- Allow repeated downloads until expiry or revocation, so interrupted downloads can be retried.
-- Never expose a permanent public storage URL.
-
-The initial expiry is configurable and defaults to **24 hours**. At expiry, the link becomes
-unusable and the generated archive is scheduled for deletion.
+- Do not create a public URL or download token. The Telegram chat identity is resolved from
+the authenticated Chatbrief user; never accept an arbitrary destination chat from a command.
+- Persist the Telegram chat ID, sent message ID, returned document `file_id` when available,
+  and delivery/expiry timestamps as job metadata needed for status, cleanup, and recovery.
+- Keep the ZIP in local staging only until Telegram confirms successful delivery; then remove
+  the local archive and temporary files. Do not treat Telegram's `file_id` as a revocable
+  download token.
+- The initial configurable availability period defaults to **24 hours**. At expiry, attempt
+  to delete the bot's Telegram message and mark the export `Expired` when the expiry policy
+  is applied. Retry failed message-deletion attempts where possible.
+- Telegram's Bot API only permits deleting messages sent less than 48 hours ago. A failed
+  deletion may therefore become impossible after that window; document this as best-effort,
+  not a guarantee that Telegram will erase the hosted file or all copies.
+- Chatbrief cannot revoke a file the user has already downloaded, forwarded, or otherwise
+  copied. Do not promise remote deletion of user-held copies.
+- Recheck source authorization immediately before delivery. After delivery, a later
+  authorization change can trigger a best-effort deletion of the bot message, but cannot
+  retroactively prevent access to a copy already obtained.
 
 ##### Cancellation and cleanup
 
-Cancellation can stop a queued or in-progress job. If generation has already completed,
-cancellation revokes the link and schedules archive deletion.
+Cancellation can stop a queued or in-progress job. If the ZIP has already been delivered,
+cancellation requests deletion of the bot's Telegram message and schedules any remaining
+local staging cleanup.
 
 - Stop further collection and packaging as soon as practical.
 - Schedule deletion of partial archives and temporary files.
 - Repeated cancellation is idempotent.
 - Repeating cancellation for an already cancelled, expired, invalidated, or failed job
   does not change its state.
-- If cancellation and completion race, make the competing transition atomic so only one
-  outcome wins.
+- If cancellation and completion/delivery race, make the competing transition atomic so
+  only one outcome wins. If delivery has already succeeded, cancellation is best-effort
+  Telegram message deletion and cannot revoke a copy already downloaded.
 - Cancellation does not alter account data, subscriptions, messages, or retained source media.
 - A copy already downloaded by the user cannot be remotely deleted.
 
@@ -922,16 +946,18 @@ Deletion is scheduled, not assumed to have succeeded synchronously.
 
 Resolve these points only after inspecting the existing architecture and deployment constraints:
 
-- Exact archive-size, item-count, generation-duration, and resource limits.
+- Exact archive-size, item-count, generation-duration, and resource limits, respecting the
+  Telegram Bot API `sendDocument` upload limit (currently 50 MB for standard cloud Bot API).
 - Policy when structured data/messages alone exceed the archive limit.
 Use `/export` with subcommands rather than separate top-level commands:
 
 - `/export request` starts a new export.
-- `/export status` shows the current export state and, when ready, its download link and expiry.
+- `/export status` shows the current export state and, when ready, confirms Telegram delivery
+  and shows the message's expiry time.
 - `/export cancel` cancels generation or revokes a ready archive and schedules its deletion.
 
 If a request is blocked by an existing active export, explain its current state and, for a
-ready export, when its download link expires. Exact argument parsing and bot-framework
+ready export, when its Telegram message is scheduled to expire. Exact argument parsing and bot-framework
 handler structure must follow the existing command conventions after source inspection.
 - Show state-based progress only, using the existing user-visible states (`Queued`, `Collecting`, `Packaging`, and `Ready`). Do not display numeric percentages because total work cannot be estimated reliably in advance, particularly with variable message and media availability. Users can query the current state with `/export status`; automatic progress-notification cadence remains a separate design decision.
 - **Export-job persistence is independent of optional message-history storage.** Export
@@ -961,10 +987,11 @@ handler structure must follow the existing command conventions after source insp
   interrupted `Collecting` and `Packaging` jobs by cleaning up their partial attempt
   artifacts and safely restarting the export from the beginning, using the original
   request cutoff and current authorization checks.
-- Preserve `Ready` jobs and their original download expiry across restarts when the
-  archive still exists and authorization remains valid. If the archive is missing or
-  authorization has been revoked, do not serve it; reconcile the job through the
-  appropriate failure or invalidation path.
+- Preserve `Ready` jobs, their original 24-hour expiry, and Telegram delivery identifiers
+  across restarts. The local ZIP should already have been deleted after confirmed delivery.
+  Resume/retry scheduled Telegram message deletion after expiry or invalidation; never extend
+  the original expiry on restart. If delivery outcome was ambiguous at a crash boundary,
+  reconcile it without blindly sending duplicate documents.
 - Design queue claiming, worker leases, atomic state transitions, and duplicate-worker
   prevention consistently with the initial single-instance deployment while keeping
   boundaries extensible to multiple instances/workers later.
@@ -972,7 +999,9 @@ handler structure must follow the existing command conventions after source insp
   finalization. Define durable cleanup retries and reconciliation after crashes/restarts.
 - Exact export JSON/report schema, schema version, message fields, and media metadata.
 - Filename normalization/collision handling, archive path validation, and entry-count limits.
-- Storage location/access controls, encryption-at-rest, and audit logging.
+- Local staging-directory access controls, encryption-at-rest considerations, and audit
+  logging. The staging directory is temporary working storage, not the authoritative archive
+  store.
 - Interactions with account deletion, source removal, retention cleanup, and shutdown.
 - Failure classification and retry behavior.
 
