@@ -407,6 +407,8 @@ Provide a user-facing `/retry` command so a user can request recovery of a diges
 - Do not generate a new AI summary, create a new digest interval, or advance the successful digest boundary until the complete existing digest is delivered.
 - When a delivery enters pending recovery, notify the affected user and include clear, actionable instructions for invoking `/retry`.
 - Include `/retry` in the bot's help/command guidance so users can discover it before they need it.
-- The command's interaction when a user has multiple pending deliveries (selection/listing versus another deterministic behavior) remains to be specified.
+- If the user has exactly one pending delivery, `/retry` retries it directly.
+- If the user has multiple pending deliveries, `/retry` lists them with stable, user-facing identifiers; the user selects one with `/retry <id>`.
+- Pending-recovery notifications must include the delivery identifier and the exact `/retry <id>` command when the user needs to select among multiple pending deliveries. When only one delivery is pending, the notification may simply instruct the user to run `/retry`. The identifier must be sufficient to select the intended pending delivery and must not expose internal database identifiers or another user's data.
 
 This is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
