@@ -612,3 +612,19 @@ the configured maximum (initially 10):
 This is an approved target behavior, not implemented. The plan was updated in commit
 `d89c927a39bfbf87348d844f166a6403430ecff4`. Documentation-only change: no application code,
 schema, migrations, or tests changed/run.
+
+
+## Initial AI image formats — approved
+
+The user approved the initial image formats for AI image analysis:
+
+- JPEG/JPG, PNG, and WebP are in scope initially.
+- GIF is deferred because animated-image frame selection/extraction needs separate design.
+- Other formats may be considered later.
+- Provider/model-specific format support must still be checked independently. Local format
+  support does not guarantee provider acceptance; use the previously approved graceful
+  omission behavior when an image cannot be analyzed.
+
+This is an approved target scope, not implemented. The plan was updated in commit
+`33875a39b6422ddbbcf0de156cb88c1e2e9fe443`. Documentation-only change: no application code,
+schema, migrations, or tests changed/run.
