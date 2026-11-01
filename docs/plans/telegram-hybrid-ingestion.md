@@ -518,3 +518,18 @@ When more eligible images are available than the configured maximum number of im
 - Apply this selection deterministically. If implementation encounters equal timestamps, define a stable tie-breaker using source-message identity so repeated processing selects the same images.
 
 This policy works with the approved initial maximum of 10 images while keeping the limit configurable. It is an approved target behavior, not implemented. Documentation-only update: no application code, schema, migrations, or tests changed/run.
+
+
+#### Initial image formats for AI analysis — approved
+
+The initial AI image-analysis capability must support these image formats:
+
+- JPEG/JPG
+- PNG
+- WebP
+
+Defer GIF support from the initial implementation. Animated-image frame selection/extraction is a separate concern and can be designed if GIF support is added later. Other formats may be considered in future extensions.
+
+Local format support does not guarantee acceptance by a selected AI provider/model. Check provider/model-specific supported formats independently and apply the previously approved graceful omission behavior when a provider cannot accept an image.
+
+This is an approved target scope, not implemented. Documentation-only update: no application code, schema, migrations, or tests changed/run.
