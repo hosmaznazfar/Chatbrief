@@ -90,7 +90,8 @@ A Telegram group/supergroup is a source chat. A `DigestGroupConfig` grouping is 
 - Enforce strict source-level access checks on every message/history/digest query. Shared storage must never imply shared user access.
 - Public channels and public groups may be subscribed to by any Chatbrief user without channel/group administrator approval, provided the central bot can access the source.
 - Private channels and groups require established access through the central bot or a linked Telegram user account.
-- The person/account that establishes access to a private source initially controls its Chatbrief sharing policy. Other Chatbrief users require explicit authorization before subscribing.
+- Any current Telegram channel administrator may register a private channel and initially control its Chatbrief sharing policy; the creator does not have exclusive authority. Other Chatbrief users require explicit authorization before subscribing.
+- If the registering administrator later loses administrator status or leaves the channel, their Chatbrief management authority is revoked. Any current channel administrator may claim management of the existing Chatbrief source. The claim must verify current administrator status, preventing a source from becoming permanently orphaned.
 - A user's membership/access through their own linked Telegram account does not automatically grant the central bot access, or grant other Chatbrief users access.
 - Keep public-source discovery/availability distinct from the question of whether a particular ingestion path can technically read the source.
 
