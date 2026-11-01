@@ -198,3 +198,12 @@ The administrator-takeover permission behavior is now approved:
 - The takeover itself must not silently revoke existing users or interrupt their authorized subscriptions.
 
 This is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
+
+The same administrator registration, takeover, and permission-preservation policy is now approved for **both private channels and private groups**:
+
+- Any current administrator may register either type of private source. For a private group, registration is initiated inside the group and the initiating user must be verified as a current administrator. Private channels retain their separate administrator-verification flow.
+- If the registering administrator leaves or loses administrator status, their Chatbrief management authority is revoked.
+- Any current administrator of that Telegram chat may claim management after verification.
+- Existing sharing authorizations and subscriptions are preserved during takeover; the new manager may subsequently change the sharing policy.
+
+This clarifies and extends the earlier channel-specific takeover decision to private groups. It is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
