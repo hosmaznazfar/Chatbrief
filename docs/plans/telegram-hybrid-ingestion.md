@@ -954,10 +954,22 @@ handler structure must follow the existing command conventions after source insp
 - Do not assume a single-user process model in schemas, job ownership, authorization,
   command handling, or worker coordination. Keep the design extensible to multiple
   application instances/workers later, but do not require distributed execution initially.
-- Still to design after inspecting deployment constraints: queue claiming, worker leases,
-  crash recovery, atomic transitions, and duplicate-worker prevention.
-- Complete atomic state-transition matrix and authorization race handling through finalization.
-- Durable cleanup retries and reconciliation after crashes/restarts.
+- **Single-instance, multi-user deployment and restart recovery.** The initial deployment
+  uses one Chatbrief application instance and an in-process worker, while supporting
+  multiple users concurrently. Per-user export limits and ownership remain isolated.
+- On application startup, leave durable `Queued` jobs queued for processing. Recover
+  interrupted `Collecting` and `Packaging` jobs by cleaning up their partial attempt
+  artifacts and safely restarting the export from the beginning, using the original
+  request cutoff and current authorization checks.
+- Preserve `Ready` jobs and their original download expiry across restarts when the
+  archive still exists and authorization remains valid. If the archive is missing or
+  authorization has been revoked, do not serve it; reconcile the job through the
+  appropriate failure or invalidation path.
+- Design queue claiming, worker leases, atomic state transitions, and duplicate-worker
+  prevention consistently with the initial single-instance deployment while keeping
+  boundaries extensible to multiple instances/workers later.
+- Complete the atomic state-transition matrix and authorization race handling through
+  finalization. Define durable cleanup retries and reconciliation after crashes/restarts.
 - Exact export JSON/report schema, schema version, message fields, and media metadata.
 - Filename normalization/collision handling, archive path validation, and entry-count limits.
 - Storage location/access controls, encryption-at-rest, and audit logging.
