@@ -161,6 +161,33 @@ This is an approved behavior direction; implementation and persistence semantics
 
 This is an approved target policy, not an implemented capability.
 
+## Digest scheduling, incremental windows, and one-time requests
+
+The user has approved the following product behavior direction. These are target requirements,
+not implemented capabilities.
+
+### Scheduled digest configuration
+
+- Users configure digest schedules independently for their own digest groups (each group may contain one or more subscribed source chats).
+- Support user-selected schedules such as every hour, daily, and a selected weekday/time (for example, Saturdays at 07:00). The scheduling model must be flexible enough for these patterns rather than assuming one global daily job.
+- For each scheduled digest group, summarize only the messages collected since that group's previous successful digest boundary, up to the current run. Do not repeatedly feed the entire retained 14-day archive to the AI on every scheduled run.
+- Advance the group's processed/digest boundary only after successful completion/delivery, with retry behavior designed so failures do not silently skip messages. Exact transaction/idempotency behavior remains part of implementation design.
+- The source archive's rolling retention remains independently bounded (14 days by default). If a scheduled digest has not run successfully for longer than the retained window, older messages may already have expired; the product must not imply they are still available.
+
+### Raw collection mode (no AI summarization)
+
+- Offer a per-digest-group mode that does not invoke an AI model.
+- In this mode, collect messages from the group's sources during the configured interval and deliver them together in the user's configured destination chat, preserving useful source attribution and message links where available.
+- The exact presentation/delivery mechanism (forwarding versus formatted/batched copies, and media handling) remains to be designed against Telegram API capabilities and limits.
+
+### One-time digest requests
+
+- A user can request a one-time digest for a selected digest group, independently of its recurring schedule.
+- The one-time request supports an AI-summarized mode and the raw collection mode.
+- The requested time range can start at the present/current point or reach back to a user-selected point no more than 14 days in the past. The upper bound is the configured rolling archive-retention window; do not promise older data.
+- One-time requests must respect source authorization, available collection coverage, and the same per-source access boundaries as scheduled digests.
+- A one-time request must not silently change the recurring schedule or the group's next scheduled digest boundary.
+
 ## Important constraints and risks
 
 - Bot API cannot backfill messages from before the bot had access or recover updates after Telegram's pending-update retention window expires.
