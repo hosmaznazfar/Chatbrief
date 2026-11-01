@@ -111,8 +111,9 @@ Each export has a fixed cutoff timestamp recorded when its request is accepted.
   requester lacks authorization is excluded at selection time.
 - Authorization is checked when selecting content and again before every archive download.
 
-If authorization for any included source is revoked after generation but before download,
-invalidate the **entire** export:
+If authorization for any source whose content has been selected for the export is revoked
+at any point before download (including while generation is still running), invalidate the
+**entire** export:
 
 - Revoke the download link.
 - Schedule deletion of the archive and temporary files.
@@ -180,7 +181,7 @@ unusable and the generated archive is scheduled for deletion.
 ## 9. Cancellation and race handling
 
 Cancellation can stop a queued or in-progress job. If generation has already completed,
-  cancellation revokes the download link and schedules archive deletion.
+cancellation revokes the download link and schedules archive deletion.
 
 - Stop further collection and packaging as soon as practical.
 - Schedule deletion of partial archives and temporary files.
