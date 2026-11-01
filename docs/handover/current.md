@@ -739,3 +739,21 @@ The rolling per-message retention rule and message-expiry-triggered media deleti
 to apply independently. This is an approved target policy, not implemented. Documentation-
 only update: no application code, schema, migrations, or tests changed/run.
 Plan commit: `38d5559f9f178b76b1301f9eeaf504df69cce2ab`.
+
+## Media deletion failure and recovery — approved
+
+The user approved durable recovery for media deletion failures:
+
+- Persist failed deletions as pending-cleanup work rather than silently dropping them.
+- Retry automatically with bounded retries and increasing delays.
+- Continue revisiting exhausted items through scheduled cleanup/reconciliation.
+- Keep authorization revoked while deletion is pending; pending deletion never permits access.
+- Keep sanitized technical failure details in logs, never exposing filesystem paths, storage
+  identifiers, or raw low-level errors to users.
+- Persist deletion state so restarts do not lose pending cleanup work.
+
+Applies to message expiry, source removal, and retention cleanup. Exact retry counts, delays,
+reconciliation cadence, and storage-specific behavior remain implementation details. This is
+approved target behavior, not implemented. Documentation-only: no application code, schema,
+migrations, or tests changed/run.
+Plan commit: `8826aede93e018e50f24c5afe16514d84dc0b491`.
