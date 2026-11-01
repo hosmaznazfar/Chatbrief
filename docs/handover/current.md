@@ -182,3 +182,11 @@ The private-channel registration authority decision is now approved:
 - Other Chatbrief users still require explicit authorization before subscribing to a private source.
 
 This is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
+
+The private-channel administrator-loss policy is now approved:
+
+- If the administrator who registered a private channel leaves it or loses Telegram administrator status, their Chatbrief management authority is revoked.
+- Any current administrator of that Telegram channel may claim management of the existing Chatbrief source after current administrator status is verified.
+- This avoids permanently orphaning private sources. It does not grant subscription access to other Chatbrief users automatically; explicit sharing authorization remains required.
+
+This is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
