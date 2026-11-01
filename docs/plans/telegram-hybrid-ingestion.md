@@ -934,8 +934,20 @@ If a request is blocked by an existing active export, explain its current state 
 ready export, when its download link expires. Exact argument parsing and bot-framework
 handler structure must follow the existing command conventions after source inspection.
 - Show state-based progress only, using the existing user-visible states (`Queued`, `Collecting`, `Packaging`, and `Ready`). Do not display numeric percentages because total work cannot be estimated reliably in advance, particularly with variable message and media availability. Users can query the current state with `/export status`; automatic progress-notification cadence remains a separate design decision.
-- Existing queue/worker model, job persistence, leases, crash recovery, and duplicate-worker
-  prevention.
+- **Export-job persistence is independent of optional message-history storage.** Export
+  requests must remain available when the existing message-storage feature is disabled;
+  do not store export jobs exclusively in that optional message store.
+- Use a dedicated durable job-storage boundary for export lifecycle records. SQLite is the
+  recommended default implementation. Keep this persistence independent of message-history
+  storage configuration and lifecycle.
+- Keep export orchestration and business logic behind a storage interface so a PostgreSQL
+  implementation can be added later without changing export behavior. Do not introduce
+  PostgreSQL-specific assumptions into the export workflow.
+- Initially run the export worker within the existing application lifecycle. Do not add
+  Redis, Celery, or another external queue unless deployment or operational requirements
+  demonstrate a need.
+- Still to design after inspecting deployment constraints: queue claiming, worker leases,
+  crash recovery, atomic transitions, and duplicate-worker prevention.
 - Complete atomic state-transition matrix and authorization race handling through finalization.
 - Durable cleanup retries and reconciliation after crashes/restarts.
 - Exact export JSON/report schema, schema version, message fields, and media metadata.
