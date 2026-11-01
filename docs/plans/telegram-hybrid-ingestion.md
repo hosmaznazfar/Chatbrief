@@ -894,8 +894,12 @@ Generate exports asynchronously:
    delivery timestamp. This establishes the overall export's `Ready` state.
 7. If a media ZIP exists and fits its limit, recheck authorization and send it as a separate
    document, then persist its delivery identifiers and timestamp. Record media delivery as
-   a separate outcome (`Sent`, `Omitted`, or `Failed`) without changing the successful
-   primary export's `Ready` state.
+   a separate outcome (`Sent`, `Omitted`, `Failed`, or `DeliveryUnknown`) without changing
+   the successful primary export's `Ready` state. If Telegram may have accepted the media
+   document but Chatbrief cannot durably record its message identifier, do not blindly
+   resend it. Reconcile the outcome where possible and show unresolved uncertainty in
+   `/export status`. An explicit user action is required to request a fresh media delivery
+   when the outcome cannot be established; explain that this may produce a duplicate.
 8. Remove local ZIPs and temporary files after their respective Telegram deliveries are
    confirmed, or after the corresponding failure/omission cleanup is complete. A media
    upload failure does not fail the text export and does not require the user to regenerate
@@ -1004,7 +1008,7 @@ Use `/export` with subcommands rather than separate top-level commands:
 
 - `/export request` starts a new export.
 - `/export status` shows the current export state and, when ready, confirms primary text
-  delivery, the separate media outcome (`Sent`, `Omitted`, or `Failed`), and the expiry time(s)
+  delivery, the separate media outcome (`Sent`, `Omitted`, `Failed`, or `DeliveryUnknown`), and the expiry time(s)
   of any delivered Telegram messages.
 - `/export cancel` cancels generation or revokes a ready archive and schedules its deletion.
 
