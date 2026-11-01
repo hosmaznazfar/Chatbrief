@@ -190,3 +190,11 @@ The private-channel administrator-loss policy is now approved:
 - This avoids permanently orphaning private sources. It does not grant subscription access to other Chatbrief users automatically; explicit sharing authorization remains required.
 
 This is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
+
+The administrator-takeover permission behavior is now approved:
+
+- When a new current Telegram channel administrator claims management after the previous manager loses administrator status or leaves, preserve existing Chatbrief sharing authorizations and subscriptions.
+- The new administrator inherits management authority and may subsequently change the sharing policy.
+- The takeover itself must not silently revoke existing users or interrupt their authorized subscriptions.
+
+This is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
