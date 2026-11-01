@@ -173,3 +173,12 @@ The Telethon account-linking constraints are now approved:
 - Safe credential rotation and failed re-link behavior remain to be designed before implementation.
 
 These are approved target-architecture rules, not implemented capabilities. No application code, database schema, or migrations have changed.
+
+The private-channel registration authority decision is now approved:
+
+- Any current Telegram channel administrator may register a private channel with Chatbrief and initially control its Chatbrief sharing policy.
+- The channel creator does not have exclusive registration authority.
+- Registration must verify that the person initiating it is a current channel administrator; a channel link or ordinary channel post alone is not proof.
+- Other Chatbrief users still require explicit authorization before subscribing to a private source.
+
+This is an approved target policy, not an implemented capability. No application code, database schema, or migrations have changed.
