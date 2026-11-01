@@ -900,3 +900,15 @@ The user approved a conservative bounded retry policy for each primary or option
 - Preserve attempts independently. Ambiguous outcomes remain `DeliveryUnknown` and follow explicit reconciliation; never treat them as ordinary transient failures or blindly resend.
 
 Exact exception classification must be verified against the installed `python-telegram-bot` version. Approved target behavior, not implemented. No application code, schema, migrations, or tests changed.
+
+
+## Export Telegram message-deletion retry policy — approved
+
+The user approved bounded exponential retries for best-effort deletion of delivered export messages:
+
+- Retry temporary deletion failures starting at 1 minute, with a 1-hour cap.
+- Respect Telegram `retry_after` whenever it is longer than the calculated backoff.
+- Stop on permanent errors or when Telegram's 48-hour deletion window closes; retries do not extend the user's export-availability expiry.
+- Persist cleanup-attempt state and next retry time so cleanup survives restarts. Retain the minimal cleanup record only while deletion remains actionable.
+
+Approved target behavior, not implemented. Documentation-only: no application code, schema, migrations, or tests changed.
