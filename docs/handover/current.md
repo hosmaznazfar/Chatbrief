@@ -326,3 +326,15 @@ raw collection mode:
 This is an approved target behavior, not an implemented capability. The plan records
 the decision in `docs/plans/telegram-hybrid-ingestion.md`. No application code,
 database schema, or migrations have changed.
+
+## Daylight-saving schedule behavior — approved
+
+The user has approved the DST transition policy for per-user local digest schedules:
+
+- If a scheduled local time does not exist during the spring-forward transition, run once at the next valid local time.
+- If a scheduled local time occurs twice during the fall-back transition, run once at the first occurrence.
+- This avoids missing a scheduled digest or delivering it twice.
+
+The policy is recorded in `docs/plans/telegram-hybrid-ingestion.md`. It is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
+
+The separate behavior when a user changes their configured timezone remains undecided.
