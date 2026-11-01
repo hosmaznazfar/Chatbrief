@@ -396,3 +396,17 @@ only. Local uncommitted Graphify rebuild output is not visible to this GitHub in
 - Add or revise ADRs for material decisions such as message identity/deduplication, tenant ownership, session storage, and collection-coverage semantics.
 - Update `CHATGPT_CONTEXT.md`, `AI_README.md`, and the current handover when the target architecture or implementation status materially changes.
 - Keep README feature claims aligned with what is actually implemented; planned multi-user and hybrid capabilities must not be described as currently available.
+
+
+## Manual pending-digest recovery command — approved
+
+Provide a user-facing `/retry` command so a user can request recovery of a digest delivery that remains pending after automatic retries are exhausted.
+
+- The command may retry only pending-recovery deliveries owned by the requesting Chatbrief user.
+- Resume the existing persisted digest from the first message not confirmed delivered. Preserve confirmed delivery progress and existing duplicate-prevention safeguards.
+- Do not generate a new AI summary, create a new digest interval, or advance the successful digest boundary until the complete existing digest is delivered.
+- When a delivery enters pending recovery, notify the affected user and include clear, actionable instructions for invoking `/retry`.
+- Include `/retry` in the bot's help/command guidance so users can discover it before they need it.
+- The command's interaction when a user has multiple pending deliveries (selection/listing versus another deterministic behavior) remains to be specified.
+
+This is an approved target behavior, not an implemented capability. No application code, database schema, or migrations have changed.
