@@ -950,3 +950,8 @@ Media ZIP entries use only the predefined media category directories. Archive fi
 ## Oversized primary export — approved (Option A)
 
 If the complete primary text export alone exceeds the configured archive/upload limit, fail the export clearly and explain that it exceeds the supported limit. Never truncate, split, or silently omit primary structured data/messages. Narrowing export scope is not part of the initial design unless separately approved. This is approved target behavior, not implemented; documentation-only, with no application code, schema, migrations, or tests changed/run.
+
+
+## Export retry classification — approved
+
+Automatically retry only clearly transient failures, such as temporary network/service outages or rate limits. Invalid input/data, authorization/access failures, unsupported media, size rejection, and configuration errors are permanent. Unknown errors fail safely without automatic retry. Keep the separately approved Telegram send and deletion retry policies, including their attempt limits and ambiguous-delivery handling. Verify exact exception mapping and any phase-specific retry limits against installed dependencies and the existing architecture before implementation. Approved target behavior, not implemented; documentation-only; no code, schema, migrations, or tests changed/run.
