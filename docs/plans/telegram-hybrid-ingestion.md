@@ -505,3 +505,16 @@ be processed safely.
 
 This is an approved target configuration, not an implemented capability. No application
 code, schema, migrations, or tests have changed.
+
+
+#### Image selection when the per-digest limit is reached — approved
+
+When more eligible images are available than the configured maximum number of images for one digest's AI image-analysis input:
+
+- Select the **most recent images** by their associated message timestamps, up to the configured limit.
+- After selection, preserve chronological order among the selected images when supplying them to the AI model.
+- Continue including all eligible message text; reaching the image limit must not exclude message text.
+- Include a concise note in the digest stating how many images were omitted because the per-digest image limit was reached.
+- Apply this selection deterministically. If implementation encounters equal timestamps, define a stable tie-breaker using source-message identity so repeated processing selects the same images.
+
+This policy works with the approved initial maximum of 10 images while keeping the limit configurable. It is an approved target behavior, not implemented. Documentation-only update: no application code, schema, migrations, or tests changed/run.
