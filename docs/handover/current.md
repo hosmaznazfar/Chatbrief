@@ -288,3 +288,24 @@ pruning old messages does not falsely imply complete recent coverage.
 
 This is an approved retention direction, not implemented behavior. No application code,
 database schema, or migrations have changed.
+
+## Digest behavior and scheduling requirements
+
+The user has clarified and approved this target product behavior; it is recorded in
+`docs/plans/telegram-hybrid-ingestion.md`:
+
+- Users configure schedules per digest group, with patterns such as hourly, daily, or a
+  selected weekday/time (for example, Saturday at 07:00).
+- Each scheduled AI digest processes only messages collected since that digest group's
+  previous successful digest boundary, not the entire 14-day archive on every run.
+- A digest group can instead use a **raw collection mode** that skips AI and delivers
+  messages collected during the configured interval together in the user's destination chat.
+- Users can request a one-time digest for a selected group, choosing AI summary or raw
+  collection mode, and a start point from now back to at most 14 days ago.
+- One-time requests do not alter the recurring schedule or its next digest boundary.
+- All modes remain subject to the rolling per-source 14-day archive, collection coverage,
+  source authorization, and Telegram delivery limits.
+
+Implementation details still to design include successful-boundary/idempotency semantics,
+raw message presentation and media handling, and flexible schedule representation.
+No application code, schema, or migrations have changed.
