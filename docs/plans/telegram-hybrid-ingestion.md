@@ -1211,7 +1211,7 @@ Resolve these points only after inspecting the existing architecture and deploym
 
 - Exact archive-size, item-count, generation-duration, and resource limits, respecting the
   Telegram Bot API `sendDocument` upload limit (currently 50 MB for standard cloud Bot API).
-- Policy when structured data/messages alone exceed the archive limit.
+- Primary archive oversize policy — approved (Option A): if the complete primary text export alone exceeds the configured archive/upload limit, fail the export clearly and explain that it exceeds the supported limit. Never truncate, split, or silently omit primary structured data/messages. Narrowing export scope is outside the initial design unless approved separately.
 Use `/export` with subcommands rather than separate top-level commands:
 
 - `/export request` starts a new export.
