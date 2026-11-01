@@ -533,3 +533,15 @@ Defer GIF support from the initial implementation. Animated-image frame selectio
 Local format support does not guarantee acceptance by a selected AI provider/model. Check provider/model-specific supported formats independently and apply the previously approved graceful omission behavior when a provider cannot accept an image.
 
 This is an approved target scope, not implemented. Documentation-only update: no application code, schema, migrations, or tests changed/run.
+
+
+#### Safe image transformations for AI analysis — approved
+
+When preparing an image for AI analysis (including resizing to the preferred dimensions or compression):
+
+- Preserve the original image format whenever the required transformation can be performed safely without changing formats.
+- Convert PNG or WebP to JPEG only when necessary to satisfy the selected provider/model's requirements or to reduce image size.
+- Preserve transparency when the source format supports it. Do not silently flatten transparent content onto an arbitrary background; if conversion to a format without transparency is necessary, use an explicitly defined safe handling policy or skip the conversion and report the omission.
+- Never modify the retained original media file. Perform transformations on a separate processing copy, such as a temporary working file, and apply the approved temporary-file cleanup/security requirements.
+
+These rules supplement the approved size, dimension, format, and provider-limit policies. This is an approved target behavior, not implemented. Documentation-only update: no application code, schema, migrations, or tests changed/run.
