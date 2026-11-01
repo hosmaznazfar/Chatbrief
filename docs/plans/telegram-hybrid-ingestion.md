@@ -1068,9 +1068,7 @@ Use **database-backed leases** to coordinate export workers without an external 
   cleanup, the original request cutoff, and current authorization checks.
 - Keep claim, renewal, and state-change transactions short. Never hold a database
   transaction or SQLite write lock during collection, archive generation, or Telegram calls.
-- Support bounded concurrent processing of different users' jobs in the initial application
-  instance. Preserve the per-user active-export rule. Choose the concurrency limit after
-  inspecting deployment resources and realistic export workloads.
+- Support bounded concurrent processing of different users' jobs in the initial application instance, controlled by the approved export-specific global concurrency setting. Preserve the per-user active-export rule; choose the conservative default after inspecting deployment resources and realistic export workloads.
 - A lease does not make Telegram side effects transactional. If a worker loses its lease
   around a Telegram send, apply the existing ambiguity rules: do not blindly resend an
   attempt whose outcome may be unknown; persist and reconcile it as `DeliveryUnknown`
@@ -1102,6 +1100,31 @@ Use **per-user fair scheduling** for queued export work:
 
 This approves fair rotation between users and FIFO within each user's queue, not a specific
 SQL query or fairness data structure.
+
+##### Configurable worker concurrency
+
+Make the maximum number of simultaneously processed export jobs configurable through an
+export-specific application setting, provisionally named `export.max_concurrent_jobs`:
+
+- The setting is a global limit for the running application instance, not a per-user limit.
+  The existing one-active-export-per-user rule remains independently enforced.
+- Provide a conservative default suitable for the initial deployment. Determine its exact
+  value after inspecting deployment memory/CPU constraints and measuring representative
+  collection, archive-generation, and upload workloads; do not guess a capacity now.
+- Validate the setting as a positive integer and reject invalid configuration at startup
+  with a clear configuration error.
+- Apply the configured limit to active worker claims/processing, while retaining database
+  leases and fair per-user scheduling. Lowering the limit must not invalidate already-running
+  leases or interrupt in-flight exports; it should reduce new claims until active work falls
+  below the new limit.
+- Keep the setting independent of user identity and do not add automatic resource-based
+  scaling for the initial implementation.
+- Confirm the final setting name, configuration nesting, and integration with existing
+  configuration conventions during source inspection.
+
+This approves operator-configurable, globally bounded concurrency, not a numeric default
+or a final configuration key until existing configuration conventions and deployment
+resources are inspected.
 
 ##### Remaining design work before implementation
 
