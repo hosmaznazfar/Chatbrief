@@ -377,6 +377,45 @@ async def test_existing_subscription_changed_after_cutoff_fails_closed(snapshot_
 
 
 @pytest.mark.asyncio
+async def test_source_metadata_changed_after_cutoff_fails_closed(snapshot_context):
+    _, archive, _, snapshots = snapshot_context
+    source = await add_source(archive)
+    await archive.upsert_source(
+        "-100100",
+        "Changed after cutoff",
+        SourceType.CHANNEL,
+        SourceVisibility.PUBLIC,
+        updated_at="2026-11-02T12:01:00Z",
+    )
+
+    with pytest.raises(SnapshotStateChangedError):
+        await snapshots.create_snapshot(
+            100, CUTOFF, retention_start_at=RETENTION_START
+        )
+
+
+@pytest.mark.asyncio
+async def test_bot_api_access_updated_after_cutoff_is_not_accepted(snapshot_context):
+    _, archive, _, snapshots = snapshot_context
+    source = await add_source(archive)
+    await archive.set_access(
+        source.id,
+        AccessMethod.BOT_API,
+        AccessState.AVAILABLE,
+        verified_at=BEFORE_CUTOFF,
+        updated_at="2026-11-02T12:01:00Z",
+    )
+
+    snapshot = await snapshots.create_snapshot(
+        100, CUTOFF, retention_start_at=RETENTION_START
+    )
+
+    assert snapshot.sources == ()
+    assert snapshot.messages == ()
+    assert snapshot.omissions[0].reason_code == "unavailable"
+
+
+@pytest.mark.asyncio
 async def test_snapshot_rejects_unknown_user_and_invalid_time_window(snapshot_context):
     _, _, _, snapshots = snapshot_context
 
