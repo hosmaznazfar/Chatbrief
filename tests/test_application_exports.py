@@ -340,14 +340,11 @@ async def test_claimed_terminal_transition_releases_lease(export_repository):
 @pytest.mark.asyncio
 async def test_claims_rotate_fairly_across_users(export_repository):
     """A recently served user moves behind users who have not been served."""
-    jobs = []
     for owner in (101, 202, 303):
-        jobs.append(
-            await export_repository.create_job(
-                owner,
-                "2026-11-02T00:00:00Z",
-                created_at="2026-11-02T00:00:00Z",
-            )
+        await export_repository.create_job(
+            owner,
+            "2026-11-02T00:00:00Z",
+            created_at="2026-11-02T00:00:00Z",
         )
 
     first = await export_repository.claim_next_job(
