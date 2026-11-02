@@ -8,10 +8,28 @@ from .exports import (
     ExportRepository,
     InvalidExportTransitionError,
 )
+from .delivery import (
+    CleanupTaskState,
+    CleanupTaskType,
+    DeliveryAttemptOutcome,
+    DeliveryDocumentKind,
+    ExportCleanupRepository,
+    ExportCleanupTask,
+    ExportDeliveryAttempt,
+    ExportDeliveryRepository,
+)
 from .migrations import ApplicationDatabase, MigrationError
 
 __all__ = [
     "ActiveExportExistsError",
+    "CleanupTaskState",
+    "CleanupTaskType",
+    "DeliveryAttemptOutcome",
+    "DeliveryDocumentKind",
+    "ExportCleanupRepository",
+    "ExportCleanupTask",
+    "ExportDeliveryAttempt",
+    "ExportDeliveryRepository",
     "ApplicationDatabase",
     "ExportJob",
     "ExportJobState",
