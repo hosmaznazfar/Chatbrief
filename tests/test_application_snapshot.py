@@ -12,7 +12,6 @@ from chatbrief.application_storage import (
     AuthorizationState,
     CollectionMethod,
     ExportSnapshotRepository,
-    MessageMediaType,
     SnapshotAuthorizationError,
     SnapshotStateChangedError,
     SnapshotUserNotFoundError,
