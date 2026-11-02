@@ -1040,3 +1040,9 @@ Compare JSON object member names by their exact Unicode code-point sequences; do
 ## Export JSON object member-name whitespace handling — approved default (Option A)
 
 Compare JSON object member names exactly; do not trim leading or trailing whitespace. Whitespace is part of the name: `" schema_version"` and `"schema_version "` do not match `schema_version` and cannot satisfy that required field. Apply at every object level in all three export JSON documents, alongside case-sensitive and exact Unicode code-point matching. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+
+## Export schema conventions — working defaults
+
+The detailed export schema uses a shared opaque UUID `export_id` and common UTC `created_at` across all included JSON documents; `export.json` also carries the acceptance `cutoff_at`. Timestamps use RFC 3339 UTC strings with trailing `Z`, preserving available sub-second precision. Cross-record relationships use export-local `src-`, `msg-`, and `media-` references; these are not database/Telegram IDs and are not stable across separate exports. Arrays and ZIP entries have documented deterministic ordering, while semantically ordered user configuration remains in its configured order. Exact section fields and shapes remain in detailed design. This is a recommended working default, not implemented.
