@@ -1,6 +1,6 @@
 # Application-state database and export persistence foundation
 
-**Status:** Step 1 implementation committed; validation exposed a test connection-lifecycle misuse, now corrected; rerun pending  
+**Status:** Step 1 implementation committed; focused and full test suites pass; Ruff formatting correction committed and awaiting local recheck  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
