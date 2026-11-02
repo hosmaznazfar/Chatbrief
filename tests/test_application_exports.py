@@ -174,14 +174,14 @@ async def test_transition_rejects_unknown_fields_and_invalid_json(export_reposit
 async def test_terminal_states_release_active_export_constraint(export_repository):
     job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
 
-    cancelled = await export_repository.transition_job(
+    failed = await export_repository.transition_job(
         job.id,
         12345,
         [ExportJobState.QUEUED],
         ExportJobState.FAILED,
     )
-    assert cancelled is not None
-    assert cancelled.terminal_at is not None
+    assert failed is not None
+    assert failed.terminal_at is not None
     assert await export_repository.get_active_job(12345) is None
 
     replacement = await export_repository.create_job(12345, "2026-11-02T01:00:00Z")
