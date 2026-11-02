@@ -126,5 +126,7 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Release leases after phase completion and schedule backoff for no-op, missing, or failed handlers.
 - [x] Stop new claims on shutdown, wait for a configurable grace period, then cancel remaining handlers.
 - [x] Add focused tests for dispatch, bounded concurrency, lease renewal/loss, cooperative shutdown, and retry scheduling.
-- [ ] Run focused worker/storage tests, Ruff lint/format, Pyright, and full pytest locally.
-- [ ] Keep startup wiring deferred until at least one real phase handler is implemented.
+- [x] Run Ruff lint, Ruff format, Pyright, and the full pytest suite locally — developer-confirmed on 2026-11-02: Ruff passed; **102 files already formatted**; Pyright **0 errors, 0 warnings, 0 informations**; pytest collected **652 tests**, with **7 skipped** and **93.19% coverage**. The pasted output omitted pytest's final passed count.
+- [x] Keep startup wiring deferred until at least one real phase handler is implemented.
+- [ ] Implement the user-scoped source/subscription/message persistence and authorization-aware snapshot query needed for safe export collection; do not backfill legacy message-history rows.
+- [ ] After the snapshot query exists, implement the collecting phase handler with cancellation-safe checkpoints and lease-generation-fenced state transitions.
