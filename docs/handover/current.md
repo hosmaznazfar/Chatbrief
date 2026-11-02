@@ -1155,3 +1155,18 @@ The existing message store is optional, uses inline `CREATE TABLE IF NOT EXISTS`
 - Additive only. No edits to legacy messages/delivery JSON/config/sessions and no automatic backfill: old messages lack reliable owner/source/message identity. Any backfill requires a separate proof-based mapping proposal.
 - First migration creates only export tables and migration metadata. PostgreSQL support, future shared domain tables, workers/commands/archive/delivery implementation, and legacy backfill remain out of scope.
 - This proposal is approved for implementation. Approval does not mean its schema/migrations are already implemented; deliver them in tested, reviewable slices.
+
+
+## Validation follow-up — 2026-11-02
+
+The developer fast-forwarded the local branch to `377f234` and ran the documented focused checks using the project interpreter (Python 3.15.2). The first run produced:
+
+- Focused pytest: **95 passed, 4 failed**. All four failures were caused by tests writing `async with await database.connect()`. An awaited `aiosqlite.Connection` has already started its worker thread; entering it again as an async context manager attempted to start the thread twice.
+- Ruff lint: passed.
+- Ruff format check: one formatting issue in `tests/test_application_storage.py`.
+- Pyright: 0 errors, 0 warnings, 0 informations.
+- Coverage: the focused two-file run reported 16.49%, below the repository-wide 49% threshold. This is not a valid full-suite coverage result; run the full suite after fixing the focused failures.
+
+Correction committed on the branch: `49f2d4d` replaces the invalid connection context usage with a test helper that awaits the configured connection once and closes it in `finally`. The test file was also reformatted. The plan now records the observed validation results. **The correction has not yet been run locally**, so do not proceed to startup integration until the focused tests, formatter, and full suite are rerun successfully. Ruff lint and Pyright passed before this test-only correction; rerun them as part of the verification set.
+
+The pull triggered Graphify's background rebuild. The developer should check that rebuild has finished and inspect `git status --short` before committing any generated graph changes; do not stage Graphify output blindly.
