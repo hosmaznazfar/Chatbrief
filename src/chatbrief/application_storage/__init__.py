@@ -19,6 +19,7 @@ from .exports import (
     InvalidExportTransitionError,
 )
 from .migrations import ApplicationDatabase, MigrationError
+from .worker import ExportLeaseLostError, ExportWorker
 
 __all__ = [
     "ActiveExportExistsError",
@@ -32,6 +33,8 @@ __all__ = [
     "ExportDeliveryRepository",
     "ApplicationDatabase",
     "ExportJob",
+    "ExportLeaseLostError",
+    "ExportWorker",
     "ExportJobState",
     "ExportMediaOutcome",
     "ExportRepository",
