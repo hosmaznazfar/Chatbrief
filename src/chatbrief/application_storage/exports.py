@@ -169,7 +169,11 @@ class ExportRepository:
 
     @staticmethod
     def _validate_owner(owner_telegram_user_id: int) -> None:
-        if isinstance(owner_telegram_user_id, bool) or owner_telegram_user_id <= 0:
+        if (
+            isinstance(owner_telegram_user_id, bool)
+            or not isinstance(owner_telegram_user_id, int)
+            or owner_telegram_user_id <= 0
+        ):
             raise ValueError("Telegram user ID must be a positive integer")
 
     async def create_job(
@@ -330,14 +334,34 @@ class ExportRepository:
                     return None
 
                 if target is ExportJobState.READY:
-                    delivered_at = changes.get(
-                        "primary_delivered_at", current["primary_delivered_at"]
-                    )
+                    async with connection.execute(
+                        """
+                        SELECT finished_at FROM export_delivery_attempts
+                        WHERE job_id = ? AND document_kind = 'primary'
+                          AND outcome = 'succeeded'
+                        ORDER BY attempt_number DESC LIMIT 1
+                        """,
+                        (job_id,),
+                    ) as cursor:
+                        successful_attempt = await cursor.fetchone()
+                    if successful_attempt is None:
+                        raise ValueError(
+                            "A ready export requires a confirmed primary delivery attempt"
+                        )
+                    delivered_at = successful_attempt["finished_at"]
                     expires_at = changes.get("expires_at", current["expires_at"])
                     if not delivered_at or not expires_at:
                         raise ValueError(
                             "A ready export requires primary delivery and expiry timestamps"
                         )
+                    if (
+                        "primary_delivered_at" in changes
+                        and changes["primary_delivered_at"] != delivered_at
+                    ):
+                        raise ValueError(
+                            "Primary delivery timestamp must match the confirmed attempt"
+                        )
+                    changes["primary_delivered_at"] = delivered_at
 
                 result = await connection.execute(
                     f"""
