@@ -136,7 +136,7 @@ Implemented in source; local validation is pending. This slice adds persistence 
 
 - `ArchiveRepository` provides identity-only user creation/lookup; stable source upsert/lookup; Bot API and user-owned Telethon access upserts; explicit source authorization grant/revocation; and subscription state upserts/lookups.
 - Bot API access records have no user owner. Telethon access records require the owning Chatbrief Telegram user. Updating access state preserves the last successful verification timestamp unless a new timestamp is supplied.
-- Authorization rows are independent from subscriptions. A subscription upsert never creates or changes a grant. Public/private/unknown eligibility and the required technical-access checks are enforced by the forthcoming snapshot query, not by assuming that a relationship row alone grants access.
+- Authorization rows are independent from subscriptions. A subscription upsert never creates or changes a grant. Public/private/unknown eligibility and technical-access checks are enforced by the Step 4b-3 snapshot query, not by assuming that a relationship row alone grants access.
 - `ArchiveContentRepository` upserts messages by the database-enforced source/platform-message identity, preserving the logical row ID and original collection time across edits. Known optional message metadata is retained when a later update omits it.
 - Reliable deletion events set `deleted_at` once. Subsequent message edits do not clear the deletion marker, so later snapshot reads can reliably exclude deleted content.
 - Message media metadata is validated as a consistent pair: `has_media=false` requires a null media type; `has_media=true` requires one of the schema's allowed media types.
