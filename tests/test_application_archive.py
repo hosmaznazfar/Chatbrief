@@ -220,7 +220,7 @@ async def test_foreign_keys_reject_unknown_users_and_sources(archive_repository)
             "missing-source", 9999, AuthorizationState.ACTIVE
         )
 
-    with pytest.raises(Exception):
+    with pytest.raises(aiosqlite.IntegrityError):
         await archive_repository.upsert_subscription(
             9999, "missing-source", SubscriptionState.ACTIVE
         )
