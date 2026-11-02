@@ -68,9 +68,9 @@
     "semantic_hash": ""
   },
   "main.py": {
-    "mtime": 1793385559.0877612,
-    "seen": 1793385567.0862954,
-    "ast_hash": "689b1ec18ccd5781fe22f24b60cf414b",
+    "mtime": 1793609762.5592837,
+    "seen": 1793609772.016706,
+    "ast_hash": "f8cb968b61170e8b48d347e7afc79646",
     "semantic_hash": ""
   },
   "pj": {
@@ -477,15 +477,15 @@
     "semantic_hash": ""
   },
   "AI_README.md": {
-    "mtime": 1793605574.938376,
-    "seen": 1793605584.951554,
-    "ast_hash": "7e461b1829c400f73c36575e4feb3968",
+    "mtime": 1793609762.5532837,
+    "seen": 1793609772.0170488,
+    "ast_hash": "a774d31051fa5e2228cde5aa0dac29dc",
     "semantic_hash": ""
   },
   "CHATGPT_CONTEXT.md": {
-    "mtime": 1793605574.939376,
-    "seen": 1793605584.9515617,
-    "ast_hash": "b630f8f3f65dc09e5406b3e6e1600675",
+    "mtime": 1793609762.5542836,
+    "seen": 1793609772.0170531,
+    "ast_hash": "26f7689984457c3d5d8cfa49cb7c2f4f",
     "semantic_hash": ""
   },
   "CODE_OF_CONDUCT.md": {
@@ -501,9 +501,9 @@
     "semantic_hash": ""
   },
   "FEATURE_IMPLEMENTATION_CHECKLIST.md": {
-    "mtime": 1793608907.093078,
-    "seen": 1793608915.3326557,
-    "ast_hash": "95fa51e41993a0de24750b5640500248",
+    "mtime": 1793609762.5552838,
+    "seen": 1793609772.0170658,
+    "ast_hash": "1938712ef61a0a55ba3db312d718de90",
     "semantic_hash": ""
   },
   "README.md": {
@@ -543,9 +543,9 @@
     "semantic_hash": ""
   },
   "docs/handover/current.md": {
-    "mtime": 1793609278.7155068,
-    "seen": 1793609286.630122,
-    "ast_hash": "bb34e9245ebf81f14ccbd402df7fffe8",
+    "mtime": 1793609929.4881968,
+    "seen": 1793609939.481911,
+    "ast_hash": "1e218c7528b886fa11716643d51bd8ff",
     "semantic_hash": ""
   },
   "src/chatbrief/prompts/base_summary.txt": {
@@ -603,9 +603,9 @@
     "semantic_hash": ""
   },
   "docs/plans/telegram-hybrid-ingestion.md": {
-    "mtime": 1793608907.098078,
-    "seen": 1793608915.3326952,
-    "ast_hash": "0517c1dc9a8a16528078e1823108ac96",
+    "mtime": 1793609762.5592837,
+    "seen": 1793609772.017117,
+    "ast_hash": "7cb8131a71109c8fc496ad7ade44ba48",
     "semantic_hash": ""
   },
   "src/chatbrief/application_storage/__init__.py": {
@@ -639,9 +639,15 @@
     "semantic_hash": ""
   },
   "docs/plans/application-state-database.md": {
-    "mtime": 1793609278.7155068,
-    "seen": 1793609286.6301253,
-    "ast_hash": "c3e13f9acffb5f34ba52b01f80de6f30",
+    "mtime": 1793609929.4891968,
+    "seen": 1793609939.4819195,
+    "ast_hash": "6b71bba601c7837fb25cc7f4d5aac3ae",
+    "semantic_hash": ""
+  },
+  "tests/test_application_lifecycle.py": {
+    "mtime": 1793609762.5592837,
+    "seen": 1793609772.0169685,
+    "ast_hash": "ebfc48223fc4fd00ef6b7b2cbed579da",
     "semantic_hash": ""
   }
 }
