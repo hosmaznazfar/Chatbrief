@@ -1076,3 +1076,21 @@ The export design now has repository-aligned working recommendations based on in
 - Recommended media privacy default: generated deterministic archive filenames based on export-local media refs; omit original filenames from both ZIP paths and manifest metadata.
 - Recommended v1 purpose: portable archival/inspection snapshot, not a restore/import or account-migration contract. Future import requires separate design.
 - Exact field mapping and legacy-data conversion remain open for Phase 1 migration design. These are documentation recommendations only; no code, tests, or migrations changed/run.
+
+## Export report and media-only message semantics — working defaults
+
+Repository inspection confirmed the current Telethon adapter synthesizes localized display placeholders (for example `[Photo]`) for media-only messages. Recommended v1 behavior:
+- Export retained message body/caption as plain text; `text` may be empty for media-only messages. Do not export synthetic display placeholders as authored text.
+- Strip a legacy placeholder only when its synthetic origin is reliably known. If provenance is ambiguous, preserve stored text rather than risk deleting genuine authored content.
+- Keep an authorized retained media-only message in `export.json` even when its binary is unavailable. The media manifest lists only binaries actually present in the companion ZIP.
+- Message source timestamp is optional only if genuinely unavailable; never substitute export creation/collection time.
+- Binary media categories are image, video, document, audio. Poll/location/other interactive or service payloads are not media binaries in v1; unsupported eligible payloads are reported as media omissions where applicable.
+- Do not use `has_media` as a promise that a binary is included. Message media references resolve only to actual companion archive items; manifest is authoritative.
+
+Report defaults:
+- Omission codes: `expired`, `unavailable`, `unsupported`, `size_limit`, `missing_content`, `not_exportable`. `unsafe_filename` is removed because original filenames are never used; unsafe filesystem inputs are never read and are reported as `not_exportable` if otherwise eligible.
+- Omission categories: preferences, schedules, subscriptions, delivery_history, messages, media. Aggregate by category/reason with positive count and safe explanation; no private IDs, paths, filenames, or omitted content.
+- `complete_with_omissions` only when eligible requested content is actually absent. Empty categories are not omissions; failed/invalidated jobs do not produce a successful report.
+- Fixed non-negative included counts: preferences, schedules, subscriptions, delivery_history, messages, sources, media_files, media_bytes; `omitted_media_items` only when known. Counts reflect actual archive contents.
+- Warnings are structured `{code,message}`; initial codes: `legacy_media_placeholder_removed`, `media_metadata_incomplete`, `timestamp_unavailable`. Warnings alone do not change result. Messages must not expose source text, identifiers, filenames, paths, traces, or secrets.
+- These are recommended schema semantics, not implemented. Legacy placeholder provenance and exact field mapping remain Phase 1 migration-design items. No application code, tests, or migrations changed/run.
