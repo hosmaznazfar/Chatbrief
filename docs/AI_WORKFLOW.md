@@ -8,7 +8,7 @@ This document adapts the reusable workflow defined in [AIWorkFlow](https://githu
 
 - Keep project context, architecture decisions, plans, checklists, and handovers in Git.
 - Give every AI assistant the same architecture and code-relationship context through the committed Graphify artifacts.
-- Use Graphify locally to maintain a code relationship graph and commit reviewed, portable artifacts to GitHub before implementation decisions when the graph needs refreshing.
+- Use Graphify as a code-navigation and impact-analysis aid when it materially helps. Keep application implementation, tests, and documentation as the deliverables; generated graph artifacts are development tooling, not product features or a routine completion gate.
 - Follow the developer's graph-first, research-before-decision, stepwise-implementation, and commit-each-step workflow for every feature or bug fix.
 - Use `pj` as the single project-local command interface for Python checks and Graphify automation.
 - Preserve safe, reviewable Git operations: no implicit staging, commits, pushes, merges, deployments, or migrations.
@@ -36,13 +36,13 @@ All assistants should read the relevant project instructions before significant 
 These rules apply regardless of whether the work is performed through ChatGPT, an IDE, a terminal agent, a code-review assistant, or a human-operated workflow.
 
 1. **Check the repository state first.** Establish the repository, target branch, latest commit, and whether the available source/graph is current. Never assume that a local worktree and GitHub have the same state.
-2. **Use Graphify before broad source exploration when the graph is available.** For a codebase question, first run a focused `graphify query "<question>"`; use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<symbol>"` for a focused concept. If the CLI is unavailable but committed graph artifacts are accessible, inspect those artifacts instead. If neither is accessible, explain the limitation and trace the source directly.
+2. **Use Graphify when it helps navigate the code.** For broad or unfamiliar areas, a focused `graphify query`, `graphify path`, or `graphify explain` can identify likely files and relationships. Do not spend time refreshing or committing graph output for a small, well-understood change. Always verify relevant behavior in source and tests; if the graph is unavailable or stale, trace the source directly.
 3. **Use the graph to navigate, not to prove.** Verify task-critical relationships, callers, dependencies, and behavior in actual source, tests, configuration, and ADRs. Treat inferred edges as leads, not facts.
 4. **Read only relevant source after graph navigation.** Use graph results to locate relevant files and symbols; avoid indiscriminate repository-wide grep or reading unrelated files. Read broader architecture reports when the task requires broad context.
 5. **Respect project architecture and existing decisions.** Do not invent abstractions, platform support, configuration, or dependencies. Check ADRs and update them when a material architecture decision changes.
 6. **Keep changes scoped and reviewable.** Do not overwrite unrelated user changes, silently broaden scope, or make destructive changes without explicit approval.
 7. **Do not claim unperformed validation.** Report exactly which commands ran and their results. Do not run the full test suite until the developer declares the current package/platform refactor ready for validation.
-8. **Refresh the graph before implementation decisions when needed, and after source changes.** Use the local `pj` graph commands; review generated changes and keep graph artifacts aligned with the source revision.
+8. **Keep graph work proportional to the coding task.** Refresh the local graph only when it is stale and a refreshed relationship map would materially improve implementation or review. Graph refreshes and generated artifacts must not delay code changes, tests, or fixes.
 9. **Follow the task's Git authorization.** For this developer's requested workflow, commit each reviewed implementation step and its related documentation directly to the intended branch when direct Git changes/commits are authorized. Never push, merge, deploy, or run migrations without explicit authorization. If direct Git access or commit authorization is absent, prepare the exact changes and ask for the required action.
 10. **Update the handover at meaningful milestones.** Record verified facts, checks, graph freshness, blockers, and next steps; distinguish supplied local evidence from independently verified remote state.
 
@@ -64,17 +64,17 @@ No assistant-specific Graphify plugin, skill, MCP server, editor extension, or C
 Follow this order. Do not skip the graph review or decision gates.
 
 1. **Inspect the current state.** Verify repository, branch, latest commit, worktree state when available, and the current graph revision. Query the graph to locate relevant modules, symbols, callers, dependencies, and likely impact.
-2. **Request a fresh graph for each non-trivial feature, bug fix, or code review.** After the initial source/relationship inspection, ask the developer to run the local refresh so the graph is regenerated against the current checkout:
+2. **Refresh the graph only when useful.** If the current graph is stale or missing and a fresh relationship map would materially improve the task, ask the developer to refresh it. Otherwise continue with the available graph and direct source inspection. When refreshing is useful, the local commands are:
    ```bash
    ./pj graph refresh
    ./pj graph diff
    ```
-   The developer reviews the Git changes and commits any changed, portable graph artifacts. If the refresh produces no graph diff, no graph-only commit is needed. Then inspect the refreshed graph and matching source revision from Git before presenting decisions.
+   The developer reviews the Git changes and commits any changed, portable graph artifacts. If the refresh produces no graph diff, no graph-only commit is needed. Use any refreshed graph as a navigation aid, then verify task-critical relationships against source and tests. Do not treat a graph-only commit as a prerequisite for implementation.
 3. **Verify the implementation context.** Trace the graph findings against actual source, tests, configuration, ADRs, and relevant documentation. Identify the real behavior and boundaries before proposing a design.
 4. **Present decisions before implementation.** List every material decision that affects architecture, APIs, data models, dependencies, platform behavior, migration, compatibility, or user-visible behavior. Research current options online when external facts, project/library capabilities, or changing best practices matter. Cite sources, compare viable options and trade-offs, recommend one with reasons, and ask the developer to choose. Do not silently decide or start application-code changes while material choices remain unanswered.
 5. **Agree on scope and sequence.** Once decisions are answered, state the approved design, acceptance criteria, non-goals, risks, and small implementation steps. Keep existing planning/migration documents accurate during work, but complete their final migration/planning updates after implementation is finished.
 6. **Implement one step at a time.** Apply the approved changes directly to the intended Git branch when repository write access is available. After each step, inspect the complete diff, update the related code documentation/tests/ADR as needed, and commit that step before starting the next. Keep commits focused and explain their contents. Do not bundle unrelated steps.
-7. **Keep the graph aligned.** After code relationships change, ask the developer to refresh the local graph with `./pj graph refresh`, inspect `./pj graph diff`, and commit reviewed graph artifacts with the source revision they describe. Do not claim the remote graph is current until the refreshed artifacts are committed and visible on the branch.
+7. **Optionally refresh the graph after structural changes.** If a code change materially changes relationships and the graph will help future work, the developer may refresh and review it. Graph artifacts are optional development context; do not bundle graph maintenance into an implementation step unless it is useful or explicitly requested.
 8. **Finish the documentation and validation.** After all implementation steps, update the relevant migration and planning Markdown files to reflect what actually changed, completed/deferred work, and remaining migration tasks. Run only the checks authorized and appropriate for the current refactor phase.
 9. **Close the task.** Review the branch diff and commit sequence, update `docs/handover/current.md`, and report exact commits, checks, graph state, remaining risks, and next actions.
 
@@ -129,7 +129,7 @@ At the start of each non-trivial feature/fix/review, and whenever the graph need
 
 `refresh` updates/builds the code graph, runs Graphify's `cluster-only` step to generate the report and HTML, and prints artifact status. `diff` shows Git status and tracked graph changes against HEAD. Review and commit only portable graph artifacts before continuing.
 
-For a graph-only incremental update without report generation:
+When a graph update is useful, an incremental update without report generation is available:
 
 ~~~bash
 ./pj graph update
