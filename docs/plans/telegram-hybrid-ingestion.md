@@ -1541,3 +1541,15 @@ These defaults apply across the primary export and optional media archive. Exact
 - Validate ZIP entries against the manifest as a one-to-one set: every manifest path exists exactly once, every media binary entry has exactly one manifest item, and no unexpected binary entries are present. The README and manifest themselves are not media items.
 - A media manifest may contain an empty `omissions` array or omit that optional member when there are no manifest-specific omissions. The primary report remains authoritative for the overall omission summary.
 - These are recommended validation defaults; exact code names and filename sanitization algorithm should be finalized with the implementation/library review. Documentation-only; no application code, schemas, migrations, or tests changed/run.
+
+
+
+## Message content privacy in personal exports — approved
+
+- Export retained message content and relevant message-level metadata only to the extent the requester is authorized to access the message.
+- Do not export other Telegram users' profile or identity data: sender display names, usernames, Telegram user IDs, profile photos, phone numbers, participant/contact lists, or equivalent profile fields.
+- Do not export forwarded-author identity metadata or quoted/replied-to author profile data. The message's own content may be retained when authorized, but identity/profile fields about third parties are excluded.
+- Do not include Telegram chat IDs, message IDs, or other transport identifiers; use the export-local source/message references already defined.
+- This privacy boundary does not remove message text/captions or timestamps merely because another person authored the message. It excludes profile/identity data, not the authorized message content itself.
+- Apply the same exclusion consistently to `export.json`, `export-report.json`, and `media-manifest.json`; report/manifest entries must not reintroduce excluded identities through warnings, filenames, or metadata.
+- This is an approved export privacy policy, not implemented. Exact message fields remain subject to inspection of the actual message model and source-specific metadata.
