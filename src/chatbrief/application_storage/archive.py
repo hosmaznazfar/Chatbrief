@@ -376,26 +376,46 @@ class ArchiveRepository:
                 ) as cursor:
                     existing = await cursor.fetchone()
                 if existing is None:
+                    if status is AuthorizationState.REVOKED:
+                        raise ValueError("Cannot revoke an authorization that does not exist")
                     await connection.execute(
                         """
                         INSERT INTO source_authorizations(
                             source_id, telegram_user_id, granted_by_telegram_user_id,
                             state, granted_at, revoked_at
-                        ) VALUES (?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, ?, ?, NULL)
                         """,
-                        (source_id, telegram_user_id, granted_by_telegram_user_id,
-                         status.value, timestamp, revoked_at),
+                        (
+                            source_id,
+                            telegram_user_id,
+                            granted_by_telegram_user_id,
+                            status.value,
+                            timestamp,
+                        ),
                     )
                 else:
                     await connection.execute(
                         """
                         UPDATE source_authorizations
-                        SET granted_by_telegram_user_id = ?, state = ?,
-                            granted_at = ?, revoked_at = ?
+                        SET granted_by_telegram_user_id = CASE
+                                WHEN ? = 'active' THEN ?
+                                ELSE granted_by_telegram_user_id
+                            END,
+                            state = ?,
+                            granted_at = CASE WHEN ? = 'active' THEN ? ELSE granted_at END,
+                            revoked_at = ?
                         WHERE source_id = ? AND telegram_user_id = ?
                         """,
-                        (granted_by_telegram_user_id, status.value, timestamp, revoked_at,
-                         source_id, telegram_user_id),
+                        (
+                            status.value,
+                            granted_by_telegram_user_id,
+                            status.value,
+                            status.value,
+                            timestamp,
+                            revoked_at,
+                            source_id,
+                            telegram_user_id,
+                        ),
                     )
                 async with connection.execute(
                     """
