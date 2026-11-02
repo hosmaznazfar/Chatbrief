@@ -1170,3 +1170,19 @@ The developer fast-forwarded the local branch to `377f234` and ran the documente
 Correction committed on the branch: `49f2d4d` replaces the invalid connection context usage with a test helper that awaits the configured connection once and closes it in `finally`. The test file was also reformatted. The plan now records the observed validation results. **The correction has not yet been run locally**, so do not proceed to startup integration until the focused tests, formatter, and full suite are rerun successfully. Ruff lint and Pyright passed before this test-only correction; rerun them as part of the verification set.
 
 The pull triggered Graphify's background rebuild. The developer should check that rebuild has finished and inspect `git status --short` before committing any generated graph changes; do not stage Graphify output blindly.
+
+
+## Application-state database validation — developer-reported results
+
+After syncing through `af0fed4`, the developer reran validation on Python 3.15.2:
+
+- Focused tests with `--no-cov`: **99 passed**.
+- Full suite: **602 passed, 7 skipped**.
+- Full-suite coverage: **94.73%** (required 49%).
+- Ruff lint: passed.
+- Pyright: 0 errors, 0 warnings, 0 informations.
+- Ruff format check: still reported one line in `tests/test_application_storage.py`.
+
+The remaining formatting line was corrected in commit `14a2681` (single-line SQL execute context). The plan records the successful test results. The format check has **not** yet been rerun after that commit; do not mark Step 1 completely validated until it passes. The source/test logic itself is validated by the reported full suite. Next, sync the formatting correction and run the formatter check (and optionally lint/Pyright again); then proceed to application startup lifecycle integration.
+
+Graphify started its background rebuild after the pull. Verify local rebuild completion and inspect graph changes before staging; no graph freshness claim is made here.
