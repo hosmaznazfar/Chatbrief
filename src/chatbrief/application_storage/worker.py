@@ -112,11 +112,11 @@ class ExportWorker:
         return len(self._active_tasks)
 
     def stop(self) -> None:
-        """Stop claiming new work; active handlers finish under renewed leases."""
+        """Stop claiming work; active handlers get a grace period before cancellation."""
         self._stop_event.set()
 
     async def run(self) -> None:
-        """Poll for jobs until stopped, then wait for active handlers to finish."""
+        """Poll for jobs until stopped, then drain active handlers within the grace period."""
         if self._running:
             raise RuntimeError("Export worker is already running")
         self._running = True
