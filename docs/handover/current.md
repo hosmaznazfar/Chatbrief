@@ -1,8 +1,35 @@
 # Chatbrief — current project handover
 
-**Updated:** 2026-10-31  
+# Current status — 2026-11-02 (authoritative update)
+
+> This section supersedes older status statements later in this handover that describe validation as pending, package/dependency upgrades as incomplete, or architecture proposals as awaiting approval. Historical notes remain for audit context; use this section for the current project stage.
+
+- **Repository:** `hosmaznazfar/Chatbrief`
+- **Active branch:** `refactor/chatbrief-package-layout`
+- **Latest locally reported synchronized HEAD:** `487727f` (`docs: record phase one export persistence proposal`). The developer reported the branch was fast-forwarded to this commit and matched `origin/refactor/chatbrief-package-layout`.
+- **Local worktree:** source files have no reported local modifications. Only generated Graphify artifacts and `.rebuild.lock` were reported modified/untracked after the post-merge background rebuild; inspect the current local status before staging or committing them.
+- **Package/layout and platform-abstraction migration:** complete.
+- **Dependency/package upgrades:** complete; all project packages have been upgraded as recorded by the developer and project documentation.
+- **Tests:** passed, as confirmed by the developer. Do not describe the suite as pending or unrun. Preserve the actual test command/output in the local development record if a precise audit trail is needed; this handover records the developer-confirmed result.
+- **Major architecture decisions and proposals:** approved. This includes the approved Telegram hybrid-ingestion/multi-user direction and the Phase 1 export-persistence migration proposal. Do not ask the developer to re-approve decisions already recorded as approved.
+- **Implementation status:** the foundation/refactor and validation are complete. The project is transitioning from architecture/design into implementation of the approved migrations and capabilities. Approval does not mean those future capabilities, schemas, migrations, or workflows have already been implemented.
+- **Next stage:** begin implementation in dependency order, starting with the approved application-state database/migration foundation for export persistence, while keeping the separate Telegram hybrid-ingestion domain migration sequenced and documented. Inspect current source and tests before each slice; update tests and docs with implementation.
+
+## Working rules for the implementation stage
+
+1. Treat approved ADRs and plans as binding architecture; do not reopen decisions without a concrete implementation contradiction.
+2. Distinguish approved target behavior from implemented behavior. Mark each implementation slice complete only after code and focused tests establish it.
+3. Keep work small and reviewable. Start with the first dependency in the approved implementation sequence; avoid further broad design rounds.
+4. Keep the optional legacy message-history store separate from the required application-state/export persistence store, and preserve the approved no-guessing rule for legacy data.
+5. Recheck local Git status and Graphify rebuild completion before staging. Never stage generated Graphify changes blindly.
+6. Report test results as developer-confirmed unless the exact command output is available in the current session.
+
+---
+
+
+**Updated:** 2026-11-02  
 **Repository:** https://github.com/hosmaznazfar/Chatbrief  
-**Active branch:** `upgrade/full-project-modernization`  
+**Active branch:** `refactor/chatbrief-package-layout`  
 **Verified GitHub HEAD before this handover update:** branch created from `refactor/chatbrief-package-layout`; see the latest branch commit for the current HEAD.
 **Branch comparison:** 117 commits ahead of `main`, 0 behind (at the verified comparison).
 **Local worktree:** unknown; GitHub cannot show local uncommitted changes.
@@ -30,9 +57,9 @@ The project also includes SQLite/PostgreSQL storage, extension hooks for filters
 
 ## Package/platform refactor status
 
-**Status: implementation migration ready for validation.**
+**Status: completed; tests passed and dependency upgrades completed.**
 
-The code and test migration work on this branch is complete. Validation is deliberately still pending.
+The code and test migration work is complete. The developer has confirmed that tests now pass and all package/dependency upgrades are complete.
 
 Completed in this work:
 
@@ -53,7 +80,7 @@ Completed in this work:
 
 A source/test import review found no remaining imports rooted at a top-level `src.*` package. Historical documentation under the archived plans and ADRs may still mention the original pre-package paths; those references are intentionally retained as historical context.
 
-## Remaining before the refactor can be declared complete
+## Historical refactor checklist (superseded by the 2026-11-02 status update)
 
 1. Review the committed branch changes in the developer's local checkout after checking `git status`; preserve any local work before pulling.
 2. Perform the final local static review and resolve any issues found.
@@ -61,7 +88,7 @@ A source/test import review found no remaining imports rooted at a top-level `sr
 4. Once authorized, run the configured checks, including Ruff lint/format, Pyright, and pytest. Also run the repository's configured Pylint, Bandit, and Vulture checks as appropriate.
 5. Record the actual command output and fix any failures before declaring the refactor complete.
 
-No full tests or quality checks have been run during this work. The historical pre-refactor baseline (471 passed, 7 skipped, 80.28% coverage) is not evidence that this branch currently passes.
+Historical note: the earlier handover recorded validation as pending. That statement is superseded by the developer's 2026-11-02 confirmation that tests passed. The pre-refactor baseline remains historical and should not be substituted for the current run's actual output.
 
 ## Graphify state
 
@@ -87,7 +114,7 @@ inspection.
 - Preserve user changes. Do not stage, commit, push, merge, deploy, publish, or run migrations without the applicable authorization.
 - Report validation as passed, failed, skipped, or not run. Never claim an unperformed check.
 
-## Immediate next action
+## Historical next-action notes (superseded by the 2026-11-02 current-status section)
 
 Phase 1 of the Telegram hybrid-ingestion plan has been inspected against the committed
 source. The findings and an initial migration proposal are recorded in
