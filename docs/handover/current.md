@@ -6,7 +6,7 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest assistant-authored commit:** `c75fc2c9ddad2a0e1421874918303d0fffeca768` (documentation update for Steps 3a–3b); preceding Step 3b source/test commits are on this branch. Sync the latest branch tip before local validation.
+- **Latest verified assistant-authored commit:** `37886a801d6caae95cacf83a3ca7d7ace7c33974` (delivery test update); documentation and source/test commits for Steps 3a–3b are on this branch. Sync the latest branch tip before local validation.
 - **Local worktree:** unknown to the GitHub editing environment. Preserve local changes and inspect `git status --short` before pulling.
 - **Local worktree:** unknown to the GitHub editing environment. Preserve local changes and inspect `git status --short` before pulling.
 - **Package/layout and platform-abstraction migration:** complete.
@@ -14,7 +14,7 @@
 - **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and the final Ruff format check passed.
 - **Major architecture decisions and proposals:** approved, including Telegram hybrid ingestion/multi-user direction and the Phase 1 export-persistence migration proposal. Do not reopen these decisions without a concrete implementation contradiction.
 - **Implementation status:** application-state database configuration, migration runner, schema migration, startup integration, export-job repository, delivery-attempt repository, and cleanup-task repository are implemented in source. Steps 1–2 are developer-validated. Step 3a has developer-confirmed focused tests (**109 passed**), Ruff lint, Pyright (**0 errors/warnings/information**), and full suite (**612 passed, 7 skipped; 94.42% coverage**); its Ruff format check last failed for two files and still needs a successful rerun. Step 3b tests and static checks have not yet been run locally.
-- **Graphify:** the developer reported refreshing/updating and committing the graph after Step 3a. Step 3b changes the source graph again; refresh and review it after local validation before treating the shared graph as current.
+- **Graphify:** the developer reported refreshing/updating and committing the graph after Step 3a. Step 3b changes the source graph again; refresh and review it after local validation before treating the shared graph as current. The GitHub editing environment cannot verify the local graph artifacts.
 - **Next stage:** sync the latest branch, run focused Step 3b tests, Ruff lint/format, and Pyright; fix failures; run the full suite at the integration milestone. Also resolve the outstanding Step 3a formatting check. Then refresh/review Graphify and proceed to worker claims and lease-generation fencing.
 
 ## Step 3b implementation update — delivery attempts and cleanup tasks
