@@ -1,6 +1,6 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2, Steps 3a–3e, and Step 4a are implemented and developer-validated. Step 4b-1 adds the first shared-archive schema migration; local validation is pending. Repository operations and the authorization-aware snapshot query remain the next slices.  
+**Status:** Steps 1–2, Steps 3a–3e, Step 4a, and Step 4b-1 are implemented and developer-validated. Step 4b-2 adds typed shared-archive repositories; local validation is pending. The authorization-aware snapshot query is the next slice.  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
@@ -129,3 +129,21 @@ Migration 4 adds the identity-only user table and the first shared source/messag
 2. Add a single authorization-aware snapshot query that checks both user authorization and source access at the fixed cutoff; shared storage must never imply shared access.
 3. Only after the snapshot query exists, implement the collecting handler with cancellation-safe checkpoints and lease-generation-fenced transitions. Then proceed to packaging, Telegram delivery, cleanup, and commands.
 4. Do not read or automatically backfill the legacy message-history store: its rows lack trustworthy owner, stable source identity, and message identity.
+
+
+## Step 4b-2 — typed shared-archive repositories
+
+Implemented in source; local validation is pending. This slice adds persistence APIs over migration 4 without changing the schema or wiring a collector/worker.
+
+- `ArchiveRepository` provides identity-only user creation/lookup; stable source upsert/lookup; Bot API and user-owned Telethon access upserts; explicit source authorization grant/revocation; and subscription state upserts/lookups.
+- Bot API access records have no user owner. Telethon access records require the owning Chatbrief Telegram user. Updating access state preserves the last successful verification timestamp unless a new timestamp is supplied.
+- Authorization rows are independent from subscriptions. A subscription upsert never creates or changes a grant. Public/private/unknown eligibility and the required technical-access checks are enforced by the forthcoming snapshot query, not by assuming that a relationship row alone grants access.
+- `ArchiveContentRepository` upserts messages by the database-enforced source/platform-message identity, preserving the logical row ID and original collection time across edits. Known optional message metadata is retained when a later update omits it.
+- Reliable deletion events set `deleted_at` once. Subsequent message edits do not clear the deletion marker, so later snapshot reads can reliably exclude deleted content.
+- Message media metadata is validated as a consistent pair: `has_media=false` requires a null media type; `has_media=true` requires one of the schema's allowed media types.
+- Coverage records are scoped by source and ingestion method. The repository coalesces overlapping or adjacent known-complete intervals but leaves gaps separate. The caller must establish completeness before recording coverage; message presence is never treated as proof.
+- All timestamps accepted by these repositories must be offset-aware ISO 8601 values and are normalized to UTC. Foreign keys remain enabled through the database connection factory.
+- Added focused tests for identity idempotency, stable source identity, user-scoped technical access, authorization revocation, subscription/authorization separation, message deduplication/edit/deletion behavior, media consistency, and coverage interval merging/gaps.
+- No Bot API or Telethon network calls, source discovery, linked-session storage, media binary storage, legacy-store reads/backfill, snapshot query, worker handler, or startup wiring is added.
+
+**Local validation — pending:** run the focused archive/migration tests, Ruff lint/format, Pyright, and the full pytest suite. Record exact results after developer confirmation. PostgreSQL integration remains optional and requires `TELEBRIEF_TEST_PG_URL`; the current application database implementation is SQLite-first.
