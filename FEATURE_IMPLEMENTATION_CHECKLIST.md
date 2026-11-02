@@ -39,3 +39,13 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Record Graphify artifact availability and freshness only when verified.
 - [ ] Record actual validation output, deferred checks, blockers, and exact next steps.
 - [ ] Commit each reviewed implementation step when the task authorizes direct Git commits; ask before pushing, merging, deploying, publishing, or running migrations.
+
+
+## Application-state database foundation — step 1
+
+- [x] Add independent application database configuration with a safe default path.
+- [x] Add versioned transactional SQLite migration runner and checksum validation.
+- [x] Add the approved export persistence schema and constraints as migration 1.
+- [x] Add focused migration and configuration tests.
+- [ ] Run focused tests and static checks in the local project environment; record exact output.
+- [ ] Integrate database initialization and shutdown lifecycle into the application composition root.
