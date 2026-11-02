@@ -131,6 +131,7 @@ async def test_ready_transition_requires_confirmed_primary_attempt(export_reposi
     assert unchanged is not None
     assert unchanged.state is ExportJobState.PACKAGING
 
+
 @pytest.mark.asyncio
 async def test_transition_rejects_unknown_fields_and_invalid_json(export_repository):
     job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
