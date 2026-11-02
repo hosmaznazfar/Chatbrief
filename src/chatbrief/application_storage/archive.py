@@ -197,6 +197,7 @@ class ArchiveRepository:
                 "SELECT * FROM users WHERE telegram_user_id = ?", (telegram_user_id,)
             ) as cursor:
                 row = await cursor.fetchone()
+            await connection.commit()
         if row is None:
             raise RuntimeError("User could not be read after insertion")
         return _user(row)
