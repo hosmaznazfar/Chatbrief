@@ -1,11 +1,11 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2 and Steps 3a–3e implemented and developer-validated; Step 4a worker orchestration foundation implemented, local validation pending  
+**Status:** Steps 1–2 and Steps 3a–3e implemented and developer-validated; Step 4a worker orchestration implemented and developer-validated. Production collection is deferred until the user-scoped source/subscription/message data layer and authorization-aware snapshot query exist.  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
 
-Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, cleanup-task, worker-lease, fair-claim scheduling, and the initial lease-aware worker orchestration service are implemented as separate slices. Application startup wiring, phase implementations, commands, archive generation, and Telegram delivery remain separate work.
+Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, cleanup-task, worker-lease, fair-claim scheduling, and the initial lease-aware worker orchestration service are implemented as separate slices. Application startup wiring, real phase implementations, commands, archive generation, and Telegram delivery remain separate work. In particular, a production collection handler must not read the legacy message-history store: existing rows lack reliable ownership and stable source/message identity, and automatic backfill is prohibited.
 
 ## Step 1 — database foundation
 
@@ -100,8 +100,17 @@ Implemented and developer-validated. Migration 3 adds nullable `worker_id` and `
 - All checks and attempt writes remain inside short `BEGIN IMMEDIATE` transactions.
 - Focused tests cover current-lease writes and stale-worker rejection after lease release/reclaim.
 
+## Step 4a — export worker orchestration foundation
+
+Implemented and developer-validated. On 2026-11-02 the developer reported Ruff lint passed, Ruff format reported **102 files already formatted**, Pyright reported **0 errors, 0 warnings, 0 informations**, and pytest collected **652 tests** with **7 skipped** and **93.19% coverage**. The pasted terminal output omitted the final pytest passed count, so it is intentionally not recorded.
+
+- `ExportWorker` claims due jobs and dispatches injected handlers by the claimed state.
+- Active work is bounded by configured concurrency; lease heartbeats renew active claims and cancel handlers when fencing is lost.
+- Failed/no-op work is rescheduled with backoff; shutdown stops claims, waits for a grace period, then cancels remaining work.
+- The worker remains deliberately unwired to application startup because no production phase handler exists yet.
+
 ## Next steps
 
-1. Developer pulls and validates Step 3e with focused delivery/storage tests, Ruff lint/format, Pyright, and the full suite.
-2. Then implement the worker orchestration service around lease claims, phase handlers, bounded concurrency, and cooperative application shutdown.
-3. Collection, packaging, actual Telegram network calls, cleanup execution, and user-facing commands remain separate phases; each worker-owned persistence mutation must carry the lease fencing token.
+1. Implement the minimal user-scoped source/subscription/message persistence and authorization-aware snapshot query required by export collection, following the approved Telegram hybrid-ingestion direction.
+2. Do not read or automatically backfill the legacy message-history store for exports: its rows lack trustworthy owner, stable source identity, and message identity.
+3. Once the snapshot source exists, implement the collecting handler with cancellation-safe checkpoints and lease-fenced persistence; then proceed to packaging, Telegram delivery, cleanup, and commands. Keep every worker-owned mutation fenced by the current lease generation.
