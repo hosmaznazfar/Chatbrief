@@ -263,9 +263,7 @@ The central-bot access-loss policy is now approved and recorded in
 This is an approved target policy, not an implemented capability. No application code,
 database schema, or migrations have changed.
 
-**Next:** continue resolving the remaining architecture/design questions and review the
-Phase 1 migration proposal. Do not begin Phase 2 implementation until the design decisions
-and migration proposal are approved. Before local work, synchronize the branch carefully
+**Historical note — superseded 2026-11-02:** architecture decisions and the Phase 1 migration proposal have since been approved. Proceed with implementation under the current-status section at the top of this document. Before local work, synchronize the branch carefully
 and preserve any uncommitted Graphify output; the handover records post-rebase Graphify
 changes that were local and unreviewed.
 
@@ -1133,7 +1131,7 @@ Report defaults:
 - Source records contain platform enum and safe display label only; no source usernames/IDs/invite links/private URLs/transport IDs. Missing required source linkage is invalid snapshot data, not a dangling or synthetic source ref.
 - Exact field keys depend on the future user-scoped model and Phase 1 migration proposal. Documentation-only; no application code, tests, or migrations changed/run.
 
-## Phase 1 export persistence migration proposal — pending approval
+## Phase 1 export persistence migration proposal — approved for implementation
 
 The existing message store is optional, uses inline `CREATE TABLE IF NOT EXISTS`, and has no versioned migration runner or application-wide user table. Proposed additive migration:
 - Required application-state store independent of optional message history; SQLite first, provisional `data/application.db`; leave `data/messages.db` unchanged.
@@ -1144,4 +1142,4 @@ The existing message store is optional, uses inline `CREATE TABLE IF NOT EXISTS`
 - Partial unique index for one blocking job per user (queued/collecting/packaging/ready); indexes for queue, owner, lease, expiry, attempts, cleanup. Short atomic transactions; lease-generation fencing; no transaction across network/archive work.
 - Additive only. No edits to legacy messages/delivery JSON/config/sessions and no automatic backfill: old messages lack reliable owner/source/message identity. Any backfill requires a separate proof-based mapping proposal.
 - First migration creates only export tables and migration metadata. PostgreSQL support, future shared domain tables, workers/commands/archive/delivery implementation, and legacy backfill remain out of scope.
-- This is a pending proposal, not approved schema or implementation. No application code, tests, or migrations changed/run.
+- This proposal is approved for implementation. Approval does not mean its schema/migrations are already implemented; deliver them in tested, reviewable slices.
