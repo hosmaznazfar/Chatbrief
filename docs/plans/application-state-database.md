@@ -1,11 +1,11 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2 and Steps 3a–3d implemented and developer-validated; Step 3e delivery-attempt lease fencing implemented, local validation pending  
+**Status:** Steps 1–2 and Steps 3a–3e implemented and developer-validated; Step 4a worker orchestration foundation implemented, local validation pending  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
 
-Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, cleanup-task, worker-lease, and fair-claim scheduling operations are implemented as separate repository slices. Worker orchestration, commands, archive generation, and Telegram delivery remain out of scope.
+Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, cleanup-task, worker-lease, fair-claim scheduling, and the initial lease-aware worker orchestration service are implemented as separate slices. Application startup wiring, phase implementations, commands, archive generation, and Telegram delivery remain separate work.
 
 ## Step 1 — database foundation
 
@@ -90,7 +90,7 @@ Implemented in source; local validation is pending. Migration 2 adds nullable `e
 
 ## Step 3e — delivery-attempt lease fencing
 
-Implemented in source; local validation is pending. Migration 3 adds nullable `worker_id` and `lease_generation` columns to delivery attempts.
+Implemented and developer-validated. Migration 3 adds nullable `worker_id` and `lease_generation` columns to delivery attempts. Focused delivery/storage tests: **19 passed**; full suite: **631 passed, 7 skipped**, coverage **93.40%**; Ruff lint/format passed; Pyright **0 errors, 0 warnings, 0 informations**.
 
 - Starting an attempt requires the caller's current worker ID and lease generation, and the export job must still be in `packaging` with that live lease.
 - The attempt persists the exact worker ID and generation that created it.
