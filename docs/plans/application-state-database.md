@@ -111,7 +111,7 @@ Implemented and developer-validated. On 2026-11-02 the developer reported Ruff l
 
 ## Step 4b-1 — shared archive schema foundation
 
-Migration 4 adds the identity-only user table and the first shared source/message domain tables. Local validation is pending.
+Migration 4 adds the identity-only user table and the first shared source/message domain tables. The developer confirmed migration validation passed; seven optional PostgreSQL integration tests were skipped because `TELEBRIEF_TEST_PG_URL` was not configured.
 
 - `users` stores only the Telegram user ID and account creation timestamp; no profile fields are introduced.
 - `sources` stores a platform-qualified source identity, safe display label, source type, and public/private/unknown visibility.
@@ -132,7 +132,7 @@ Migration 4 adds the identity-only user table and the first shared source/messag
 
 ## Step 4b-2 — typed shared-archive repositories
 
-Implemented in source; local validation is pending. This slice adds persistence APIs over migration 4 without changing the schema or wiring a collector/worker.
+Implemented in source and developer-tested. This slice adds persistence APIs over migration 4 without changing the schema or wiring a collector/worker.
 
 - `ArchiveRepository` provides identity-only user creation/lookup; stable source upsert/lookup; Bot API and user-owned Telethon access upserts; explicit source authorization grant/revocation; and subscription state upserts/lookups.
 - Bot API access records have no user owner. Telethon access records require the owning Chatbrief Telegram user. Updating access state preserves the last successful verification timestamp unless a new timestamp is supplied.
