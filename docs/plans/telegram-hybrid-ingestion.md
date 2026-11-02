@@ -1332,3 +1332,10 @@ migrations, or tests.
 - This rule applies independently to `export.json`, `export-report.json`, and `media-manifest.json`.
 - The exact required/optional field sets and validation details remain part of the detailed schema design.
 
+
+### Explicit null values in versioned export documents — approved (Option A)
+
+- Each of `export.json`, `export-report.json`, and `media-manifest.json` may contain `null` only for fields that its own schema explicitly defines as nullable.
+- A `null` value for any field not explicitly nullable makes that document invalid; consumers must reject it.
+- An omitted optional field remains distinct from an explicitly present `null` value. Optional-field absence follows the field's documented optional semantics.
+- The exact nullable field sets remain part of detailed schema design.
