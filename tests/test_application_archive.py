@@ -215,7 +215,7 @@ async def test_foreign_keys_reject_unknown_users_and_sources(archive_repository)
             AccessState.AVAILABLE,
         )
 
-    with pytest.raises(Exception):
+    with pytest.raises(aiosqlite.IntegrityError):
         await archive_repository.set_authorization(
             "missing-source", 9999, AuthorizationState.ACTIVE
         )
