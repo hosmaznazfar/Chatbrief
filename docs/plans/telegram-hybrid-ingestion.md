@@ -1339,3 +1339,9 @@ migrations, or tests.
 - A `null` value for any field not explicitly nullable makes that document invalid; consumers must reject it.
 - An omitted optional field remains distinct from an explicitly present `null` value. Optional-field absence follows the field's documented optional semantics.
 - The exact nullable field sets remain part of detailed schema design.
+
+### Unsupported schema versions — approved (Option A)
+
+- A consumer must reject `export.json`, `export-report.json`, or `media-manifest.json` when its `schema_version` is not supported by that consumer.
+- Report the unsupported schema version clearly; do not attempt best-effort parsing using a different supported schema version.
+- Apply this rule independently to each document. Ignoring unknown fields remains permitted only within a supported schema version and does not authorize parsing an unsupported version.
