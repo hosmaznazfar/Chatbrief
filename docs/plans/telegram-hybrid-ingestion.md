@@ -1514,3 +1514,30 @@ These defaults apply across the primary export and optional media archive. Exact
 - Empty primary categories are represented by empty arrays/objects, not missing keys or `null`. The optional media ZIP is omitted entirely when it contains no eligible binaries; do not create an empty media archive just to carry an empty manifest.
 - Report `counts` must agree with the actual number of records and media entries. A mismatch between manifest entries and ZIP files, or between references and primary records, makes the archive invalid.
 - These are recommended schema-shape defaults. Exact domain fields, author/privacy treatment, import behavior, and final validation details remain open. Documentation-only; no application code, schemas, migrations, or tests changed/run.
+
+
+
+## Export report and media manifest validation details — recommended defaults
+
+### Report result, counts, and omission codes
+
+- Define `result` as `complete` or `complete_with_omissions`. A successful primary archive must never claim completeness if any eligible requested content was omitted.
+- Use non-negative JSON integers for counts and byte sizes; reject negative, fractional, string, boolean, or null values.
+- Use structured omission records with a stable machine-readable `reason_code`, a `category`, a positive `count`, and an explanatory `message`. Do not rely on parsing prose to determine the reason.
+- Initial reason-code vocabulary: `expired`, `unavailable`, `unsupported`, `size_limit`, `unsafe_filename`, `missing_content`, and `not_exportable`. Keep authorization revocation/source deletion that invalidates the whole snapshot as job outcomes, not ordinary omissions.
+- Report omissions by category/reason and count rather than exporting private identifiers or copying omitted message contents into the report. Add a reference only when it resolves to an included export record and is necessary to explain the omission.
+- `warnings` should be structured as `{code, message}` records with stable warning codes. Warnings are informational and do not replace omission records or change the result by themselves.
+- Counts should cover included preferences/records/messages and media files/bytes, plus omitted media item counts where known. Do not report database totals or imply completeness outside the export cutoff and authorized retained scope.
+
+### Media manifest integrity and archive paths
+
+- Use lowercase hexadecimal SHA-256 checksums over the exact bytes written into the ZIP. The checksum is for integrity verification, not a substitute for authorization or encryption.
+- `size_bytes` is the exact uncompressed binary length in bytes; it must match the corresponding ZIP entry after extraction.
+- `content_type` is a MIME type when reliably known; omit it when unknown rather than guessing. `media_type` is the normalized archive category: `image`, `video`, `document`, or `audio`.
+- Archive paths must use forward slashes and start with exactly one predefined category directory: `media/images/`, `media/videos/`, `media/documents/`, or `media/audio/`. Do not include user-controlled directory components.
+- Normalize the basename for portability, remove path separators/control characters and unsafe components, and reject an empty or invalid result. Preserve the original filename separately as descriptive metadata when available.
+- Resolve filename collisions deterministically within a category by appending a numeric suffix before the extension (for example, `report-2.pdf`). Compare collision candidates case-insensitively to avoid collisions on case-insensitive filesystems. Never overwrite an existing ZIP entry.
+- Reject symbolic links and non-regular filesystem entries as media inputs. Resolve and validate the final staging file beneath the dedicated staging root before reading it; do not follow an archive path or manifest path as a source filesystem path.
+- Validate ZIP entries against the manifest as a one-to-one set: every manifest path exists exactly once, every media binary entry has exactly one manifest item, and no unexpected binary entries are present. The README and manifest themselves are not media items.
+- A media manifest may contain an empty `omissions` array or omit that optional member when there are no manifest-specific omissions. The primary report remains authoritative for the overall omission summary.
+- These are recommended validation defaults; exact code names and filename sanitization algorithm should be finalized with the implementation/library review. Documentation-only; no application code, schemas, migrations, or tests changed/run.
