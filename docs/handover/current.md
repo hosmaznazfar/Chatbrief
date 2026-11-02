@@ -2,20 +2,21 @@
 
 # Current status — 2026-11-02 (authoritative update)
 
-> This section supersedes older status statements later in this handover that describe validation as pending, package/dependency upgrades as incomplete, or architecture proposals as awaiting approval. Historical notes remain for audit context; use this section for the current project stage.
+> This section supersedes older status statements later in this handover. Historical notes remain for audit context; use this section for the current implementation stage.
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest source fix commit:** `44ec74e4d1cbda6d7485aa944243c1745a59c0f9` (stale-attempt validation ordering, validation helper complexity, and cleanup-row narrowing).
-- **Latest documentation commit:** `c5577228ca183f41feaf115cfa91d95bef7e9c26` (records local validation outcomes and outstanding reruns).
-- **Local worktree:** the developer's latest report showed only modified Graphify artifacts before pulling; preserve local changes and inspect `git status --short` before the next pull.
+- **Latest verified implementation commits:** `4170244` (worker lease operations) and `9631cb2` (lease tests), followed by documentation commits recorded in branch history.
+- **Local worktree:** after the developer's last report, the local branch was fast-forwarded to `f1a3beb`; local formatting was applied to the Step 3b files. A stash named `local Step 3b changes` contains formatting-only edits that appear redundant with the formatted current files; do not reapply it unless a later comparison reveals substantive changes.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
-- **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and the final Ruff format check passed.
-- **Major architecture decisions and proposals:** approved, including Telegram hybrid ingestion/multi-user direction and the Phase 1 export-persistence migration proposal. Do not reopen these decisions without a concrete implementation contradiction.
-- **Implementation status:** application-state database configuration, migration runner, schema migration, startup integration, export-job repository, delivery-attempt repository, and cleanup-task repository are implemented in source. Steps 1–2 are developer-validated. Step 3a has developer-confirmed focused tests (**109 passed**), Ruff lint, Pyright (**0 errors/warnings/information**), full suite (**612 passed, 7 skipped; 94.42% coverage**), and now a successful Ruff format check after the developer formatted the files. Step 3b's first local validation found **one test failure** (118 passed), a Ruff C901 issue, and one Pyright optional-row issue. These three issues were fixed in commit `44ec74e`; validation must be rerun against that commit before Step 3b can be marked validated.
-- **Graphify:** the developer reported refreshing/updating and committing the graph after Step 3a. Step 3b changes the source graph again; refresh and review it after local validation before treating the shared graph as current. The GitHub editing environment cannot verify the local graph artifacts.
-- **Next stage:** sync the latest branch, rerun focused Step 3b tests, Ruff lint/format, Pyright, and the full suite after commit `44ec74e`. Then refresh/review Graphify (the local pull launched a background rebuild; do not stage artifacts blindly). Only after all checks pass proceed to worker claims and lease-generation fencing.
+- **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and Ruff format passed.
+- **Step 3a validation:** developer-confirmed — focused tests **109 passed**, Ruff lint/format passed, Pyright **0 errors/warnings/information**, full suite **612 passed, 7 skipped**, coverage **94.42%**.
+- **Step 3b validation:** developer-confirmed — focused tests **119 passed**, Ruff lint/format passed, Pyright **0 errors/warnings/information**, full suite **622 passed, 7 skipped**, coverage **94.07%**.
+- **Step 3c implementation:** worker claim, renewal, release, retry scheduling, and generation-fenced state-transition APIs have been added with focused tests. Local validation is pending; this GitHub editing environment cannot run the developer's `uv` checks.
+- **Graphify:** optional development tooling for code navigation and impact analysis. It is not a Chatbrief runtime feature or a project implementation deliverable; no graph refresh/commit is required to validate the current code slice.
+- **Next stage:** pull the Step 3c commits, run focused export tests plus Ruff lint/format, Pyright, and the full suite. Fix any implementation issues before proceeding to worker orchestration.
+
 
 ## Step 3b implementation update — delivery attempts and cleanup tasks
 
