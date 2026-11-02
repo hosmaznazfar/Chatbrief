@@ -327,7 +327,11 @@ class ExportRepository:
                           OR lease_expires_at IS NULL
                           OR lease_expires_at <= ?
                       )
-                    ORDER BY COALESCE(next_run_at, created_at), created_at, id
+                    ORDER BY
+                        (last_claimed_at IS NOT NULL),
+                        last_claimed_at,
+                        created_at,
+                        id
                     LIMIT 1
                     """,
                     (
@@ -347,12 +351,14 @@ class ExportRepository:
                     """
                     UPDATE export_jobs
                     SET lease_owner = ?, lease_expires_at = ?,
-                        lease_generation = lease_generation + 1, updated_at = ?
+                        lease_generation = lease_generation + 1,
+                        last_claimed_at = ?, updated_at = ?
                     WHERE id = ? AND lease_generation = ?
                     """,
                     (
                         worker_id,
                         lease_expires_at,
+                        timestamp,
                         timestamp,
                         candidate["id"],
                         candidate["lease_generation"],
