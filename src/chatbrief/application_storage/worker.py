@@ -79,7 +79,9 @@ class ExportWorker:
             or worker_id != worker_id.strip()
             or len(worker_id) > 128
         ):
-            raise ValueError("worker_id must be a non-empty opaque identifier of at most 128 characters")
+            raise ValueError(
+                "worker_id must be a non-empty opaque identifier of at most 128 characters"
+            )
         normalized_handlers = {
             ExportJobState(state): handler for state, handler in phase_handlers.items()
         }
