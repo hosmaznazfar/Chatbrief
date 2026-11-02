@@ -85,27 +85,17 @@ _TERMINAL_STATES = {
 _ALLOWED_TRANSITIONS = {
     ExportJobState.QUEUED: {
         ExportJobState.COLLECTING,
-        ExportJobState.CANCELLED,
         ExportJobState.FAILED,
-        ExportJobState.INVALIDATED,
     },
     ExportJobState.COLLECTING: {
         ExportJobState.PACKAGING,
-        ExportJobState.CANCELLED,
         ExportJobState.FAILED,
-        ExportJobState.INVALIDATED,
     },
     ExportJobState.PACKAGING: {
         ExportJobState.READY,
-        ExportJobState.CANCELLED,
         ExportJobState.FAILED,
-        ExportJobState.INVALIDATED,
     },
-    ExportJobState.READY: {
-        ExportJobState.CANCELLED,
-        ExportJobState.INVALIDATED,
-        ExportJobState.EXPIRED,
-    },
+    ExportJobState.READY: set(),
     ExportJobState.CANCELLED: set(),
     ExportJobState.FAILED: set(),
     ExportJobState.INVALIDATED: set(),
@@ -282,8 +272,10 @@ class ExportRepository:
         """Atomically transition a job only if its current state is expected.
 
         Returns None when another operation has already changed the state. This
-        compare-and-set operation prevents cancellation and completion from both
-        winning a race. Worker lease-generation fencing is a separate later step.
+        compare-and-set operation prevents competing progression/failure updates
+        from both winning a race. Cancellation, invalidation, and expiry require
+        cleanup-aware operations and are intentionally not exposed here yet.
+        Worker lease-generation fencing is a separate later step.
         """
         self._validate_owner(owner_telegram_user_id)
         expected = tuple(dict.fromkeys(ExportJobState(state) for state in expected_states))
