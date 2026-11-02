@@ -6,7 +6,7 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest verified implementation commits:** `4170244` (worker lease operations) and `9631cb2` (lease tests), followed by documentation commits recorded in branch history.
+- **Latest verified implementation commits:** `4170244` (worker lease operations), `9631cb2` (lease tests), `4293ddb` (shared lease validation), `2eb735d` (terminal-transition test), and `c867d03` (final lease-input validation). Latest workflow documentation commit: `a3dcae2`.
 - **Local worktree:** after the developer's last report, the local branch was fast-forwarded to `f1a3beb`; local formatting was applied to the Step 3b files. A stash named `local Step 3b changes` contains formatting-only edits that appear redundant with the formatted current files; do not reapply it unless a later comparison reveals substantive changes.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
