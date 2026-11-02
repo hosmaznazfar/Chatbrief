@@ -1764,4 +1764,13 @@ Durable work queue for deletion and staging cleanup, including cleanup that must
 - PostgreSQL support for the new export tables.
 - Choosing numeric lease duration, heartbeat cadence, worker concurrency default, or deployment-specific staging capacity before workload/resource inspection.
 
-**Implementation status:** approved. Proceed with the additive migration in small tested steps, preserving the legacy-data exclusion and all approved constraints. Exact runtime values and library-specific behavior still marked for verification must be confirmed against the current code/dependencies. No application code or migration implementation is implied by this approval.
+**Implementation status — 2026-11-02:**
+
+- The approved application-state database boundary, SQLite migration runner, initial export tables, and root application startup integration are implemented.
+- The developer confirmed the focused Step 2 tests and full pytest suite passed after the pytest import-path correction. Ruff lint/format and Pyright had passed in the preceding run.
+- Step 3a adds the export-job repository, owner-scoped reads, active-job lookup, and atomic expected-state lifecycle transitions. Focused tests are added; local validation is pending.
+- A `ready` transition requires a persisted successful primary delivery attempt. Delivery-attempt and cleanup-task repository operations are the next implementation slice.
+- Worker claims/leases, commands, ZIP generation, Telegram delivery, retries, cleanup orchestration, export JSON serializers, PostgreSQL support, and broader hybrid ingestion are not yet implemented.
+- The legacy message-history database remains independent and unchanged. No legacy data backfill has been attempted.
+
+Continue in small tested steps, preserving the legacy-data exclusion and all approved constraints. Exact runtime values and library-specific behavior still marked for verification must be confirmed against the current code/dependencies.
