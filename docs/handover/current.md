@@ -6,7 +6,7 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest implementation commits:** Step 3e validation follow-up was completed by the developer locally; worker orchestration commits: worker service and follow-up refinements through `31cceb7`; worker tests and fixes through `3c13191`; package export `2dd0f3f`.
+- **Latest implementation commits:** Step 3e validation follow-up was completed by the developer locally; worker orchestration commits: worker service and follow-up refinements through `cc85074`; worker tests and fixes through `3c13191`; package export `2dd0f3f`.
 - **Local worktree:** not visible from the GitHub editing environment. Preserve local Graphify output and other uncommitted work when pulling.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
