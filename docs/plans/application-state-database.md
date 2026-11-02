@@ -1,11 +1,11 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2 implemented and developer-validated; Steps 3a–3b repository APIs implemented, local validation pending  
+**Status:** Steps 1–2 and Steps 3a–3b implemented and developer-validated; Step 3c worker lease APIs implemented, local validation pending  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
 
-Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, and cleanup-task persistence are implemented as separate repository slices. Worker leases, commands, archive generation, and Telegram delivery remain out of scope.
+Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, cleanup-task, and worker-lease persistence operations are implemented as separate repository slices. Worker orchestration, commands, archive generation, and Telegram delivery remain out of scope.
 
 ## Step 1 — database foundation
 
@@ -41,7 +41,7 @@ The developer subsequently reported updating Git with the refreshed graph after 
 
 ## Step 3a — export-job repository and atomic state transitions
 
-Implemented in source. Developer-reported checks after syncing this slice: focused export/storage/config/lifecycle tests **109 passed**; Ruff lint passed; Pyright **0 errors, 0 warnings, 0 informations**; full suite **612 passed, 7 skipped**, coverage **94.42%**. The Ruff format check still reported two files requiring formatting (`exports.py` and `test_application_exports.py`); rerun it after formatting before marking Step 3a fully validated.
+Implemented and developer-validated. Focused export/storage/config/lifecycle tests: **109 passed**; Ruff lint passed; Pyright **0 errors, 0 warnings, 0 informations**; full suite **612 passed, 7 skipped**, coverage **94.42%**; Ruff format check passed after formatting.
 
 - `ExportRepository.create_job()` creates an opaque internal job UUID and a separate opaque export UUID, assigns the authenticated Telegram user as owner, and starts the job in `queued`.
 - The database partial unique index remains the final concurrency guard enforcing one blocking export per user. The repository translates that specific uniqueness conflict into `ActiveExportExistsError`.
@@ -55,7 +55,7 @@ Focused tests cover owner scoping, per-user uniqueness, terminal-state release, 
 
 ## Step 3b — delivery-attempt and cleanup-task repositories
 
-Implemented in source; local validation is pending. No migration or schema change was required because migration 1 already defines both tables.
+Implemented and developer-validated. Focused Step 3b tests: **119 passed**; Ruff lint passed; Ruff format check passed; Pyright **0 errors, 0 warnings, 0 informations**; full suite **622 passed, 7 skipped**, coverage **94.07%**. No migration or schema change was required because migration 1 already defines both tables.
 
 - Added typed delivery-attempt/document-kind models and `ExportDeliveryRepository`.
 - `start_attempt()` appends a per-job/per-document attempt number in a short `BEGIN IMMEDIATE` transaction, requires an owner-owned job in `packaging`, and prevents concurrent unresolved attempts. Media attempts require a confirmed successful primary attempt.
@@ -66,8 +66,19 @@ Implemented in source; local validation is pending. No migration or schema chang
 - Added focused tests for primary/media delivery, owner checks, retries and attempt numbering, unknown outcomes, terminal resolution, cleanup scheduling/retries, and parent-job deletion.
 - No worker leases, external Telegram calls, archive/staging filesystem operations, or user-facing commands were added.
 
+## Step 3c — worker claims and lease-generation fencing
+
+Implemented in source; developer validation is pending. The existing migration-1 lease columns and lease-expiry index are reused; no schema migration is required.
+
+- `claim_next_job()` atomically selects the earliest due queued/collecting/packaging job whose lease is absent or expired, assigns the worker, sets the expiry, and increments the generation.
+- `renew_lease()` and `release_lease()` require the current worker ID, generation, and an unexpired lease. Release can set a future `next_run_at` for backoff.
+- `transition_claimed_job()` fences state transitions by worker ID, generation, and live expiry. A stale worker cannot transition a job after expiry or after another worker reclaims it. Transitions to ready or a terminal state clear the lease.
+- Lease timestamps must be timezone-aware ISO 8601 values and are normalized to UTC. Worker IDs are opaque, non-empty identifiers; lease durations are bounded to 1–3600 seconds.
+- Focused tests cover competing claims, generation increments after expiry, stale-worker rejection, lease renewal/release, scheduled retry eligibility, and invalid lease parameters.
+- This slice adds persistence primitives only. It does not start a worker loop, perform external work, or change delivery-attempt writes to require a lease token.
+
 ## Next steps
 
-1. Run the focused export/storage/lifecycle tests, Ruff lint/format, and Pyright locally; fix any issues and run the full suite at the integration milestone.
-2. Review and refresh Graphify for the Step 3b source changes, then commit only reviewed portable graph artifacts.
-3. Add worker claims and lease-generation fencing after the job, delivery-attempt, and cleanup-task repository operations are validated.
+1. Developer runs focused export/storage/delivery/lifecycle tests, Ruff lint/format, Pyright, and the full suite for Step 3c.
+2. Fix any validation issues before proceeding to worker orchestration.
+3. Later slices can connect worker execution to collection, packaging, delivery, and cleanup while passing the lease generation through every worker-owned mutation.
