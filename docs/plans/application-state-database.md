@@ -22,7 +22,8 @@ Establish a required application-state SQLite database independently from the op
 
 Run from the repository root:
 
-    uv run pytest tests/test_application_storage.py tests/test_config.py -q
+    uv run pytest --no-cov tests/test_application_storage.py tests/test_config.py -q
+    uv run pytest -q
     uv run ruff check src/chatbrief/application_storage src/chatbrief/config tests/test_application_storage.py tests/test_config.py
     uv run ruff format --check src/chatbrief/application_storage src/chatbrief/config tests/test_application_storage.py tests/test_config.py
     uv run pyright
