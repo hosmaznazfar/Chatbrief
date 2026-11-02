@@ -65,7 +65,24 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add short transactional compare-and-set state transitions with an explicit lifecycle graph.
 - [x] Reject premature `ready` transitions unless a successful primary delivery attempt is already persisted.
 - [x] Add focused tests for ownership, uniqueness, state transitions, terminal release, and metadata validation.
-- [ ] Run focused export/storage/lifecycle pytest tests locally.
-- [ ] Run Ruff lint/format and Pyright locally.
-- [ ] Review complete implementation diff; refresh/review Graphify after validation.
-- [ ] Add delivery-attempt and cleanup-task repository operations in the next slice.
+- [x] Run focused export/storage/config/lifecycle pytest tests locally — developer-confirmed **109 passed**.
+- [x] Run Ruff lint and Pyright locally — developer-confirmed; Pyright **0 errors, 0 warnings, 0 informations**.
+- [ ] Run Ruff format check locally — last reported two files requiring formatting (`exports.py`, `test_application_exports.py`); rerun after formatting.
+- [x] Run full suite after Step 3a — developer-confirmed **612 passed, 7 skipped**, coverage **94.42%**.
+- [x] Refresh and commit the graph after Step 3a — developer reported the updated graph was committed; exact commit not yet recorded here.
+
+## Export persistence — Step 3b: delivery attempts and cleanup tasks
+
+- [x] Add typed delivery document-kind, attempt-outcome, cleanup-task-type/state models.
+- [x] Add owner-scoped delivery-attempt creation with sequential per-document attempt numbers and unresolved-attempt protection.
+- [x] Allow retry only after a known failed attempt; prevent automatic retry after ambiguous delivery.
+- [x] Require confirmed primary delivery before media delivery and before the job can transition to `ready`.
+- [x] Add one-time finalization of started attempts with restricted Telegram identifiers and stable error metadata.
+- [x] Persist media delivery outcomes on the export job.
+- [x] Add owner-checked Telegram-message and staging-object cleanup task creation.
+- [x] Add due-task listing, task lookup, retry/result recording, and parent-job deletion survival.
+- [x] Add focused tests for delivery attempts, ownership, retries, media outcome, cleanup scheduling, and orphan cleanup.
+- [ ] Run focused Step 3b tests locally.
+- [ ] Run Ruff lint/format and Pyright for Step 3b; run full pytest suite at the integration milestone.
+- [ ] Review complete Step 3b diff and refresh/review Graphify after source changes.
+- [ ] Validate Step 3a formatter correction and close its remaining validation item.
