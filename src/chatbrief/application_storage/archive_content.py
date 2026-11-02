@@ -160,6 +160,7 @@ class ArchiveContentRepository:
                 (source_id, platform_message_id),
             ) as cursor:
                 row = await cursor.fetchone()
+            await connection.commit()
         if row is None:
             raise RuntimeError("Message could not be read after upsert")
         return _message(row)
@@ -178,6 +179,7 @@ class ArchiveContentRepository:
                 (source_id, platform_message_id),
             ) as cursor:
                 row = await cursor.fetchone()
+            await connection.commit()
         return _message(row) if row is not None else None
 
     async def mark_message_deleted(
