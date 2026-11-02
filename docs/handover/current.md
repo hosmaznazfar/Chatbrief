@@ -6,14 +6,30 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Remote updates:** the developer confirmed focused and full pytest runs passed after the pytest import-path fix, then synchronized Graphify and pushed commit `ab53ac1`. The export-job repository implementation and tests were subsequently committed to this branch by the GitHub editing workflow; sync the latest branch tip before local validation.
+- **Latest assistant-authored commit:** `c75fc2c9ddad2a0e1421874918303d0fffeca768` (documentation update for Steps 3a–3b); preceding Step 3b source/test commits are on this branch. Sync the latest branch tip before local validation.
+- **Local worktree:** unknown to the GitHub editing environment. Preserve local changes and inspect `git status --short` before pulling.
 - **Local worktree:** unknown to the GitHub editing environment. Preserve local changes and inspect `git status --short` before pulling.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
 - **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and the final Ruff format check passed.
 - **Major architecture decisions and proposals:** approved, including Telegram hybrid ingestion/multi-user direction and the Phase 1 export-persistence migration proposal. Do not reopen these decisions without a concrete implementation contradiction.
-- **Implementation status:** application-state database configuration, migration runner, schema migration, and startup integration are implemented. Steps 1–2 are developer-validated. Step 3a adds the export-job repository and compare-and-set lifecycle transitions; local validation is pending. Delivery-attempt and cleanup repositories, workers/leases, commands, archive generation, delivery, and broader hybrid ingestion remain unimplemented.
-- **Next stage:** sync the latest branch, run focused export/storage/lifecycle tests plus Ruff, formatting, and Pyright; review the implementation; then add delivery-attempt and cleanup-task persistence before worker leases.
+- **Implementation status:** application-state database configuration, migration runner, schema migration, startup integration, export-job repository, delivery-attempt repository, and cleanup-task repository are implemented in source. Steps 1–2 are developer-validated. Step 3a has developer-confirmed focused tests (**109 passed**), Ruff lint, Pyright (**0 errors/warnings/information**), and full suite (**612 passed, 7 skipped; 94.42% coverage**); its Ruff format check last failed for two files and still needs a successful rerun. Step 3b tests and static checks have not yet been run locally.
+- **Graphify:** the developer reported refreshing/updating and committing the graph after Step 3a. Step 3b changes the source graph again; refresh and review it after local validation before treating the shared graph as current.
+- **Next stage:** sync the latest branch, run focused Step 3b tests, Ruff lint/format, and Pyright; fix failures; run the full suite at the integration milestone. Also resolve the outstanding Step 3a formatting check. Then refresh/review Graphify and proceed to worker claims and lease-generation fencing.
+
+## Step 3b implementation update — delivery attempts and cleanup tasks
+
+Implemented in source; local validation is pending. Added:
+
+- `src/chatbrief/application_storage/delivery.py`: typed delivery-attempt and cleanup-task models, `ExportDeliveryRepository`, and `ExportCleanupRepository`.
+- `src/chatbrief/application_storage/__init__.py`: public exports for the new repository APIs and models.
+- `tests/test_application_delivery.py`: focused tests for primary/media attempts, owner scoping, sequential retries, ambiguous delivery handling, cleanup scheduling/retries, and cleanup survival after parent-job deletion.
+
+Delivery attempts are created in short transactions and finalized only once. A failed attempt can be retried with a new number; an unresolved or delivery-unknown attempt blocks automatic retry to avoid duplicate sends. Media delivery requires a confirmed primary send. Successful primary attempts satisfy the existing `ready` transition guard. Telegram delivery identifiers remain confined to the restricted attempt table.
+
+Cleanup tasks can target Telegram messages or opaque staging keys. They are created only for jobs owned by the supplied user, remain after parent-job deletion through the approved `ON DELETE SET NULL` relationship, and can be retried or moved to a terminal state. Due-task listing includes overdue-deadline pending tasks so a future worker can explicitly abandon them rather than silently dropping them.
+
+No schema migration, external Telegram call, archive generation, filesystem cleanup, worker lease, or user-facing command was added. The developer must run local validation; this GitHub-only environment cannot execute `uv` checks. The new source changes also require a Graphify refresh/review.
 
 ## Step 2 validation follow-up — 2026-11-02
 
