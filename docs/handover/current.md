@@ -6,7 +6,7 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest implementation commits:** `e7779e1` (fair-scheduling migration), `30c17cd` (fair claim selection), `1fddf80` (multi-user rotation test), `ef6dbcf` and `8265796` (migration-upgrade coverage), and `d266b0e` / `efbfb97` (deterministic tie-breaking and explicit migration ordering).
+- **Latest implementation commits:** `e7779e1` (fair-scheduling migration), `30c17cd` (fair claim selection), `1fddf80` (multi-user rotation test), `ef6dbcf` and `8265796` (migration-upgrade coverage), and `d266b0e` / `efbfb97` (deterministic tie-breaking and explicit migration ordering), and `0d0b430`, `a6bf17b`, `9c790a1`, `79f3aef` (index, test, and plan refinements).
 - **Local worktree:** not visible from the GitHub editing environment. The developer should fast-forward the branch and preserve any local uncommitted work/stashes.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
