@@ -1018,3 +1018,8 @@ Reject `export.json`, `export-report.json`, or `media-manifest.json` if any JSON
 ## Export `schema_version` value validation — approved (Option A)
 
 In `export.json`, `export-report.json`, and `media-manifest.json`, `schema_version` must be a JSON integer greater than zero. Reject zero, negative values, decimals (including `1.0`), strings (including `"1"`), booleans, null, and all other non-integer or non-positive values. Do not coerce or normalize values. Apply independently to each document. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export missing `schema_version` — approved (Option A)
+
+`export.json`, `export-report.json`, and `media-manifest.json` are invalid if the top-level `schema_version` field is missing. Consumers must not infer a default version, including version `1`. Apply independently to each document. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
