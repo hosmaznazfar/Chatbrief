@@ -6,7 +6,11 @@ import logging
 import pytest
 import pytest_asyncio
 
-from chatbrief.application_storage import ApplicationDatabase, ExportJobState, ExportRepository
+from chatbrief.application_storage import (
+    ApplicationDatabase,
+    ExportJobState,
+    ExportRepository,
+)
 from chatbrief.application_storage.worker import ExportWorker
 
 
@@ -68,6 +72,7 @@ async def test_worker_never_exceeds_configured_concurrency(export_repository):
     active = 0
     maximum_active = 0
     handled = 0
+
     async def process(_job):
         nonlocal active, maximum_active, handled
         active += 1
@@ -231,7 +236,6 @@ async def test_worker_schedules_backoff_when_handler_does_not_advance_state(expo
     assert current.next_run_at > current.updated_at
 
 
-
 @pytest.mark.asyncio
 async def test_shutdown_cancels_handler_after_grace_and_releases_lease(export_repository):
     job = (await _create_jobs(export_repository, (101,)))[0]
@@ -262,7 +266,6 @@ async def test_shutdown_cancels_handler_after_grace_and_releases_lease(export_re
     assert current is not None
     assert current.state is ExportJobState.QUEUED
     assert current.lease_owner is None
-
 
 
 @pytest.mark.parametrize(
