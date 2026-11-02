@@ -68,8 +68,6 @@ async def test_worker_never_exceeds_configured_concurrency(export_repository):
     active = 0
     maximum_active = 0
     handled = 0
-    worker = None
-
     async def process(_job):
         nonlocal active, maximum_active, handled
         active += 1
@@ -81,8 +79,6 @@ async def test_worker_never_exceeds_configured_concurrency(export_repository):
             await release_handlers.wait()
         finally:
             active -= 1
-            if release_handlers.is_set():
-                worker.stop()
 
     worker = ExportWorker(
         export_repository,
@@ -96,6 +92,7 @@ async def test_worker_never_exceeds_configured_concurrency(export_repository):
     assert worker.active_count == 2
     assert handled == 2
     release_handlers.set()
+    worker.stop()
     await asyncio.wait_for(running, timeout=2)
 
     assert maximum_active == 2
