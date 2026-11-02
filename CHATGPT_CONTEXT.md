@@ -97,7 +97,7 @@ The current implementation remains single-user and Telethon-backed until these p
 
 ## Current refactor status (2026-10-30)
 
-The package/platform implementation migration is the starting point for the Python-only modernization on `upgrade/full-project-modernization`. The full test suite and quality checks have deliberately not been run.
+The package/platform implementation migration is complete on `refactor/chatbrief-package-layout`. The developer confirmed that tests have passed and all package/dependency upgrades are complete. Major architecture decisions and proposals are approved; the project is in the implementation stage.
 
 Completed:
 - Migrated test imports to `chatbrief.*` and moved legacy `tests/test_core.py` behavior coverage into `tests/test_digest.py`.
@@ -285,7 +285,7 @@ Report recommendations:
 - Source records contain platform enum and safe display label only; no source usernames/IDs/invite links/private URLs/transport IDs. Missing required source linkage is invalid snapshot data, not a dangling/synthetic source ref.
 - Exact field keys remain dependent on the future user-scoped model and Phase 1 migration proposal. No code/tests/migrations changed or run.
 
-## Phase 1 export persistence migration proposal — pending approval
+## Phase 1 export persistence migration proposal — approved for implementation
 
 Repository inspection: existing message storage is optional, uses inline `CREATE TABLE IF NOT EXISTS`, and has no versioned migration runner or application-wide user table. It cannot safely supply export ownership or source identity.
 
@@ -299,4 +299,4 @@ Proposed additive design:
 - Short atomic transactions; worker writes fenced by lease generation; no DB transaction across archive or Telegram calls.
 - Additive migration only. Do not alter old messages, delivery JSON, config, or Telethon session. Do not backfill old message rows: they lack stored owner, stable source ID, and message ID. Any later backfill requires a separate proof-based mapping proposal.
 - First migration creates only export tables and migration metadata. PostgreSQL migrations, shared users/sources/subscriptions/messages/coverage/session tables, workers/commands/ZIP/delivery implementation, and legacy backfill remain out of scope.
-- Approval gate: approve table/column/constraint proposal and explicit legacy-data exclusion before any code or migration. No code/tests/migrations changed or run.
+- Implementation status: approved direction; implement additively in tested slices. The proposal is not yet implemented, and legacy data must remain untouched unless a separately approved proof-based mapping is established.
