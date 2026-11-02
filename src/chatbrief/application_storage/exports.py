@@ -348,23 +348,14 @@ async def _require_confirmed_primary_delivery(
     ) as cursor:
         successful_attempt = await cursor.fetchone()
     if successful_attempt is None:
-        raise ValueError(
-            "A ready export requires a confirmed primary delivery attempt"
-        )
+        raise ValueError("A ready export requires a confirmed primary delivery attempt")
 
     delivered_at = successful_attempt["finished_at"]
     expires_at = changes.get("expires_at", current["expires_at"])
     if not delivered_at or not expires_at:
-        raise ValueError(
-            "A ready export requires primary delivery and expiry timestamps"
-        )
-    if (
-        "primary_delivered_at" in changes
-        and changes["primary_delivered_at"] != delivered_at
-    ):
-        raise ValueError(
-            "Primary delivery timestamp must match the confirmed attempt"
-        )
+        raise ValueError("A ready export requires primary delivery and expiry timestamps")
+    if "primary_delivered_at" in changes and changes["primary_delivered_at"] != delivered_at:
+        raise ValueError("Primary delivery timestamp must match the confirmed attempt")
     changes["primary_delivered_at"] = delivered_at
 
 
@@ -390,9 +381,7 @@ async def _transition_in_transaction(
             return None
 
         if target is ExportJobState.READY:
-            await _require_confirmed_primary_delivery(
-                connection, job_id, current, changes
-            )
+            await _require_confirmed_primary_delivery(connection, job_id, current, changes)
 
         assignments = ["state = ?", "updated_at = ?"]
         parameters: list[object] = [target.value, timestamp]
@@ -404,9 +393,7 @@ async def _transition_in_transaction(
             parameters.append(timestamp)
         else:
             assignments.append("terminal_at = NULL")
-        parameters.extend(
-            (job_id, owner_telegram_user_id, *(state.value for state in expected))
-        )
+        parameters.extend((job_id, owner_telegram_user_id, *(state.value for state in expected)))
 
         result = await connection.execute(
             f"""
