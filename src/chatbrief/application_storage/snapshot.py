@@ -230,8 +230,9 @@ class ExportSnapshotRepository:
                 # A source metadata update after cutoff makes its historical
                 # visibility unknowable because the schema has no change history.
                 if row["source_updated_at"] > cutoff_text:
-                    omit("messages", "not_exportable")
-                    continue
+                    raise SnapshotStateChangedError(
+                        "A subscribed source changed after the export cutoff"
+                    )
                 if visibility == "unknown":
                     omit("messages", "not_exportable")
                     continue
@@ -275,7 +276,7 @@ class ExportSnapshotRepository:
                     FROM messages
                     WHERE source_id = ?
                       AND deleted_at IS NULL
-                      AND collected_at >= ?
+                      AND COALESCE(source_timestamp, collected_at) >= ?
                       AND collected_at <= ?
                       AND (source_timestamp IS NULL OR source_timestamp <= ?)
                     ORDER BY
