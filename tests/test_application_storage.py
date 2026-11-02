@@ -27,9 +27,7 @@ async def test_initial_migration_creates_export_schema_and_is_idempotent(tmp_pat
     await database.initialize()
 
     async with _connected(database) as connection:
-        async with connection.execute(
-            "SELECT version, checksum FROM schema_migrations"
-        ) as cursor:
+        async with connection.execute("SELECT version, checksum FROM schema_migrations") as cursor:
             rows = await cursor.fetchall()
         assert len(rows) == 1
         assert rows[0][0] == 1
