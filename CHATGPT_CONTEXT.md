@@ -230,3 +230,17 @@ Report result is `complete` or `complete_with_omissions`; omissions carry stable
 ## Exported message privacy — approved
 
 Export authorized retained message content/captions/timestamps, but no third-party profile data or identity fields (sender names/usernames/Telegram IDs, photos, phone numbers, participant/contact lists, forwarded/quoted author identities). No Telegram transport IDs. Message content remains exportable when authorized. Approved; not implemented.
+
+## Export schema v1 message/source/media defaults — working recommendations
+
+Repository inspection on `refactor/chatbrief-package-layout` found the current `Message` fields are text, sender, timestamp, link, channel_name, has_media, and media_type; the Telegram adapter derives sender names, Telegram links, and localized media labels. `ChannelConfig` has source id/name plus lookback/prompt/filter/group settings. `Settings` mixes user-facing preferences with operational values and target_user_id. Current storage is optional and is not the export-job store.
+
+Working recommendations:
+- Export authorized text/captions and source timestamps; exclude sender/author profile identity, Telegram IDs and links, and synthetic author references.
+- Keep v1 message content plain text; do not invent entities, reply/forward/reaction/edit/deletion/service-event fields absent from the retained model.
+- Use stable media categories, not localized labels. Media-only messages should not gain invented user-authored placeholder text; conversion of legacy placeholders remains a migration-design issue.
+- Source records use a safe configured display label and platform only; no Telegram IDs, usernames, invite/deep links, internal keys, or sessions.
+- Export an allowlist of user-owned preferences, not raw config. Exclude target_user_id, credentials, sessions, storage paths, internal class paths, and operational settings.
+- Recommended media privacy: generated deterministic ZIP filenames based on export-local media refs; omit original filenames from the manifest.
+- Recommended v1 purpose: archival/inspection snapshot, not automatic restore/import or account migration. Future import needs separate design.
+- Exact v1 field mapping and legacy-data conversion remain open for Phase 1 migration proposal. No code/tests/migrations changed or run.
