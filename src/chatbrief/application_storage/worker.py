@@ -22,7 +22,7 @@ class ExportLeaseLostError(RuntimeError):
     """Raised internally when a worker no longer owns a job's live lease."""
 
 
-class ExportWorker:
+class ExportWorker:  # pylint: disable=too-many-instance-attributes
     """Claim and dispatch export jobs with bounded concurrency and lease renewal.
 
     A handler processes one phase for a claimed job. It is responsible for
@@ -191,7 +191,7 @@ class ExportWorker:
                 job.lease_generation,
             )
             raise
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.logger.error(
                 "Export phase handler failed for job %s; retry scheduled",
                 job.id,
