@@ -1553,3 +1553,52 @@ These defaults apply across the primary export and optional media archive. Exact
 - This privacy boundary does not remove message text/captions or timestamps merely because another person authored the message. It excludes profile/identity data, not the authorized message content itself.
 - Apply the same exclusion consistently to `export.json`, `export-report.json`, and `media-manifest.json`; report/manifest entries must not reintroduce excluded identities through warnings, filenames, or metadata.
 - This is an approved export privacy policy, not implemented. Exact message fields remain subject to inspection of the actual message model and source-specific metadata.
+
+## Export schema v1 message, source, media, and portability defaults — working recommendations
+
+Repository alignment inspected on `refactor/chatbrief-package-layout`:
+
+- The current platform-neutral `Message` dataclass contains `text`, `sender`, `timestamp`, `link`, `channel_name`, `has_media`, and `media_type`.
+- The current Telethon adapter derives sender display names, constructs Telegram message links containing transport identifiers, and stores media types as localized display labels. The storage layer persists those fields when optional message storage is enabled.
+- The current `ChannelConfig` contains a source `id`, configured `name`, optional lookback, prompt/filter configuration, and digest-group assignment. The current `Settings` model mixes user-facing digest choices with operational values and a Telegram `target_user_id`; environment credentials are held separately.
+- These are observations of the committed code on this branch, not a claim that the future multi-user/export model already exists. The current storage is optional and is not the durable export-job store.
+
+Recommended schema defaults, pending final field-by-field migration alignment:
+
+### Message records
+
+- Retain authorized message text/caption and the source event timestamp. Do not remove message content merely because another Telegram user authored it.
+- Do not export sender/author identity, author profile data, Telegram chat/message IDs, Telegram message URLs, or transport-specific links. Do not create synthetic author references or author-grouping identifiers.
+- Keep message content as plain text in v1. Do not invent structured text entities, formatting spans, reply/quote links, forward metadata, reactions, edit history, deletion state, or service-event payloads when the retained model does not represent them. Add such fields only with a deliberate model/compatibility design.
+- Represent media with stable export vocabulary (image, video, document, audio), not localized UI labels or SDK class names. Preserve a caption as message text. Media-only messages must be representable without inventing user-authored placeholder text; the exact conversion of legacy stored placeholders must be resolved against retained data during migration design.
+- Use export-local `message_ref` and `source_ref` only. A message reference is unique within the export and carries no identity outside it.
+- A message is included only when it is still retained at the fixed cutoff and the requester is authorized. The export does not infer missing content or reconstruct messages no longer retained.
+
+### Source records
+
+- Include only the minimum user-useful source descriptor: platform identifier and a display label from the user's configured source name (or an equivalent safe label).
+- Do not export source numeric IDs, usernames, invite links, private access URLs, Telegram deep links, internal source keys, or account/session identifiers.
+- Do not duplicate source details into every message or subscription; use `source_ref`.
+- Do not infer a source's public/private classification or current access state from incomplete legacy configuration. Add those fields only if the future domain model defines their semantics and they are useful to the export owner.
+
+### Preferences and configuration
+
+- Export an explicit allowlist of user-owned, user-meaningful preferences, not a raw application config dump.
+- Exclude Telegram user IDs, bot tokens, API keys, Telethon session/auth material, database identifiers, storage paths, prompt-template filesystem paths, internal class paths, worker/lease IDs, and operational secrets.
+- Keep operational/runtime configuration distinct from user preferences. In particular, the current `target_user_id` is an identity/operational setting and must not be exported as a preference.
+- The current single-user `Settings` and `ChannelConfig` classes are evidence for existing concepts only; they are not the final multi-user export contract. Exact preference, schedule, subscription, and delivery-history fields must be mapped to the future user-scoped domain model during Phase 1 migration design.
+
+### Media filenames and metadata
+
+- Do not place original filenames in ZIP paths. Recommended privacy default: generate deterministic archive basenames from export-local `media_ref` values and a validated safe extension where known (for example, `media-000001.jpg`); do not preserve original filenames in the manifest by default.
+- This avoids leaking names or other personal details embedded in filenames and makes collision handling deterministic. The manifest retains `media_ref`, `message_ref`, category, optional reliable content type, exact byte size, SHA-256, and safe archive-relative path.
+- Derive extensions only from validated media metadata/MIME mappings; if the extension cannot be established safely, use a neutral generated filename without one. Never trust a source path or original filename as an archive path.
+- The exact safe-extension mapping and filename algorithm remain implementation/library review items.
+
+### Archive purpose
+
+- Recommended v1 contract: a portable archival/inspection snapshot of the requester's authorized retained Chatbrief data, with documented JSON schemas and media checksums.
+- Do not promise automatic restore, round-trip import, account migration, or recreation of live Telegram access/subscriptions from the archive. In particular, the archive contains no credentials or Telegram transport identifiers and cannot recreate source access.
+- A future import/restore feature would require a separate explicit compatibility, conflict-resolution, authorization, and security design; it must not be inferred from the existence of the export schema.
+
+These are recommended working defaults for the detailed design, not implemented behavior. Exact v1 fields and legacy-data conversion remain subject to the Phase 1 model/migration proposal. No application code, tests, or migrations were changed or run.
