@@ -1,6 +1,6 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2 and Steps 3a–3e implemented and developer-validated; Step 4a worker orchestration implemented and developer-validated. Production collection is deferred until the user-scoped source/subscription/message data layer and authorization-aware snapshot query exist.  
+**Status:** Steps 1–2, Steps 3a–3e, and Step 4a are implemented and developer-validated. Step 4b-1 adds the first shared-archive schema migration; local validation is pending. Repository operations and the authorization-aware snapshot query remain the next slices.  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
@@ -109,8 +109,23 @@ Implemented and developer-validated. On 2026-11-02 the developer reported Ruff l
 - Failed/no-op work is rescheduled with backoff; shutdown stops claims, waits for a grace period, then cancels remaining work.
 - The worker remains deliberately unwired to application startup because no production phase handler exists yet.
 
+## Step 4b-1 — shared archive schema foundation
+
+Migration 4 adds the identity-only user table and the first shared source/message domain tables. Local validation is pending.
+
+- `users` stores only the Telegram user ID and account creation timestamp; no profile fields are introduced.
+- `sources` stores a platform-qualified source identity, safe display label, source type, and public/private/unknown visibility.
+- `source_access` separates technical Bot API or user-owned Telethon access from user authorization and subscriptions. The central Bot API has one access record per source; Telethon access is scoped to one Chatbrief user.
+- `source_authorizations` records explicit user grants independently of subscriptions. Public-source eligibility and private-source grants will be enforced by repository/service queries, not inferred from subscription existence.
+- `subscriptions` records each user's active/suspended/ended relationship with a source; one row per user/source can be reactivated without creating duplicate active subscriptions.
+- `messages` stores normalized content with a unique `(source_id, platform_message_id)` key, so overlapping Bot API and Telethon observations converge on one logical message. Deleted messages are represented with `deleted_at`; export/digest queries must exclude them.
+- `source_collection_coverage` stores only known-complete time intervals, independently of message rows. A future coverage writer must split intervals at any known gap; a row must never be interpreted as proof beyond its exact interval.
+- Source-owned rows cascade when a source is deleted. User deletion removes that user's subscriptions, authorizations, and linked-access records; a deleted grantor is nulled rather than blocking cleanup.
+- The migration is additive. It does not alter or backfill the legacy `messages` store, JSON delivery tracking, configuration, or Telethon session files. It does not yet add repository APIs, Bot API ingestion, linked-session storage, media binaries, source-manager/admin verification, or export snapshot queries.
+
 ## Next steps
 
-1. Implement the minimal user-scoped source/subscription/message persistence and authorization-aware snapshot query required by export collection, following the approved Telegram hybrid-ingestion direction.
-2. Do not read or automatically backfill the legacy message-history store for exports: its rows lack trustworthy owner, stable source identity, and message identity.
-3. Once the snapshot source exists, implement the collecting handler with cancellation-safe checkpoints and lease-fenced persistence; then proceed to packaging, Telegram delivery, cleanup, and commands. Keep every worker-owned mutation fenced by the current lease generation.
+1. Add typed repository operations for user registration, source/access upsert, authorization grants/revocation, subscription lifecycle, message upsert/edit/delete, and coverage intervals.
+2. Add a single authorization-aware snapshot query that checks both user authorization and source access at the fixed cutoff; shared storage must never imply shared access.
+3. Only after the snapshot query exists, implement the collecting handler with cancellation-safe checkpoints and lease-generation-fenced transitions. Then proceed to packaging, Telegram delivery, cleanup, and commands.
+4. Do not read or automatically backfill the legacy message-history store: its rows lack trustworthy owner, stable source identity, and message identity.
