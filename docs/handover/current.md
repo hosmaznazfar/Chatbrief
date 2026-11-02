@@ -1064,3 +1064,15 @@ Report results are `complete` or `complete_with_omissions`; omissions use stable
 ## Exported message privacy — approved
 
 Include authorized retained message content, captions, timestamps, and necessary message metadata, but exclude third-party profile/identity data: sender display names, usernames, Telegram user IDs, profile photos, phone numbers, participant/contact lists, and forwarded/quoted author identity metadata. Do not expose Telegram transport IDs. This excludes profile data, not the authorized message content itself. Approved policy; not implemented.
+
+## Export schema follow-up — message/source/media defaults
+
+The export design now has repository-aligned working recommendations based on inspection of the committed `Message`, Telegram adapter, storage, and configuration models:
+
+- Export authorized message text/captions and source timestamps; exclude author/profile identity, Telegram transport IDs/links, and synthetic author references. Do not invent reply/forward/reaction/edit/service-event fields absent from the retained model.
+- Use stable media categories rather than localized labels. Media-only messages must not gain invented user-authored placeholder text; legacy placeholder conversion remains a migration-design item.
+- Source records use only a safe configured display label and platform; exclude Telegram IDs, usernames, invite/deep links, internal keys, and session identifiers.
+- Preferences are an explicit allowlist of user-owned choices, never a raw config dump. Exclude target Telegram user IDs, credentials, sessions, storage paths, internal class paths, and operational settings.
+- Recommended media privacy default: generated deterministic archive filenames based on export-local media refs; omit original filenames from both ZIP paths and manifest metadata.
+- Recommended v1 purpose: portable archival/inspection snapshot, not a restore/import or account-migration contract. Future import requires separate design.
+- Exact field mapping and legacy-data conversion remain open for Phase 1 migration design. These are documentation recommendations only; no code, tests, or migrations changed/run.
