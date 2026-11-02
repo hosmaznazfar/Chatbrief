@@ -313,8 +313,8 @@ class ExportSnapshotRepository:
                 )
 
             if coverage_gaps:
-                omit("messages", "unavailable")
-                omission_counts[("messages", "unavailable")] += len(coverage_gaps) - 1
+                key = ("messages", "unavailable")
+                omission_counts[key] = omission_counts.get(key, 0) + len(coverage_gaps)
 
             omissions = tuple(
                 SnapshotOmission(
