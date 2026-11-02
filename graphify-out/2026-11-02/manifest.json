@@ -477,9 +477,9 @@
     "semantic_hash": ""
   },
   "AI_README.md": {
-    "mtime": 1793617282.8166003,
-    "seen": 1793617292.6987185,
-    "ast_hash": "979a867cce523959481297b19f463e37",
+    "mtime": 1793621716.8193922,
+    "seen": 1793621726.866251,
+    "ast_hash": "9d17b7015f0f52dffe4d05174affd336",
     "semantic_hash": ""
   },
   "CHATGPT_CONTEXT.md": {
@@ -501,9 +501,9 @@
     "semantic_hash": ""
   },
   "FEATURE_IMPLEMENTATION_CHECKLIST.md": {
-    "mtime": 1793617282.8176005,
-    "seen": 1793617292.6987467,
-    "ast_hash": "423e00d90cc768486879afadb7d2fede",
+    "mtime": 1793621716.8193922,
+    "seen": 1793621726.8662653,
+    "ast_hash": "b75635c070cb13203ced3c018c6d264e",
     "semantic_hash": ""
   },
   "README.md": {
@@ -543,9 +543,9 @@
     "semantic_hash": ""
   },
   "docs/handover/current.md": {
-    "mtime": 1793617282.8186004,
-    "seen": 1793617292.6988022,
-    "ast_hash": "dfbbab6ea355c75e60215d3c0e35d472",
+    "mtime": 1793621716.8213923,
+    "seen": 1793621726.866293,
+    "ast_hash": "cb18714193951b294fde5fe0b0c89670",
     "semantic_hash": ""
   },
   "src/chatbrief/prompts/base_summary.txt": {
@@ -609,9 +609,9 @@
     "semantic_hash": ""
   },
   "src/chatbrief/application_storage/__init__.py": {
-    "mtime": 1793617282.8206005,
-    "seen": 1793617292.6980927,
-    "ast_hash": "8aa4f7c26a8ac04a6e63ecf4d6e86145",
+    "mtime": 1793621333.2893226,
+    "seen": 1793621342.363555,
+    "ast_hash": "053006c1d3d435b842b3be093a124444",
     "semantic_hash": ""
   },
   "src/chatbrief/application_storage/migrations/__init__.py": {
@@ -639,9 +639,9 @@
     "semantic_hash": ""
   },
   "docs/plans/application-state-database.md": {
-    "mtime": 1793617282.8186004,
-    "seen": 1793617292.6988091,
-    "ast_hash": "9fc31644c01c2b5785e82495d5b1533c",
+    "mtime": 1793621333.2893226,
+    "seen": 1793621342.3638825,
+    "ast_hash": "f0369f109eb1429f4b5bc23241b69b4b",
     "semantic_hash": ""
   },
   "tests/test_application_lifecycle.py": {
@@ -651,15 +651,27 @@
     "semantic_hash": ""
   },
   "src/chatbrief/application_storage/exports.py": {
-    "mtime": 1793619003.3933444,
-    "seen": 1793619010.3736174,
-    "ast_hash": "ac6b9c407a8b1b6b212dc397ee8b2e84",
+    "mtime": 1793619116.7875571,
+    "seen": 1793619147.840272,
+    "ast_hash": "0aebe7182b9b67cc74a8ed2f74227d7a",
     "semantic_hash": ""
   },
   "tests/test_application_exports.py": {
-    "mtime": 1793619003.3943443,
-    "seen": 1793619010.3737886,
-    "ast_hash": "2c1605f08ef3e0d5f8663ca5beeaedcc",
+    "mtime": 1793619116.786557,
+    "seen": 1793619147.8404675,
+    "ast_hash": "7e16fefa7c20d5d60bedc876ae536eb6",
+    "semantic_hash": ""
+  },
+  "src/chatbrief/application_storage/delivery.py": {
+    "mtime": 1793621716.8213923,
+    "seen": 1793621726.8654613,
+    "ast_hash": "22583d7b06b68ebf54007fd5f0b710ab",
+    "semantic_hash": ""
+  },
+  "tests/test_application_delivery.py": {
+    "mtime": 1793621709.7753186,
+    "seen": 1793621726.8661027,
+    "ast_hash": "aad2c1fe4e10ad614ed9fac3e27eba4e",
     "semantic_hash": ""
   }
 }

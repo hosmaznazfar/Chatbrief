@@ -86,16 +86,13 @@ class ExportCleanupTask:
 
 def _validate_error_code(error_code: str | None) -> None:
     if error_code is not None and (
-        not isinstance(error_code, str)
-        or re.fullmatch(r"[a-z][a-z0-9_]{0,63}", error_code) is None
+        not isinstance(error_code, str) or re.fullmatch(r"[a-z][a-z0-9_]{0,63}", error_code) is None
     ):
         raise ValueError("Error codes must be lowercase stable identifiers")
 
 
 def _validate_positive_identifier(value: int | None, field_name: str) -> None:
-    if value is not None and (
-        isinstance(value, bool) or not isinstance(value, int) or value <= 0
-    ):
+    if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value <= 0):
         raise ValueError(f"{field_name} must be a positive integer")
 
 
@@ -157,8 +154,7 @@ def _validate_delivery_identifiers(
     ):
         raise ValueError("telegram_file_id must be a non-empty string")
     identifiers_present = any(
-        value is not None
-        for value in (telegram_chat_id, telegram_message_id, telegram_file_id)
+        value is not None for value in (telegram_chat_id, telegram_message_id, telegram_file_id)
     )
     if outcome is DeliveryAttemptOutcome.SUCCEEDED:
         if telegram_chat_id is None or telegram_message_id is None:
@@ -173,9 +169,7 @@ def _validate_retry_metadata(
     error_code: str | None,
     retry_after_seconds: int | None,
 ) -> None:
-    if retry_after_at is not None and (
-        not isinstance(retry_after_at, str) or not retry_after_at
-    ):
+    if retry_after_at is not None and (not isinstance(retry_after_at, str) or not retry_after_at):
         raise ValueError("retry_after_at must be a non-empty timestamp")
     _validate_error_code(error_code)
     if retry_after_seconds is not None and (
@@ -185,9 +179,7 @@ def _validate_retry_metadata(
     ):
         raise ValueError("retry_after_seconds must be a non-negative integer")
     if outcome is DeliveryAttemptOutcome.SUCCEEDED and (
-        retry_after_at is not None
-        or retry_after_seconds is not None
-        or error_code is not None
+        retry_after_at is not None or retry_after_seconds is not None or error_code is not None
     ):
         raise ValueError("Successful delivery cannot include retry or error metadata")
 
@@ -208,9 +200,7 @@ def _validate_finish_metadata(
     if not isinstance(timestamp, str) or not timestamp:
         raise ValueError("Attempt finish timestamp must be non-empty")
     _validate_retry_metadata(outcome, retry_after_at, error_code, retry_after_seconds)
-    _validate_delivery_identifiers(
-        outcome, telegram_chat_id, telegram_message_id, telegram_file_id
-    )
+    _validate_delivery_identifiers(outcome, telegram_chat_id, telegram_message_id, telegram_file_id)
     return timestamp
 
 
@@ -559,16 +549,12 @@ class ExportCleanupRepository:
         due_at = next_attempt_at or timestamp
         if not isinstance(due_at, str) or not due_at:
             raise ValueError("Cleanup next-attempt timestamp must be non-empty")
-        if deadline_at is not None and (
-            not isinstance(deadline_at, str) or not deadline_at
-        ):
+        if deadline_at is not None and (not isinstance(deadline_at, str) or not deadline_at):
             raise ValueError("Cleanup deadline must be a non-empty timestamp")
         async with self._connection() as connection:
             await connection.execute("BEGIN IMMEDIATE")
             try:
-                if not await self._require_owned_job(
-                    connection, job_id, owner_telegram_user_id
-                ):
+                if not await self._require_owned_job(connection, job_id, owner_telegram_user_id):
                     await connection.rollback()
                     return None
                 await connection.execute(
@@ -603,9 +589,7 @@ class ExportCleanupRepository:
                 raise
         return _cleanup_from_row(row) if row is not None else None
 
-    async def list_due_tasks(
-        self, now: str, *, limit: int = 100
-    ) -> tuple[ExportCleanupTask, ...]:
+    async def list_due_tasks(self, now: str, *, limit: int = 100) -> tuple[ExportCleanupTask, ...]:
         """Return due pending tasks for an internal cleanup worker."""
         if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 500:
             raise ValueError("Cleanup task limit must be between 1 and 500")

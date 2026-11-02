@@ -199,12 +199,8 @@ async def test_worker_claim_is_atomic_and_assigns_first_lease_generation(export_
 
     job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
     first, second = await asyncio.gather(
-        export_repository.claim_next_job(
-            "worker-a", now="2026-11-02T01:00:00Z", lease_seconds=60
-        ),
-        export_repository.claim_next_job(
-            "worker-b", now="2026-11-02T01:00:00Z", lease_seconds=60
-        ),
+        export_repository.claim_next_job("worker-a", now="2026-11-02T01:00:00Z", lease_seconds=60),
+        export_repository.claim_next_job("worker-b", now="2026-11-02T01:00:00Z", lease_seconds=60),
     )
 
     claims = [claim for claim in (first, second) if claim is not None]
@@ -303,16 +299,9 @@ async def test_worker_lease_can_be_renewed_and_released_with_backoff(export_repo
     assert released.lease_owner is None
     assert released.lease_expires_at is None
     assert released.next_run_at == "2026-11-02T02:00:00+00:00"
-    assert (
-        await export_repository.claim_next_job(
-            "worker-b", now="2026-11-02T01:59:59Z"
-        )
-        is None
-    )
+    assert await export_repository.claim_next_job("worker-b", now="2026-11-02T01:59:59Z") is None
 
-    next_claim = await export_repository.claim_next_job(
-        "worker-b", now="2026-11-02T02:00:00Z"
-    )
+    next_claim = await export_repository.claim_next_job("worker-b", now="2026-11-02T02:00:00Z")
     assert next_claim is not None
     assert next_claim.lease_generation == claimed.lease_generation + 1
 
@@ -326,12 +315,11 @@ async def test_worker_lease_rejects_invalid_parameters(export_repository):
     with pytest.raises(ValueError, match="timezone"):
         await export_repository.claim_next_job("worker-a", now="2026-11-02T01:00:00")
 
+
 @pytest.mark.asyncio
 async def test_claimed_terminal_transition_releases_lease(export_repository):
     job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
-    claimed = await export_repository.claim_next_job(
-        "worker-a", now="2026-11-02T01:00:00Z"
-    )
+    claimed = await export_repository.claim_next_job("worker-a", now="2026-11-02T01:00:00Z")
     assert claimed is not None
 
     failed = await export_repository.transition_claimed_job(
@@ -347,4 +335,3 @@ async def test_claimed_terminal_transition_releases_lease(export_repository):
     assert failed.terminal_at == "2026-11-02T01:00:10+00:00"
     assert failed.lease_owner is None
     assert failed.lease_expires_at is None
-

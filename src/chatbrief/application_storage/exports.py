@@ -509,7 +509,9 @@ class ExportRepository:
         _validate_lease_generation(lease_generation)
         expected, target = _validate_transition(expected_states, new_state)
         changes = _normalize_updates(updates)
-        timestamp = _normalize_lease_timestamp((_utc_now() if updated_at is None else updated_at), "updated_at")
+        timestamp = _normalize_lease_timestamp(
+            (_utc_now() if updated_at is None else updated_at), "updated_at"
+        )
         placeholders = ", ".join("?" for _ in expected)
 
         async with self._connection() as connection:
@@ -529,9 +531,7 @@ class ExportRepository:
                     return None
 
                 if target is ExportJobState.READY:
-                    await _require_confirmed_primary_delivery(
-                        connection, job_id, current, changes
-                    )
+                    await _require_confirmed_primary_delivery(connection, job_id, current, changes)
 
                 assignments = ["state = ?", "updated_at = ?"]
                 parameters: list[object] = [target.value, timestamp]
@@ -598,7 +598,7 @@ class ExportRepository:
         self._validate_owner(owner_telegram_user_id)
         expected, target = _validate_transition(expected_states, new_state)
         changes = _normalize_updates(updates)
-        timestamp = (_utc_now() if updated_at is None else updated_at)
+        timestamp = _utc_now() if updated_at is None else updated_at
 
         async with self._connection() as connection:
             updated = await _transition_in_transaction(

@@ -86,22 +86,10 @@ async def test_primary_delivery_attempt_can_be_confirmed_and_job_becomes_ready(
 async def test_delivery_attempts_are_owner_scoped(export_repositories):
     _, jobs, deliveries, _ = export_repositories
     job = await _packaging_job(jobs)
-    assert (
-        await deliveries.start_attempt(
-            job.id, 99999, DeliveryDocumentKind.PRIMARY
-        )
-        is None
-    )
-    attempt = await deliveries.start_attempt(
-        job.id, 12345, DeliveryDocumentKind.PRIMARY
-    )
+    assert await deliveries.start_attempt(job.id, 99999, DeliveryDocumentKind.PRIMARY) is None
+    attempt = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY)
     assert attempt is not None
-    assert (
-        await deliveries.finish_attempt(
-            attempt.id, 99999, DeliveryAttemptOutcome.FAILED
-        )
-        is None
-    )
+    assert await deliveries.finish_attempt(attempt.id, 99999, DeliveryAttemptOutcome.FAILED) is None
     assert await deliveries.list_attempts(job.id, 99999) is None
     assert await deliveries.list_attempts(job.id, 12345) == (attempt,)
 
@@ -158,19 +146,12 @@ async def test_attempt_cannot_be_finished_twice_or_with_started_outcome(export_r
     assert attempt is not None
 
     with pytest.raises(ValueError, match="final outcome"):
-        await deliveries.finish_attempt(
-            attempt.id, 12345, DeliveryAttemptOutcome.STARTED
-        )
+        await deliveries.finish_attempt(attempt.id, 12345, DeliveryAttemptOutcome.STARTED)
 
-    failed = await deliveries.finish_attempt(
-        attempt.id, 12345, DeliveryAttemptOutcome.FAILED
-    )
+    failed = await deliveries.finish_attempt(attempt.id, 12345, DeliveryAttemptOutcome.FAILED)
     assert failed is not None
     assert (
-        await deliveries.finish_attempt(
-            attempt.id, 12345, DeliveryAttemptOutcome.SUCCEEDED
-        )
-        is None
+        await deliveries.finish_attempt(attempt.id, 12345, DeliveryAttemptOutcome.SUCCEEDED) is None
     )
 
 
@@ -184,9 +165,7 @@ async def test_media_attempt_requires_primary_success_and_updates_job_outcome(
     with pytest.raises(ValueError, match="confirmed primary"):
         await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.MEDIA)
 
-    primary = await deliveries.start_attempt(
-        job.id, 12345, DeliveryDocumentKind.PRIMARY
-    )
+    primary = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY)
     assert primary is not None
     assert await deliveries.finish_attempt(
         primary.id,
@@ -297,10 +276,7 @@ async def test_cleanup_task_survives_job_deletion_and_can_be_completed(
 async def test_cleanup_tasks_are_created_only_for_owned_jobs(export_repositories):
     _, jobs, _, cleanup = export_repositories
     job = await _packaging_job(jobs)
-    assert (
-        await cleanup.create_staging_task(job.id, 99999, "stage-key")
-        is None
-    )
+    assert await cleanup.create_staging_task(job.id, 99999, "stage-key") is None
     with pytest.raises(ValueError, match="non-empty"):
         await cleanup.create_staging_task(job.id, 12345, "")
     with pytest.raises(ValueError, match="limit"):
