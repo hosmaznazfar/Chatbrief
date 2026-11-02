@@ -12,6 +12,7 @@ from typing import AsyncIterator
 
 import aiosqlite
 
+from .exports import _normalize_lease_timestamp, _validate_lease_generation, _validate_worker_id
 from .migrations import ApplicationDatabase
 
 
@@ -234,6 +235,8 @@ class ExportDeliveryRepository:
         owner_telegram_user_id: int,
         document_kind: DeliveryDocumentKind,
         *,
+        worker_id: str,
+        lease_generation: int,
         started_at: str | None = None,
     ) -> ExportDeliveryAttempt | None:
         """Append a started attempt for a packaging job owned by the caller.
@@ -243,8 +246,11 @@ class ExportDeliveryRepository:
         automatically because doing so could duplicate a Telegram document.
         """
         self._validate_owner(owner_telegram_user_id)
+        _validate_worker_id(worker_id)
+        _validate_lease_generation(lease_generation)
         kind = DeliveryDocumentKind(document_kind)
-        timestamp = started_at or _utc_now()
+        now = _normalize_lease_timestamp(_utc_now(), "now")
+        timestamp = started_at or now
         if not isinstance(timestamp, str) or not timestamp:
             raise ValueError("Attempt start timestamp must be non-empty")
         attempt_id = str(uuid.uuid4())
@@ -256,8 +262,10 @@ class ExportDeliveryRepository:
                     """
                     SELECT state FROM export_jobs
                     WHERE id = ? AND owner_telegram_user_id = ?
+                      AND lease_owner = ? AND lease_generation = ?
+                      AND lease_expires_at > ?
                     """,
-                    (job_id, owner_telegram_user_id),
+                    (job_id, owner_telegram_user_id, worker_id, lease_generation, now),
                 ) as cursor:
                     job = await cursor.fetchone()
                 if job is None:
@@ -334,6 +342,8 @@ class ExportDeliveryRepository:
         owner_telegram_user_id: int,
         outcome: DeliveryAttemptOutcome,
         *,
+        worker_id: str,
+        lease_generation: int,
         finished_at: str | None = None,
         retry_after_at: str | None = None,
         telegram_chat_id: int | None = None,
@@ -344,7 +354,10 @@ class ExportDeliveryRepository:
     ) -> ExportDeliveryAttempt | None:
         """Resolve a started attempt once; return None for wrong owner or stale ID."""
         self._validate_owner(owner_telegram_user_id)
+        _validate_worker_id(worker_id)
+        _validate_lease_generation(lease_generation)
         final_outcome = DeliveryAttemptOutcome(outcome)
+        now = _normalize_lease_timestamp(_utc_now(), "now")
 
         async with self._connection() as connection:
             await connection.execute("BEGIN IMMEDIATE")
@@ -354,8 +367,10 @@ class ExportDeliveryRepository:
                     SELECT a.* FROM export_delivery_attempts AS a
                     JOIN export_jobs AS j ON j.id = a.job_id
                     WHERE a.id = ? AND j.owner_telegram_user_id = ?
+                      AND j.lease_owner = ? AND j.lease_generation = ?
+                      AND j.lease_expires_at > ?
                     """,
-                    (attempt_id, owner_telegram_user_id),
+                    (attempt_id, owner_telegram_user_id, worker_id, lease_generation, now),
                 ) as cursor:
                     current = await cursor.fetchone()
                 if current is None or current["outcome"] != DeliveryAttemptOutcome.STARTED.value:
