@@ -504,7 +504,6 @@ class ExportCleanupRepository:
             not isinstance(deadline_at, str) or not deadline_at
         ):
             raise ValueError("Cleanup deadline must be a non-empty timestamp")
-        _validate_error_code(None)
         async with self._connection() as connection:
             await connection.execute("BEGIN IMMEDIATE")
             try:
