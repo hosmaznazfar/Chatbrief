@@ -1,37 +1,56 @@
 # Application-state database and export persistence foundation
 
-**Status:** Step 1 implementation committed; focused and full test suites pass; Ruff formatting correction committed and awaiting local recheck  
+**Status:** Steps 1–2 implemented in source; local validation of the startup integration is pending  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
 
-Establish a required application-state SQLite database independently from the optional legacy message-history store. Add a small versioned migration runner and the first additive schema migration for export persistence. This slice does not initialize the database from application startup and does not implement export repositories, workers, commands, archive generation, or delivery.
+Establish a required application-state SQLite database independently from the optional legacy message-history store. The first implementation slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export repositories, workers, commands, archive generation, and delivery remain out of scope.
 
-## Implementation details
+## Step 1 — database foundation
 
-- Default database path: data/application.db, configurable through top-level application_storage.path.
-- Existing optional storage configuration and data/messages.db behavior remain unchanged.
-- schema_migrations records the positive migration version, UTC application timestamp, and SHA-256 checksum of the immutable SQL statement sequence.
-- Each migration runs inside BEGIN IMMEDIATE; schema changes and the version/checksum record commit atomically. Failed migrations roll back. Applied checksum drift and unknown migration versions fail closed.
-- SQLite foreign-key enforcement is enabled and verified during initialization and on every connection opened through ApplicationDatabase.connect().
-- Migration SQL executes statement-by-statement rather than through executescript, preserving transaction boundaries.
-- Migration 1 creates only export_jobs, export_delivery_attempts, export_cleanup_tasks, their approved checks/foreign keys/indexes, and migration metadata.
+- Default database path: `data/application.db`, configurable through top-level `application_storage.path`.
+- Existing optional storage configuration and `data/messages.db` behavior remain unchanged.
+- `schema_migrations` records the positive migration version, UTC application timestamp, and SHA-256 checksum of the immutable SQL statement sequence.
+- Each migration runs inside `BEGIN IMMEDIATE`; schema changes and the version/checksum record commit atomically. Failed migrations roll back. Applied checksum drift and unknown migration versions fail closed.
+- SQLite foreign-key enforcement is enabled and verified during initialization and on every connection opened through `ApplicationDatabase.connect()`.
+- Migration SQL executes statement-by-statement rather than through `executescript`, preserving transaction boundaries.
+- Migration 1 creates only `export_jobs`, `export_delivery_attempts`, `export_cleanup_tasks`, their approved checks/foreign keys/indexes, and migration metadata.
 - No legacy message rows are copied, inferred, renamed, or modified. No PostgreSQL schema is added in this slice.
 
-## Focused local verification
+## Step 2 — application lifecycle integration
 
-Run from the repository root:
+- Root `main.py` constructs `ApplicationDatabase` from `config.application_storage.path`.
+- The database is initialized after configuration and logging are ready, but before platform services, the scheduler, the command service, the bot, or the optional MCP server are constructed.
+- A migration or database initialization failure follows the existing initialization-failure path and prevents the application from starting with missing required persistence.
+- The initialized database object is retained on `ChatbriefApp` for injection into future application services/repositories.
+- The legacy optional message-history store remains a separate subsystem and is not initialized, closed, or otherwise changed by this integration.
+- `ApplicationDatabase.initialize()` uses a scoped SQLite connection and closes it before returning. The database object does not own a persistent connection or pool, so there is no artificial shutdown `close()` method. Future repository connections must be scoped and closed by their owners.
 
-    uv run pytest --no-cov tests/test_application_storage.py tests/test_config.py -q
-    uv run pytest -q
-    uv run ruff check src/chatbrief/application_storage src/chatbrief/config tests/test_application_storage.py tests/test_config.py
-    uv run ruff format --check src/chatbrief/application_storage src/chatbrief/config tests/test_application_storage.py tests/test_config.py
-    uv run pyright
+## Tests added
 
-The first focused run collected 99 tests: 95 passed and 4 application-storage tests failed because they used `async with await database.connect()`. Awaiting an `aiosqlite.Connection` starts its worker thread; entering that already-awaited connection as an async context manager starts it a second time. The tests now use a small async context manager that awaits `database.connect()` once and closes the returned connection in `finally`. Ruff lint passed and Pyright reported 0 errors, 0 warnings, and 0 informations on the first run. Ruff format identified one formatting change in the test file; the file has also been reformatted in the correction. The focused pytest command additionally hit the repository-wide coverage threshold because only two test files were run (16.49% overall against 49%); rerun the full suite after the focused tests pass. These corrections have not yet been validated locally. The remote GitHub editing environment cannot execute local project commands.
+- Startup initializes the application database using the configured path before platform construction.
+- Database initialization failure aborts startup before platform services are created.
+- Existing migration/configuration tests continue to cover schema creation, idempotency, foreign keys, partial uniqueness, checksum drift, rollback, and path validation.
+
+## Local verification
+
+The developer confirmed that Step 1's focused tests, full suite, Ruff lint, Pyright, and formatting checks passed before this lifecycle change. The GitHub editing environment cannot run the developer's local `uv` commands, so Step 2 has **not** been locally validated yet.
+
+Run from the repository root after syncing the branch:
+
+```bash
+uv run pytest --no-cov tests/test_application_storage.py tests/test_config.py tests/test_application_lifecycle.py -q
+uv run ruff check main.py src/chatbrief/application_storage tests/test_application_storage.py tests/test_application_lifecycle.py
+uv run ruff format --check main.py src/chatbrief/application_storage tests/test_application_storage.py tests/test_application_lifecycle.py
+uv run pyright
+uv run pytest -q
+```
+
+Record the actual output here and in the handover. Do not mark Step 2 validated until these checks pass locally.
 
 ## Next steps
 
-1. Review and run the focused tests and checks above in the local checkout.
-2. Add startup initialization and shutdown lifecycle handling for the required application database.
-3. Add the export persistence repository and state-transition operations in a separate implementation step.
+1. Sync the lifecycle integration and run the focused/static/full checks above.
+2. Implement export persistence repositories and atomic job-state operations as a separate slice.
+3. Add worker claims/lease-generation fencing only when the repository/state-transition layer is in place.
