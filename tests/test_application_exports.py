@@ -107,7 +107,7 @@ async def test_transition_rejects_skipping_required_lifecycle_states(export_repo
 
 
 @pytest.mark.asyncio
-async def test_ready_transition_requires_delivery_and_expiry_timestamps(export_repository):
+async def test_ready_transition_requires_confirmed_primary_attempt(export_repository):
     job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
     await export_repository.transition_job(
         job.id, [ExportJobState.QUEUED], ExportJobState.COLLECTING
@@ -116,27 +116,20 @@ async def test_ready_transition_requires_delivery_and_expiry_timestamps(export_r
         job.id, [ExportJobState.COLLECTING], ExportJobState.PACKAGING
     )
 
-    with pytest.raises(ValueError, match="delivery and expiry"):
+    with pytest.raises(ValueError, match="confirmed primary delivery attempt"):
         await export_repository.transition_job(
-            job.id, [ExportJobState.PACKAGING], ExportJobState.READY
+            job.id,
+            [ExportJobState.PACKAGING],
+            ExportJobState.READY,
+            updates={
+                "primary_delivered_at": "2026-11-02T02:00:00Z",
+                "expires_at": "2026-11-03T02:00:00Z",
+            },
         )
 
-    ready = await export_repository.transition_job(
-        job.id,
-        [ExportJobState.PACKAGING],
-        ExportJobState.READY,
-        updates={
-            "primary_delivered_at": "2026-11-02T02:00:00Z",
-            "expires_at": "2026-11-03T02:00:00Z",
-            "report_json": '{"result":"complete"}',
-        },
-    )
-    assert ready is not None
-    assert ready.state is ExportJobState.READY
-    assert ready.primary_delivered_at == "2026-11-02T02:00:00Z"
-    assert ready.expires_at == "2026-11-03T02:00:00Z"
-    assert ready.terminal_at is None
-
+    unchanged = await export_repository.get_job(job.id)
+    assert unchanged is not None
+    assert unchanged.state is ExportJobState.PACKAGING
 
 @pytest.mark.asyncio
 async def test_transition_rejects_unknown_fields_and_invalid_json(export_repository):
