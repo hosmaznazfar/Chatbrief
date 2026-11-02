@@ -167,7 +167,9 @@ async def test_transition_rejects_unknown_fields_and_invalid_json(export_reposit
             updates={"report_json": "{invalid"},
         )
 
-    assert (await export_repository.get_job(job.id)).state is ExportJobState.QUEUED
+    unchanged = await export_repository.get_job(job.id)
+    assert unchanged is not None
+    assert unchanged.state is ExportJobState.QUEUED
 
 
 @pytest.mark.asyncio
