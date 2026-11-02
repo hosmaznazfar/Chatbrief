@@ -6,14 +6,14 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest implementation commits:** Step 3e validation follow-up was completed by the developer locally; worker orchestration commits: worker service and follow-up refinements through `cc85074`; worker tests and fixes through `3c13191`; package export `2dd0f3f`.
+- **Latest verified GitHub HEAD:** `e99412faa85a54d4e842345bf1a0bdea1377818f` (`refactor(exports): simplify worker polling and awaitables`).
 - **Local worktree:** not visible from the GitHub editing environment. Preserve local Graphify output and other uncommitted work when pulling.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
 - **Step 3e validation:** developer-confirmed — focused delivery/storage tests **19 passed**; full suite **631 passed, 7 skipped**, coverage **93.40%**; Ruff lint passed; Ruff format passed (**8 files already formatted**); Pyright **0 errors, 0 warnings, 0 informations**.
-- **Step 4a implementation:** `ExportWorker` now provides injected state-based phase dispatch, bounded concurrency, renewable leases, stale-handler cancellation, retry backoff, and bounded shutdown grace. Focused worker tests are committed; local validation is pending.
+- **Step 4a implementation and validation:** `ExportWorker` provides injected state-based phase dispatch, bounded concurrency, renewable leases, stale-handler cancellation, retry backoff, and bounded shutdown grace. Developer-confirmed validation on 2026-11-02: Ruff lint passed, Ruff format reported **102 files already formatted**, Pyright reported **0 errors, 0 warnings, 0 informations**, and pytest collected **652 tests** with **7 skipped** and **93.19% coverage**. The pasted output ended before pytest's final summary, so the exact passed count is not recorded.
 - **Graphify:** optional development tooling for code navigation and impact analysis, not a runtime feature or implementation deliverable.
-- **Next stage:** developer pulls and validates Step 4a. Then implement the first real collection phase handler with cancellation-safe checkpoints and lease-fenced transitions. Do not wire an idle worker into application startup before phase handlers exist.
+- **Next stage:** establish the minimal user-scoped source/subscription/message data layer and an authorization-aware snapshot query before implementing a production collection handler. Existing legacy message-history rows do not contain trustworthy ownership, stable source identity, or message identity; the approved plan explicitly forbids automatic backfill or guessing. Do not make a fake empty-export handler or wire the worker into startup. Once the snapshot source exists, implement collection with cancellation-safe checkpoints and lease-fenced transitions.
 
 > This section supersedes older status statements later in this handover. Historical notes remain for audit context; use this section for the current implementation stage.
 
