@@ -138,3 +138,7 @@ Do not add Graphify to the Python check pipeline: .pj/workflow.toml remains Pyth
 ## Safety
 
 No automatic staging, committing, pushing, merging, deployment, publishing, or migrations. Ask before application-code changes when the task is exploratory or feature-oriented. For approved implementation, work in small reviewable phases and keep docs/checklist/handover aligned. Do not run tests before the current refactor is complete unless the developer changes that instruction.
+
+## Export schema unknown-field handling — approved (Option A)
+
+Consumers of `export.json`, `export-report.json`, and `media-manifest.json` ignore unrecognized fields instead of rejecting a document solely for containing them. This keeps consumers forward-compatible with optional fields added in compatible revisions. It does not relax validation of required fields, malformed values, or other schema constraints. Approved target behavior, not implemented; documentation-only.
