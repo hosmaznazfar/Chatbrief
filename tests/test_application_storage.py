@@ -10,6 +10,7 @@ from chatbrief.application_storage.migrations.versions import (
     DELIVERY_LEASE_FENCING_MIGRATION,
     FAIR_EXPORT_CLAIM_MIGRATION,
     INITIAL_EXPORT_MIGRATION,
+    SHARED_ARCHIVE_MIGRATION,
     Migration,
 )
 
@@ -296,7 +297,12 @@ async def test_applied_migration_checksum_drift_is_rejected(tmp_path):
     with pytest.raises(MigrationError, match="Checksum mismatch"):
         await ApplicationDatabase(
             path,
-            migrations=(changed, FAIR_EXPORT_CLAIM_MIGRATION, DELIVERY_LEASE_FENCING_MIGRATION),
+            migrations=(
+                changed,
+                FAIR_EXPORT_CLAIM_MIGRATION,
+                DELIVERY_LEASE_FENCING_MIGRATION,
+                SHARED_ARCHIVE_MIGRATION,
+            ),
         ).initialize()
 
 
