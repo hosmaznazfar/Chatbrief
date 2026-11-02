@@ -121,8 +121,14 @@ async def test_shared_archive_migration_creates_identity_and_collection_constrai
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                "source-1", "telegram", "-100123", "Example channel", "channel",
-                "public", "now", "now",
+                "source-1",
+                "telegram",
+                "-100123",
+                "Example channel",
+                "channel",
+                "public",
+                "now",
+                "now",
             ),
         )
         await connection.execute(
@@ -157,8 +163,13 @@ async def test_shared_archive_migration_creates_identity_and_collection_constrai
                 id, source_id, ingestion_method, covered_from, covered_until, recorded_at
             ) VALUES (?, ?, 'bot_api', ?, ?, ?)
             """,
-            ("coverage-1", "source-1", "2026-11-01T00:00:00Z",
-             "2026-11-02T00:00:00Z", "now"),
+            (
+                "coverage-1",
+                "source-1",
+                "2026-11-01T00:00:00Z",
+                "2026-11-02T00:00:00Z",
+                "now",
+            ),
         )
 
         with pytest.raises(aiosqlite.IntegrityError):
