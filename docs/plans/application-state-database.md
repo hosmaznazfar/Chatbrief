@@ -1,11 +1,11 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2 and Steps 3a–3b implemented and developer-validated; Step 3c worker lease APIs implemented, local validation pending  
+**Status:** Steps 1–2 and Steps 3a–3c implemented and developer-validated; Step 3d fair per-user claim scheduling implemented, local validation pending  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
 
-Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, cleanup-task, and worker-lease persistence operations are implemented as separate repository slices. Worker orchestration, commands, archive generation, and Telegram delivery remain out of scope.
+Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, cleanup-task, worker-lease, and fair-claim scheduling operations are implemented as separate repository slices. Worker orchestration, commands, archive generation, and Telegram delivery remain out of scope.
 
 ## Step 1 — database foundation
 
@@ -68,7 +68,7 @@ Implemented and developer-validated. Focused Step 3b tests: **119 passed**; Ruff
 
 ## Step 3c — worker claims and lease-generation fencing
 
-Implemented in source; developer validation is pending. The existing migration-1 lease columns and lease-expiry index are reused; no schema migration is required.
+Implemented and developer-validated. Ruff lint and format passed; Pyright passed; full suite **627 passed, 7 skipped**, coverage **93.38%**. The existing migration-1 lease columns and lease-expiry index are reused; no schema migration is required.
 
 - `claim_next_job()` atomically selects the earliest due queued/collecting/packaging job whose lease is absent or expired, assigns the worker, sets the expiry, and increments the generation.
 - `renew_lease()` and `release_lease()` require the current worker ID, generation, and an unexpired lease. Release can set a future `next_run_at` for backoff.
@@ -77,8 +77,19 @@ Implemented in source; developer validation is pending. The existing migration-1
 - Focused tests cover competing claims, generation increments after expiry, stale-worker rejection, lease renewal/release, scheduled retry eligibility, and invalid lease parameters.
 - This slice adds persistence primitives only. It does not start a worker loop, perform external work, or change delivery-attempt writes to require a lease token.
 
+## Step 3d — fair per-user claim scheduling
+
+Implemented in source; local validation is pending. Migration 2 adds nullable `export_jobs.last_claimed_at` and an index for fair claim selection.
+
+- Claims prefer users who have never been served; after that, the least recently claimed eligible user's job is selected.
+- `created_at` and job ID provide deterministic FIFO/tie ordering. The existing one-blocking-export-per-user constraint means at most one eligible blocking job currently exists per user; if that constraint changes, per-user queue-head selection must be revisited.
+- Claim selection and lease assignment remain in the same `BEGIN IMMEDIATE` transaction. The selected job's `last_claimed_at` is updated atomically with its lease, so fairness survives process restarts and competing workers.
+- Reclaiming an expired job counts as serving that user again.
+- No priority tiers, external queue, in-memory-only round robin, or additional user profile data are introduced.
+- A focused test exercises rotation across three users and confirms that a recently served user moves behind users not yet served.
+
 ## Next steps
 
-1. Developer runs focused export/storage/delivery/lifecycle tests, Ruff lint/format, Pyright, and the full suite for Step 3c.
-2. Fix any validation issues before proceeding to worker orchestration.
-3. Later slices can connect worker execution to collection, packaging, delivery, and cleanup while passing the lease generation through every worker-owned mutation.
+1. Developer pulls the fair-scheduling commits and runs focused export/storage/delivery/lifecycle tests, Ruff lint/format, Pyright, and the full suite.
+2. Fix any validation issues before adding worker orchestration.
+3. Worker orchestration then connects lease-fenced claims to application lifecycle and phase handlers; collection, packaging, Telegram delivery, cleanup execution, bounded concurrency configuration, and graceful shutdown remain separate implementation slices.
