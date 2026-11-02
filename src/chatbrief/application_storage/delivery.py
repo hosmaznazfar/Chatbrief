@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -81,6 +82,21 @@ class ExportCleanupTask:
     last_error_code: str | None
     created_at: str
     updated_at: str
+
+
+def _validate_error_code(error_code: str | None) -> None:
+    if error_code is not None and (
+        not isinstance(error_code, str)
+        or re.fullmatch(r"[a-z][a-z0-9_]{0,63}", error_code) is None
+    ):
+        raise ValueError("Error codes must be lowercase stable identifiers")
+
+
+def _validate_positive_identifier(value: int | None, field_name: str) -> None:
+    if value is not None and (
+        isinstance(value, bool) or not isinstance(value, int) or value <= 0
+    ):
+        raise ValueError(f"{field_name} must be a positive integer")
 
 
 def _utc_now() -> str:
@@ -164,6 +180,8 @@ class ExportDeliveryRepository:
         self._validate_owner(owner_telegram_user_id)
         kind = DeliveryDocumentKind(document_kind)
         timestamp = started_at or _utc_now()
+        if not isinstance(timestamp, str) or not timestamp:
+            raise ValueError("Attempt start timestamp must be non-empty")
         attempt_id = str(uuid.uuid4())
 
         async with self._connection() as connection:
@@ -265,6 +283,22 @@ class ExportDeliveryRepository:
         if final_outcome is DeliveryAttemptOutcome.STARTED:
             raise ValueError("A delivery attempt must finish with a final outcome")
         timestamp = finished_at or _utc_now()
+        if not isinstance(timestamp, str) or not timestamp:
+            raise ValueError("Attempt finish timestamp must be non-empty")
+        if retry_after_at is not None and (
+            not isinstance(retry_after_at, str) or not retry_after_at
+        ):
+            raise ValueError("retry_after_at must be a non-empty timestamp")
+        _validate_error_code(error_code)
+        _validate_positive_identifier(telegram_message_id, "telegram_message_id")
+        if telegram_chat_id is not None and (
+            isinstance(telegram_chat_id, bool) or not isinstance(telegram_chat_id, int)
+        ):
+            raise ValueError("telegram_chat_id must be an integer")
+        if telegram_file_id is not None and (
+            not isinstance(telegram_file_id, str) or not telegram_file_id
+        ):
+            raise ValueError("telegram_file_id must be a non-empty string")
         if retry_after_seconds is not None and (
             isinstance(retry_after_seconds, bool)
             or not isinstance(retry_after_seconds, int)
@@ -457,9 +491,20 @@ class ExportCleanupRepository:
             telegram_chat_id is None or telegram_message_id is None
         ):
             raise ValueError("Telegram cleanup requires chat and message IDs")
+        if task_type is CleanupTaskType.TELEGRAM_MESSAGE_DELETE:
+            if isinstance(telegram_chat_id, bool) or not isinstance(telegram_chat_id, int):
+                raise ValueError("telegram_chat_id must be an integer")
+            _validate_positive_identifier(telegram_message_id, "telegram_message_id")
         timestamp = _utc_now()
         task_id = str(uuid.uuid4())
         due_at = next_attempt_at or timestamp
+        if not isinstance(due_at, str) or not due_at:
+            raise ValueError("Cleanup next-attempt timestamp must be non-empty")
+        if deadline_at is not None and (
+            not isinstance(deadline_at, str) or not deadline_at
+        ):
+            raise ValueError("Cleanup deadline must be a non-empty timestamp")
+        _validate_error_code(None)
         async with self._connection() as connection:
             await connection.execute("BEGIN IMMEDIATE")
             try:
@@ -542,11 +587,18 @@ class ExportCleanupRepository:
         retains the task even if its parent export job is later deleted.
         """
         target = CleanupTaskState(outcome)
+        _validate_error_code(error_code)
         if target is CleanupTaskState.PENDING and not next_attempt_at:
             raise ValueError("A pending cleanup retry requires next_attempt_at")
         if target is not CleanupTaskState.PENDING and next_attempt_at is not None:
             raise ValueError("Terminal cleanup outcomes cannot schedule another retry")
         timestamp = updated_at or _utc_now()
+        if not isinstance(timestamp, str) or not timestamp:
+            raise ValueError("Cleanup update timestamp must be non-empty")
+        if next_attempt_at is not None and (
+            not isinstance(next_attempt_at, str) or not next_attempt_at
+        ):
+            raise ValueError("Cleanup next-attempt timestamp must be non-empty")
         async with self._connection() as connection:
             await connection.execute("BEGIN IMMEDIATE")
             try:
