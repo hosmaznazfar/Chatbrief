@@ -6,7 +6,7 @@ import json
 import uuid
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from typing import AsyncIterator, Mapping, Sequence
 
@@ -115,6 +115,41 @@ _MUTABLE_FIELDS = {
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _normalize_lease_timestamp(value: str, field_name: str) -> str:
+    """Validate an offset-aware timestamp and normalize it to UTC."""
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{field_name} must be a non-empty timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError(f"{field_name} must be an ISO 8601 timestamp") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError(f"{field_name} must include a timezone")
+    return parsed.astimezone(timezone.utc).isoformat()
+
+
+def _validate_worker_lease(worker_id: str, lease_seconds: int) -> None:
+    if not isinstance(worker_id, str) or not worker_id or worker_id != worker_id.strip():
+        raise ValueError("Worker ID must be a non-empty opaque identifier")
+    if len(worker_id) > 128:
+        raise ValueError("Worker ID must not exceed 128 characters")
+    if (
+        isinstance(lease_seconds, bool)
+        or not isinstance(lease_seconds, int)
+        or not 1 <= lease_seconds <= 3600
+    ):
+        raise ValueError("Lease duration must be between 1 and 3600 seconds")
+
+
+def _validate_lease_generation(lease_generation: int) -> None:
+    if (
+        isinstance(lease_generation, bool)
+        or not isinstance(lease_generation, int)
+        or lease_generation <= 0
+    ):
+        raise ValueError("Lease generation must be a positive integer")
 
 
 def _job_from_row(row: aiosqlite.Row) -> ExportJob:
@@ -255,6 +290,296 @@ class ExportRepository:
             async with connection.execute(query, parameters) as cursor:
                 row = await cursor.fetchone()
         return _job_from_row(row) if row is not None else None
+
+    async def claim_next_job(
+        self,
+        worker_id: str,
+        *,
+        now: str | None = None,
+        lease_seconds: int = 300,
+    ) -> ExportJob | None:
+        """Atomically claim the next due, non-terminal job for one worker.
+
+        Reclaiming an expired lease increments its generation, fencing out
+        any worker that still holds the previous generation.
+        """
+        _validate_worker_lease(worker_id, lease_seconds)
+        timestamp = _normalize_lease_timestamp(now or _utc_now(), "now")
+        lease_expires_at = (
+            datetime.fromisoformat(timestamp) + timedelta(seconds=lease_seconds)
+        ).isoformat()
+
+        async with self._connection() as connection:
+            await connection.execute("BEGIN IMMEDIATE")
+            try:
+                async with connection.execute(
+                    """
+                    SELECT id, lease_generation
+                    FROM export_jobs
+                    WHERE state IN (?, ?, ?)
+                      AND (next_run_at IS NULL OR next_run_at <= ?)
+                      AND (
+                          lease_owner IS NULL
+                          OR lease_expires_at IS NULL
+                          OR lease_expires_at <= ?
+                      )
+                    ORDER BY COALESCE(next_run_at, created_at), created_at, id
+                    LIMIT 1
+                    """,
+                    (
+                        ExportJobState.QUEUED.value,
+                        ExportJobState.COLLECTING.value,
+                        ExportJobState.PACKAGING.value,
+                        timestamp,
+                        timestamp,
+                    ),
+                ) as cursor:
+                    candidate = await cursor.fetchone()
+                if candidate is None:
+                    await connection.rollback()
+                    return None
+
+                result = await connection.execute(
+                    """
+                    UPDATE export_jobs
+                    SET lease_owner = ?, lease_expires_at = ?,
+                        lease_generation = lease_generation + 1, updated_at = ?
+                    WHERE id = ? AND lease_generation = ?
+                    """,
+                    (
+                        worker_id,
+                        lease_expires_at,
+                        timestamp,
+                        candidate["id"],
+                        candidate["lease_generation"],
+                    ),
+                )
+                if result.rowcount != 1:
+                    await connection.rollback()
+                    return None
+                async with connection.execute(
+                    "SELECT * FROM export_jobs WHERE id = ?", (candidate["id"],)
+                ) as cursor:
+                    row = await cursor.fetchone()
+                await connection.commit()
+            except Exception:
+                await connection.rollback()
+                raise
+
+        if row is None:
+            raise RuntimeError("Claimed export job could not be read back")
+        return _job_from_row(row)
+
+    async def renew_lease(
+        self,
+        job_id: str,
+        worker_id: str,
+        lease_generation: int,
+        *,
+        now: str | None = None,
+        lease_seconds: int = 300,
+    ) -> ExportJob | None:
+        """Extend a lease only while its owner and generation are still current."""
+        _validate_worker_lease(worker_id, lease_seconds)
+        _validate_lease_generation(lease_generation)
+        timestamp = _normalize_lease_timestamp(now or _utc_now(), "now")
+        lease_expires_at = (
+            datetime.fromisoformat(timestamp) + timedelta(seconds=lease_seconds)
+        ).isoformat()
+
+        async with self._connection() as connection:
+            await connection.execute("BEGIN IMMEDIATE")
+            try:
+                result = await connection.execute(
+                    """
+                    UPDATE export_jobs
+                    SET lease_expires_at = ?, updated_at = ?
+                    WHERE id = ? AND lease_owner = ? AND lease_generation = ?
+                      AND lease_expires_at > ?
+                      AND state IN (?, ?, ?)
+                    """,
+                    (
+                        lease_expires_at,
+                        timestamp,
+                        job_id,
+                        worker_id,
+                        lease_generation,
+                        timestamp,
+                        ExportJobState.QUEUED.value,
+                        ExportJobState.COLLECTING.value,
+                        ExportJobState.PACKAGING.value,
+                    ),
+                )
+                if result.rowcount != 1:
+                    await connection.rollback()
+                    return None
+                async with connection.execute(
+                    "SELECT * FROM export_jobs WHERE id = ?", (job_id,)
+                ) as cursor:
+                    row = await cursor.fetchone()
+                await connection.commit()
+            except Exception:
+                await connection.rollback()
+                raise
+
+        if row is None:
+            raise RuntimeError("Renewed export job could not be read back")
+        return _job_from_row(row)
+
+    async def release_lease(
+        self,
+        job_id: str,
+        worker_id: str,
+        lease_generation: int,
+        *,
+        now: str | None = None,
+        next_run_at: str | None = None,
+    ) -> ExportJob | None:
+        """Release a live lease, optionally scheduling the next attempt."""
+        if not isinstance(worker_id, str) or not worker_id or worker_id != worker_id.strip():
+            raise ValueError("Worker ID must be a non-empty opaque identifier")
+        if len(worker_id) > 128:
+            raise ValueError("Worker ID must not exceed 128 characters")
+        _validate_lease_generation(lease_generation)
+        timestamp = _normalize_lease_timestamp(now or _utc_now(), "now")
+        scheduled_at = (
+            _normalize_lease_timestamp(next_run_at, "next_run_at")
+            if next_run_at is not None
+            else None
+        )
+
+        async with self._connection() as connection:
+            await connection.execute("BEGIN IMMEDIATE")
+            try:
+                result = await connection.execute(
+                    """
+                    UPDATE export_jobs
+                    SET lease_owner = NULL, lease_expires_at = NULL,
+                        next_run_at = ?, updated_at = ?
+                    WHERE id = ? AND lease_owner = ? AND lease_generation = ?
+                      AND lease_expires_at > ?
+                      AND state IN (?, ?, ?)
+                    """,
+                    (
+                        scheduled_at,
+                        timestamp,
+                        job_id,
+                        worker_id,
+                        lease_generation,
+                        timestamp,
+                        ExportJobState.QUEUED.value,
+                        ExportJobState.COLLECTING.value,
+                        ExportJobState.PACKAGING.value,
+                    ),
+                )
+                if result.rowcount != 1:
+                    await connection.rollback()
+                    return None
+                async with connection.execute(
+                    "SELECT * FROM export_jobs WHERE id = ?", (job_id,)
+                ) as cursor:
+                    row = await cursor.fetchone()
+                await connection.commit()
+            except Exception:
+                await connection.rollback()
+                raise
+
+        if row is None:
+            raise RuntimeError("Released export job could not be read back")
+        return _job_from_row(row)
+
+    async def transition_claimed_job(
+        self,
+        job_id: str,
+        worker_id: str,
+        lease_generation: int,
+        expected_states: Sequence[ExportJobState],
+        new_state: ExportJobState,
+        *,
+        updated_at: str | None = None,
+        updates: Mapping[str, str | None] | None = None,
+    ) -> ExportJob | None:
+        """Transition a job only when the caller still holds its live lease.
+
+        The lease generation is a fencing token: a worker whose lease expired
+        or was reclaimed cannot commit work using an older generation.
+        """
+        if not isinstance(worker_id, str) or not worker_id or worker_id != worker_id.strip():
+            raise ValueError("Worker ID must be a non-empty opaque identifier")
+        if len(worker_id) > 128:
+            raise ValueError("Worker ID must not exceed 128 characters")
+        _validate_lease_generation(lease_generation)
+        expected, target = _validate_transition(expected_states, new_state)
+        changes = _normalize_updates(updates)
+        timestamp = _normalize_lease_timestamp(updated_at or _utc_now(), "updated_at")
+        placeholders = ", ".join("?" for _ in expected)
+
+        async with self._connection() as connection:
+            await connection.execute("BEGIN IMMEDIATE")
+            try:
+                async with connection.execute(
+                    """
+                    SELECT * FROM export_jobs
+                    WHERE id = ? AND lease_owner = ? AND lease_generation = ?
+                      AND lease_expires_at > ?
+                    """,
+                    (job_id, worker_id, lease_generation, timestamp),
+                ) as cursor:
+                    current = await cursor.fetchone()
+                if current is None or ExportJobState(current["state"]) not in expected:
+                    await connection.rollback()
+                    return None
+
+                if target is ExportJobState.READY:
+                    await _require_confirmed_primary_delivery(
+                        connection, job_id, current, changes
+                    )
+
+                assignments = ["state = ?", "updated_at = ?"]
+                parameters: list[object] = [target.value, timestamp]
+                for field_name, value in changes.items():
+                    assignments.append(f"{field_name} = ?")
+                    parameters.append(value)
+                if target in _TERMINAL_STATES:
+                    assignments.append("terminal_at = COALESCE(terminal_at, ?)")
+                    parameters.append(timestamp)
+                else:
+                    assignments.append("terminal_at = NULL")
+                if target is ExportJobState.READY or target in _TERMINAL_STATES:
+                    assignments.extend(("lease_owner = NULL", "lease_expires_at = NULL"))
+                parameters.extend(
+                    (
+                        job_id,
+                        worker_id,
+                        lease_generation,
+                        timestamp,
+                        *(state.value for state in expected),
+                    )
+                )
+                result = await connection.execute(
+                    f"""
+                    UPDATE export_jobs
+                    SET {", ".join(assignments)}
+                    WHERE id = ? AND lease_owner = ? AND lease_generation = ?
+                      AND lease_expires_at > ? AND state IN ({placeholders})
+                    """,
+                    parameters,
+                )
+                if result.rowcount != 1:
+                    await connection.rollback()
+                    return None
+                async with connection.execute(
+                    "SELECT * FROM export_jobs WHERE id = ?", (job_id,)
+                ) as cursor:
+                    updated = await cursor.fetchone()
+                await connection.commit()
+            except Exception:
+                await connection.rollback()
+                raise
+
+        if updated is None:
+            raise RuntimeError("Transitioned export job could not be read back")
+        return _job_from_row(updated)
 
     async def transition_job(
         self,
