@@ -60,6 +60,13 @@ class StorageConfig:
 
 
 @dataclass
+class ApplicationStorageConfig:
+    """Configuration for the required application-state database."""
+
+    path: str = "data/application.db"
+
+
+@dataclass
 class McpConfig:
     """Configuration for the built-in MCP server."""
 
@@ -115,3 +122,4 @@ class Config:  # pylint: disable=too-many-instance-attributes
     storage: StorageConfig = field(default_factory=StorageConfig)
     prompts: PromptsConfig = field(default_factory=PromptsConfig)
     mcp: McpConfig = field(default_factory=McpConfig)
+    application_storage: ApplicationStorageConfig = field(default_factory=ApplicationStorageConfig)
