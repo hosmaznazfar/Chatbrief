@@ -1654,9 +1654,9 @@ The current configuration model is application-wide/single-user and cannot be co
 
 No application code, tests, or migrations were changed or run.
 
-## Phase 1 export persistence migration proposal — pending approval
+## Phase 1 export persistence migration proposal — approved for implementation
 
-This is a concrete additive proposal based on inspection of the committed storage/configuration code. It is not an approved final schema and has not been implemented.
+The developer has approved this additive migration proposal as part of the major architecture decisions confirmed on 2026-11-02. It is approved as the implementation direction; it is not yet implemented. Any remaining numeric/runtime tuning or code-level details explicitly marked for verification below should be resolved during implementation without reopening the approved architecture.
 
 ### Existing constraints
 
@@ -1746,4 +1746,4 @@ Durable work queue for deletion and staging cleanup, including cleanup that must
 - PostgreSQL support for the new export tables.
 - Choosing numeric lease duration, heartbeat cadence, worker concurrency default, or deployment-specific staging capacity before workload/resource inspection.
 
-**Approval gate:** review this table/column/constraint proposal, additive migration strategy, and legacy-data exclusion before any migration or application code is written. No application code, tests, or migrations have been changed or run.
+**Implementation status:** approved. Proceed with the additive migration in small tested steps, preserving the legacy-data exclusion and all approved constraints. Exact runtime values and library-specific behavior still marked for verification must be confirmed against the current code/dependencies. No application code or migration implementation is implied by this approval.
