@@ -1,10 +1,22 @@
 """Tests for the required application-state database and migration runner."""
 
+from contextlib import asynccontextmanager
+
 import aiosqlite
 import pytest
 
 from chatbrief.application_storage import ApplicationDatabase, MigrationError
 from chatbrief.application_storage.migrations.versions import Migration
+
+
+@asynccontextmanager
+async def _connected(database: ApplicationDatabase):
+    """Open and reliably close a configured database connection."""
+    connection = await database.connect()
+    try:
+        yield connection
+    finally:
+        await connection.close()
 
 
 @pytest.mark.asyncio
@@ -14,7 +26,7 @@ async def test_initial_migration_creates_export_schema_and_is_idempotent(tmp_pat
     await database.initialize()
     await database.initialize()
 
-    async with await database.connect() as connection:
+    async with _connected(database) as connection:
         async with connection.execute(
             "SELECT version, checksum FROM schema_migrations"
         ) as cursor:
@@ -39,7 +51,7 @@ async def test_foreign_keys_are_enabled_on_every_database_connection(tmp_path):
     database = ApplicationDatabase(str(tmp_path / "application.db"))
     await database.initialize()
 
-    async with await database.connect() as connection:
+    async with _connected(database) as connection:
         async with connection.execute("PRAGMA foreign_keys") as cursor:
             assert (await cursor.fetchone())[0] == 1
 
@@ -49,7 +61,7 @@ async def test_foreign_key_constraints_reject_orphaned_delivery_attempts(tmp_pat
     database = ApplicationDatabase(str(tmp_path / "application.db"))
     await database.initialize()
 
-    async with await database.connect() as connection:
+    async with _connected(database) as connection:
         with pytest.raises(aiosqlite.IntegrityError):
             await connection.execute(
                 """INSERT INTO export_delivery_attempts(
@@ -64,7 +76,7 @@ async def test_partial_unique_index_allows_only_one_blocking_job_per_user(tmp_pa
     database = ApplicationDatabase(str(tmp_path / "application.db"))
     await database.initialize()
 
-    async with await database.connect() as connection:
+    async with _connected(database) as connection:
         await connection.execute(
             """INSERT INTO export_jobs(
                 id, export_id, owner_telegram_user_id, state, cutoff_at, created_at, updated_at
