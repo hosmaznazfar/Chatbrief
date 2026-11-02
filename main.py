@@ -12,6 +12,7 @@ import sys
 from contextlib import suppress
 from typing import Any
 
+from chatbrief.application_storage import ApplicationDatabase
 from chatbrief.commands.service import CommandService
 from chatbrief.config.loader import load_config
 from chatbrief.config.models import Config
@@ -36,6 +37,7 @@ class ChatbriefApp:
 
         self.scheduler: DigestScheduler | None = None
         self.command_service: CommandService | None = None
+        self.application_database: ApplicationDatabase | None = None
 
         # MCPServer's type is not imported here because Pyright cannot
         # resolve the external mcp.server module in the current environment.
@@ -96,6 +98,19 @@ class ChatbriefApp:
             logger.info("=" * 70)
             logger.info("🚀 CHATBRIEF STARTING")
             logger.info("=" * 70)
+
+            # ---------------------------------------------------------
+            # Required application-state persistence
+            # ---------------------------------------------------------
+            #
+            # This database is independent of the optional message-history
+            # store. Initialize it before constructing services so startup
+            # fails closed if required application state is unavailable.
+            application_database = ApplicationDatabase(config.application_storage.path)
+            await application_database.initialize()
+            self.application_database = application_database
+
+            logger.info("Application-state database initialized")
 
             # Display configuration.
             logger.info("Platform: %s", config.platform.value)
