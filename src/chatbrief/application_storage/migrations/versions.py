@@ -121,4 +121,20 @@ FAIR_EXPORT_CLAIM_MIGRATION = Migration(
     ),
 )
 
-MIGRATIONS = (INITIAL_EXPORT_MIGRATION, FAIR_EXPORT_CLAIM_MIGRATION)
+DELIVERY_LEASE_FENCING_MIGRATION = Migration(
+    version=3,
+    statements=(
+        "ALTER TABLE export_delivery_attempts ADD COLUMN worker_id TEXT",
+        """
+        ALTER TABLE export_delivery_attempts
+        ADD COLUMN lease_generation INTEGER
+        CHECK (lease_generation IS NULL OR lease_generation > 0)
+        """,
+    ),
+)
+
+MIGRATIONS = (
+    INITIAL_EXPORT_MIGRATION,
+    FAIR_EXPORT_CLAIM_MIGRATION,
+    DELIVERY_LEASE_FENCING_MIGRATION,
+)
