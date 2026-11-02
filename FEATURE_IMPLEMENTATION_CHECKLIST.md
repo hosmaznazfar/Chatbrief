@@ -131,7 +131,7 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add migration 4 for identity-only users, sources, technical source access, explicit user authorizations, subscriptions, normalized deduplicated messages, and known-complete collection coverage intervals.
 - [x] Validate migration 4 upgrade/idempotency, foreign keys, uniqueness, and constraints locally; developer confirmed the migration tests and validation checks passed (seven optional PostgreSQL tests skipped without `TELEBRIEF_TEST_PG_URL`).
 - [ ] Add typed repository operations for user/source/access/authorization/subscription/message/coverage records.
-- [ ] Add an authorization-aware export snapshot query that enforces source access and user grants independently of subscription state.
+- [x] Add an authorization-aware export snapshot query that enforces source access and user grants independently of subscription state (Step 4b-3).
 - [ ] Implement the collecting phase handler only after the snapshot query exists; use cancellation-safe checkpoints and lease-generation-fenced transitions. Do not backfill legacy message-history rows.
 
 
