@@ -1003,3 +1003,8 @@ For `export.json`, `export-report.json`, and `media-manifest.json`, `null` is ac
 ## Export schema unsupported-version handling — approved (Option A)
 
 Consumers must reject `export.json`, `export-report.json`, or `media-manifest.json` when the document's `schema_version` is unsupported, and clearly report that version. They must not attempt best-effort parsing with a different schema. Unknown fields are ignored only within a supported version. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export JSON root shape — approved (Option A)
+
+`export.json`, `export-report.json`, and `media-manifest.json` must each have a top-level JSON object containing that document's `schema_version` and document-specific fields. Top-level arrays and scalar JSON values (strings, numbers, booleans, or null) are invalid. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
