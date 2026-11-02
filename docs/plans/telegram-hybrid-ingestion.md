@@ -799,7 +799,7 @@ Primary archive, `chatbrief-export.zip`:
 
 ```text
 chatbrief-export.zip
-├── README.txt
+├── README.md
 ├── export.json
 └── export-report.json
 ```
@@ -815,13 +815,13 @@ chatbrief-export.zip
   independently from both `export.json` and the Chatbrief application release. Increment
   it for incompatible report-format changes so report consumers can evolve independently
   from consumers of the primary data document.
-- `README.txt`: archive structure and interpretation guidance.
+- `README.md`: archive structure, usage, and the schema versions of the JSON document(s) in that archive. Explain that each JSON document's top-level `schema_version` is independent of the other export documents and the Chatbrief application release, and that incompatible format changes increment that document's version.
 
 Optional companion archive, `chatbrief-media.zip`:
 
 ```text
 chatbrief-media.zip
-├── README.txt
+├── README.md
 ├── media-manifest.json
 └── media/
     ├── images/
@@ -838,7 +838,7 @@ chatbrief-media.zip
   independently from `export.json`, `export-report.json`, and the Chatbrief application
   release. Increment it for incompatible manifest-format changes so media consumers can
   evolve independently from both primary-archive documents.
-- `README.txt`: media archive structure and interpretation guidance.
+- `README.md`: archive structure, usage, and the schema versions of the JSON document(s) in that archive. Explain that each JSON document's top-level `schema_version` is independent of the other export documents and the Chatbrief application release, and that incompatible format changes increment that document's version.
 
 Use safe archive-relative filenames in both archives; never expose internal storage paths
 or identifiers. Text data must not depend on the media archive being present.
