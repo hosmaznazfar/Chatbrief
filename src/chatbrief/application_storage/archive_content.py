@@ -123,8 +123,12 @@ class ArchiveContentRepository:
         if has_media != (kind is not None):
             raise ValueError("has_media and media_type must be supplied consistently")
         collected = _timestamp(collected_at, "collected_at")
-        source_time = _timestamp(source_timestamp, "source_timestamp") if source_timestamp else None
-        edited = _timestamp(edited_at, "edited_at") if edited_at else None
+        source_time = (
+            _timestamp(source_timestamp, "source_timestamp")
+            if source_timestamp is not None
+            else None
+        )
+        edited = _timestamp(edited_at, "edited_at") if edited_at is not None else None
         identifier = str(uuid.uuid4())
 
         async with self._connection() as connection:
