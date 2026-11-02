@@ -218,3 +218,9 @@ Use one opaque UUID `export_id` and common RFC 3339 UTC `created_at` across all 
 ## Export JSON document shapes — working defaults
 
 In schema v1, require common metadata and all primary sections: `preferences` object; `schedules`, `subscriptions`, `delivery_history`, `messages`, and `sources` arrays. Empty sections are `{}`/`[]`, never omitted or null. Report structure: result, included-record counts, structured omissions, warnings. Media manifest lists only included files and records media/message references, safe ZIP-relative path, type/content type, byte size, and SHA-256. Validate shared export metadata, counts, ZIP paths, and references. Exact domain fields, author/privacy rules, and model alignment remain open; not implemented.
+
+
+
+## Export report and media validation — working defaults
+
+Report result is `complete` or `complete_with_omissions`; omissions carry stable reason codes, category, count, and explanation. Counts and byte sizes are non-negative integers. Media entries use SHA-256, exact uncompressed size, known MIME type when available, and predefined media categories. Archive paths are safe relative paths; filenames are sanitized and collisions receive deterministic suffixes. Manifest entries and ZIP binaries must match one-to-one. Source authorization revocation invalidates the export rather than being reported as an ordinary omission. Not implemented.
