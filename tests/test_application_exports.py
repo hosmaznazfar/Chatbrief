@@ -36,6 +36,13 @@ async def test_create_and_read_export_job_is_scoped_to_its_owner(export_reposito
         == job
     )
     assert await export_repository.get_job(job.id, owner_telegram_user_id=99999) is None
+    unauthorized_transition = await export_repository.transition_job(
+        job.id,
+        99999,
+        [ExportJobState.QUEUED],
+        ExportJobState.CANCELLED,
+    )
+    assert unauthorized_transition is None
     assert await export_repository.get_active_job(12345) == job
 
 
