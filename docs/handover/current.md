@@ -13,6 +13,8 @@ Chatbrief is an asynchronous AI-powered messaging digest application. It collect
 
 The current implemented platform adapter is Telegram. Bale is a future adapter target; the enum/configuration boundary exists, but no Bale source, sender, or bot adapter is implemented.
 
+- The primary `export.json` uses separate top-level data sections (preferences, schedules, subscriptions, delivery history, messages, and source relationship records) with explicit export-scoped relationships; exact fields and reference format remain in detailed schema design.
+
 The project also includes SQLite/PostgreSQL storage, extension hooks for filters and prompts, configurable digest grouping, and an optional MCP server.
 
 ## Current architecture
