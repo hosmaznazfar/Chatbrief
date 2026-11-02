@@ -236,18 +236,21 @@ Implement incrementally. Do not rewrite the existing Telegram source, sender, or
 
 ### Application-state database foundation — implementation status
 
-**Step 1: implemented in source; local validation pending.**
+**Steps 1–2: implemented in source; Step 2 local validation pending.**
 
-- Added a separate required application-state database configuration with default path data/application.db and top-level application_storage.path override.
-- Added a versioned SQLite migration runner and schema_migrations(version, applied_at, checksum) metadata.
-- Migrations are applied one at a time under BEGIN IMMEDIATE; migration DDL and its checksum record commit atomically. Checksum drift and unknown applied versions fail closed.
+- Added a separate required application-state database configuration with default path `data/application.db` and top-level `application_storage.path` override.
+- Added a versioned SQLite migration runner and `schema_migrations(version, applied_at, checksum)` metadata.
+- Migrations are applied one at a time under `BEGIN IMMEDIATE`; migration DDL and its checksum record commit atomically. Checksum drift and unknown applied versions fail closed.
 - Foreign-key enforcement is enabled and verified during initialization and on every connection opened through the application database boundary.
-- Added migration 1 for export_jobs, export_delivery_attempts, and export_cleanup_tasks, including state/value checks, foreign keys, operational indexes, and the one-blocking-job-per-user partial unique index.
+- Added migration 1 for `export_jobs`, `export_delivery_attempts`, and `export_cleanup_tasks`, including state/value checks, foreign keys, operational indexes, and the one-blocking-job-per-user partial unique index.
 - Added focused tests for schema creation/idempotency, FK activation, the partial unique index, checksum drift, rollback, and application database path parsing.
-- This step does not yet wire the database into main.py; startup/shutdown integration is the next slice after local focused tests pass.
-- The optional legacy message-history store and its messages schema remain unchanged. No legacy rows are backfilled.
+- Root `main.py` now initializes the required application database after configuration/logging and before platform services, scheduler, command service, bot, or MCP server construction.
+- The initialized database object is retained on `ChatbriefApp` for future repository/service injection. Initialization failure prevents the remaining application components from being constructed.
+- Added lifecycle tests for initialization order and fail-closed startup behavior.
+- `ApplicationDatabase.initialize()` owns and closes its scoped SQLite connection. It does not retain a connection/pool, so no separate database shutdown close operation is required; future repository connections remain caller-owned and must be scoped.
+- The optional legacy message-history store and its `messages` schema remain unchanged. No legacy rows are backfilled.
 
-**Validation:** not run in the remote GitHub editing environment. Run the focused commands recorded in docs/plans/application-state-database.md from the local checkout before proceeding.
+**Validation:** Step 1's focused/full tests and static checks were confirmed by the developer. Step 2 code and tests were committed through the GitHub editing environment, which cannot run local `uv` commands. Run the Step 2 focused tests, Ruff checks, Pyright, and full suite recorded in `docs/plans/application-state-database.md` from the local checkout before proceeding to repositories.
 
 ### Phase 1 findings — verified 2026-10-31
 
