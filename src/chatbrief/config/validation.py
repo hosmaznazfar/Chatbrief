@@ -4,6 +4,7 @@ from chatbrief.constants import PROVIDER_DEFAULT_MODELS, SUPPORTED_LANGUAGES, SU
 from chatbrief.ui_strings import get_ui_strings
 
 from .models import (
+    ApplicationStorageConfig,
     ChannelConfig,
     DigestGroupConfig,
     FilterSpec,
@@ -371,3 +372,17 @@ def parse_channels(yaml_config: dict) -> list[ChannelConfig]:
         raise ValueError(f"Duplicate channel names in config.yaml: {', '.join(sorted(duplicates))}")
 
     return channels
+
+
+def parse_application_storage_config(yaml_config: dict) -> ApplicationStorageConfig:
+    """Parse the required application-state database configuration."""
+    raw = yaml_config.get("application_storage")
+    if raw is None:
+        return ApplicationStorageConfig()
+    if not isinstance(raw, dict):
+        raise ValueError("'application_storage' must be a mapping")
+
+    path = raw.get("path", "data/application.db")
+    if not isinstance(path, str) or not path.strip():
+        raise ValueError("application_storage.path must be a non-empty string")
+    return ApplicationStorageConfig(path=path.strip())
