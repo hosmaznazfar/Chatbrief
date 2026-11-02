@@ -1052,3 +1052,9 @@ The detailed export schema uses a shared opaque UUID `export_id` and common UTC 
 ## Export JSON document shapes — working defaults
 
 Schema v1 requires the common metadata plus all six approved primary sections: `preferences` is an object; `schedules`, `subscriptions`, `delivery_history`, `messages`, and `sources` are arrays. Empty categories use empty objects/arrays rather than omission or null. Source and message records are referenced with export-local references, not internal/Telegram identifiers. The report requires result, counts, omissions, and warnings. The media manifest lists only binaries actually included, with safe archive-relative paths, byte sizes, content types where known, and SHA-256 checksums. Cross-document export IDs/timestamps and all references must validate. Field-level content/privacy and application-model alignment remain open; no implementation.
+
+
+
+## Export report and media validation — working defaults
+
+Report results are `complete` or `complete_with_omissions`; omissions use stable reason codes, category, count, and explanation. Counts/byte sizes are non-negative integers. Media manifest entries use SHA-256 of exact archived bytes, exact uncompressed byte size, MIME type only when known, and one of four predefined media categories. ZIP paths are safe relative paths under the corresponding category directory; sanitized filenames get deterministic numeric collision suffixes, checked case-insensitively. Manifest entries and ZIP binaries must match one-to-one. Authorization revocation/source deletion invalidates the export rather than becoming a normal omission. Implementation details remain unverified/not implemented.
