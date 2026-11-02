@@ -267,6 +267,16 @@ async def test_stale_worker_cannot_start_or_finish_delivery_after_reclaim(
         )
         is None
     )
+    assert (
+        await deliveries.finish_attempt(
+            old_attempt.id,
+            12345,
+            DeliveryAttemptOutcome.SUCCEEDED,
+            worker_id=new_worker,
+            lease_generation=reclaimed.lease_generation,
+        )
+        is None
+    )
 
     current_attempt = await deliveries.start_attempt(
         job.id,
