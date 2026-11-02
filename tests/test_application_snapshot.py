@@ -130,6 +130,7 @@ async def test_snapshot_includes_only_retained_non_deleted_messages_before_cutof
     assert not hasattr(snapshot.messages[0], "platform_message_id")
     assert not hasattr(snapshot.messages[0], "has_media")
     assert not hasattr(snapshot.messages[0], "media_type")
+    assert not hasattr(snapshot.messages[0], "collected_at")
     assert snapshot.sources[0].id == source.id
     assert not hasattr(snapshot.sources[0], "platform_chat_id")
     assert not hasattr(snapshot.sources[0], "source_type")
