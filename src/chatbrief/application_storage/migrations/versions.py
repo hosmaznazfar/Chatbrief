@@ -116,7 +116,7 @@ FAIR_EXPORT_CLAIM_MIGRATION = Migration(
         "ALTER TABLE export_jobs ADD COLUMN last_claimed_at TEXT",
         """
         CREATE INDEX idx_export_jobs_fair_claim
-        ON export_jobs(state, last_claimed_at, created_at, id)
+        ON export_jobs(state, last_claimed_at, created_at, owner_telegram_user_id, id)
         """,
     ),
 )
