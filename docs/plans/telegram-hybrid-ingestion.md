@@ -1360,3 +1360,11 @@ migrations, or tests.
 - Treat duplicate keys as invalid input rather than relying on parser-specific behavior such as keeping the first or last value.
 - Apply this rule independently to `export.json`, `export-report.json`, and `media-manifest.json`.
 - This prevents ambiguous interpretation and inconsistent validation across parsers. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+### `schema_version` value validation — approved (Option A)
+
+- In `export.json`, `export-report.json`, and `media-manifest.json`, `schema_version` must be a JSON integer greater than zero.
+- Reject zero, negative numbers, decimal/fractional values (including `1.0`), strings (including `"1"`), booleans, null, and any other non-integer or non-positive value.
+- Do not coerce or normalize values into integers; validate the JSON value's actual type and value.
+- Apply this rule independently to each document. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
