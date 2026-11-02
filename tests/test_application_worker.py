@@ -280,7 +280,8 @@ async def test_shutdown_cancels_handler_after_grace_and_releases_lease(export_re
         ({"shutdown_grace_seconds": 0}, "shutdown_grace_seconds"),
     ],
 )
-@pytest.mark.asyncio\nasync def test_worker_rejects_invalid_configuration(export_repository, options, message):
+@pytest.mark.asyncio
+async def test_worker_rejects_invalid_configuration(export_repository, options, message):
     with pytest.raises(ValueError, match=message):
         ExportWorker(
             export_repository,
