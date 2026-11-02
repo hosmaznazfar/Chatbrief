@@ -1046,3 +1046,9 @@ Compare JSON object member names exactly; do not trim leading or trailing whites
 ## Export schema conventions — working defaults
 
 The detailed export schema uses a shared opaque UUID `export_id` and common UTC `created_at` across all included JSON documents; `export.json` also carries the acceptance `cutoff_at`. Timestamps use RFC 3339 UTC strings with trailing `Z`, preserving available sub-second precision. Cross-record relationships use export-local `src-`, `msg-`, and `media-` references; these are not database/Telegram IDs and are not stable across separate exports. Arrays and ZIP entries have documented deterministic ordering, while semantically ordered user configuration remains in its configured order. Exact section fields and shapes remain in detailed design. This is a recommended working default, not implemented.
+
+
+
+## Export JSON document shapes — working defaults
+
+Schema v1 requires the common metadata plus all six approved primary sections: `preferences` is an object; `schedules`, `subscriptions`, `delivery_history`, `messages`, and `sources` are arrays. Empty categories use empty objects/arrays rather than omission or null. Source and message records are referenced with export-local references, not internal/Telegram identifiers. The report requires result, counts, omissions, and warnings. The media manifest lists only binaries actually included, with safe archive-relative paths, byte sizes, content types where known, and SHA-256 checksums. Cross-document export IDs/timestamps and all references must validate. Field-level content/privacy and application-model alignment remain open; no implementation.
