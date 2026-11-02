@@ -1345,3 +1345,10 @@ migrations, or tests.
 - A consumer must reject `export.json`, `export-report.json`, or `media-manifest.json` when its `schema_version` is not supported by that consumer.
 - Report the unsupported schema version clearly; do not attempt best-effort parsing using a different supported schema version.
 - Apply this rule independently to each document. Ignoring unknown fields remains permitted only within a supported schema version and does not authorize parsing an unsupported version.
+
+### JSON document root shape — approved (Option A)
+
+- `export.json`, `export-report.json`, and `media-manifest.json` must each have a JSON object as their top-level value.
+- The top-level object contains that document's `schema_version` and its document-specific fields.
+- Top-level arrays and scalar JSON values (strings, numbers, booleans, or `null`) are invalid.
+- Apply this root-shape requirement independently to all three documents.
