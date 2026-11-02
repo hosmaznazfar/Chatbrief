@@ -1637,3 +1637,19 @@ These are recommended working defaults for the detailed design, not implemented 
 - Do not export `has_media` as a misleading promise that a binary is included. The primary message may optionally carry export-local media references only for binaries actually present in the companion archive; the manifest remains authoritative for included media.
 
 These are recommended v1 schema semantics, not implemented behavior. Exact fields and legacy placeholder provenance must be verified against retained records during Phase 1 migration design. No application code, tests, or migrations were changed or run.
+
+## Preference, subscription, and source field allowlist — recommended defaults
+
+The current configuration model is application-wide/single-user and cannot be copied wholesale into a future multi-user export. For schema v1:
+
+- Export only values that belong to the requesting user and are meaningful for that user's Chatbrief experience. Do not export process-wide deployment settings or service operator configuration.
+- The future user-scoped `preferences` allowlist may include typed digest choices such as lookback, output language, digest mode, emoji/statistics choices, topic deduplication, and user-owned digest-group definitions, but only where those values are actually stored per user in the Phase 1 domain model.
+- A subscription record may include the requester's own source-specific lookback override, digest-group assignment, and user-authored prompt override when these are part of that subscription's user-owned settings. Do not include source access credentials or other users' subscription/sharing data.
+- Preserve user-authored prompt override text as data when it is part of the requester's own settings. Do not export prompt template filesystem paths, composer/filter Python class paths, arbitrary filter configuration dictionaries, or executable/plugin code.
+- Export filter settings only through a stable, explicitly versioned, data-only allowlist for supported filter types. If a configured filter has no safe portable representation, omit that filter setting and report it as `not_exportable`; never serialize arbitrary Python objects or class import paths.
+- Keep AI-provider credentials, API keys, service endpoints, deployment limits, timeouts, global model/runtime configuration, database/storage configuration, and operational settings out of personal preferences. Provider/model choices are included only if Phase 1 establishes them as an explicit user-owned preference rather than an operator-level setting.
+- Source records contain only a stable platform enum and a user-safe display label. The label is descriptive only, not an identifier or access credential. Do not export source usernames, numeric IDs, invite/deep links, private URLs, or Telegram transport IDs.
+- Do not create a synthetic source record for a subscription whose source cannot be resolved at the cutoff. Treat missing required source linkage as invalid snapshot data and fail/invalidate the job rather than emitting dangling references.
+- These rules define the privacy/portability boundary; exact keys and required/optional fields remain tied to the future user-scoped model and are finalized in the Phase 1 migration proposal.
+
+No application code, tests, or migrations were changed or run.
