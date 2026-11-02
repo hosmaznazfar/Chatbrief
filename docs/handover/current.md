@@ -6,17 +6,17 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest verified implementation commits:** `4170244` (worker lease operations), `9631cb2` (lease tests), `4293ddb` (shared lease validation), `2eb735d` (terminal-transition test), and `c867d03` (final lease-input validation). Latest workflow documentation commit: `a3dcae2`.
-- **Local worktree:** after the developer's last report, the local branch was fast-forwarded to `f1a3beb`; local formatting was applied to the Step 3b files. A stash named `local Step 3b changes` contains formatting-only edits that appear redundant with the formatted current files; do not reapply it unless a later comparison reveals substantive changes.
+- **Latest implementation commits:** `e7779e1` (fair-scheduling migration), `30c17cd` (fair claim selection), and `1fddf80` (multi-user rotation test).
+- **Local worktree:** not visible from the GitHub editing environment. The developer should fast-forward the branch and preserve any local uncommitted work/stashes.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
 - **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and Ruff format passed.
 - **Step 3a validation:** developer-confirmed — focused tests **109 passed**, Ruff lint/format passed, Pyright **0 errors/warnings/information**, full suite **612 passed, 7 skipped**, coverage **94.42%**.
 - **Step 3b validation:** developer-confirmed — focused tests **119 passed**, Ruff lint/format passed, Pyright **0 errors/warnings/information**, full suite **622 passed, 7 skipped**, coverage **94.07%**.
-- **Step 3c implementation:** worker claim, renewal, release, retry scheduling, and generation-fenced state-transition APIs have been added with focused tests. Local validation is pending; this GitHub editing environment cannot run the developer's `uv` checks.
-- **Graphify:** optional development tooling for code navigation and impact analysis. It is not a Chatbrief runtime feature or a project implementation deliverable; no graph refresh/commit is required to validate the current code slice.
-- **Next stage:** pull the Step 3c commits, run focused export tests plus Ruff lint/format, Pyright, and the full suite. Fix any implementation issues before proceeding to worker orchestration.
-
+- **Step 3c validation:** developer-confirmed — Ruff lint/format and Pyright passed; full suite **627 passed, 7 skipped**, coverage **93.38%**.
+- **Step 3d implementation:** migration-backed per-user last-claimed ordering and atomic fair claim updates are implemented remotely; local validation is pending.
+- **Graphify:** optional development tooling for code navigation and impact analysis, not a runtime feature or implementation deliverable.
+- **Next stage:** pull and validate Step 3d. Then implement the export worker orchestration in dependency order, including bounded concurrency and cooperative lifecycle integration without bypassing lease-generation fencing.
 
 ## Step 3b implementation update — delivery attempts and cleanup tasks
 
