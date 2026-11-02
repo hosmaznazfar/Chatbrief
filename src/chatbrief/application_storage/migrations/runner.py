@@ -17,6 +17,12 @@ class MigrationError(RuntimeError):
     """Raised when application database migrations cannot be trusted or applied."""
 
 
+def _restrict_database_permissions(path: str) -> None:
+    """Restrict the database file to its owning user on POSIX systems."""
+    if os.name == "posix":
+        os.chmod(path, 0o600)
+
+
 class ApplicationDatabase:
     """Own the required SQLite application database and apply versioned migrations."""
 
@@ -40,7 +46,7 @@ class ApplicationDatabase:
         """Create the database directory and apply every unapplied migration."""
         Path(self.path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         async with aiosqlite.connect(self.path) as connection:
-            os.chmod(self.path, 0o600)
+            _restrict_database_permissions(self.path)
             await connection.execute("PRAGMA foreign_keys = ON")
             async with connection.execute("PRAGMA foreign_keys") as cursor:
                 row = await cursor.fetchone()
@@ -107,7 +113,7 @@ class ApplicationDatabase:
     async def connect(self) -> aiosqlite.Connection:
         """Open a configured connection with foreign-key enforcement enabled."""
         connection = await aiosqlite.connect(self.path)
-        os.chmod(self.path, 0o600)
+        _restrict_database_permissions(self.path)
         await connection.execute("PRAGMA foreign_keys = ON")
         async with connection.execute("PRAGMA foreign_keys") as cursor:
             row = await cursor.fetchone()
