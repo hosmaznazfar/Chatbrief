@@ -989,3 +989,7 @@ Apply this policy independently to `export.json`, `export-report.json`, and `med
 ## Export schema unknown-field handling — approved (Option A)
 
 Consumers of `export.json`, `export-report.json`, and `media-manifest.json` ignore unrecognized fields instead of rejecting a document solely for containing them. This keeps consumers forward-compatible with optional fields added in compatible revisions. It does not relax validation of required fields, malformed values, or other schema constraints. Approved target behavior, not implemented; documentation-only; no code, schema, migrations, or tests changed/run.
+
+## Export schema required-field handling — approved (Option A)
+
+Consumers reject `export.json`, `export-report.json`, or `media-manifest.json` when a field required by that document's schema is missing; they do not silently substitute defaults. Optional fields may be absent according to their documented semantics. Exact required/optional field sets remain open for detailed schema design. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
