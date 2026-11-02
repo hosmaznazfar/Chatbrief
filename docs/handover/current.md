@@ -946,7 +946,7 @@ Account deletion cancels queued/running exports, removes staged files, and immed
 
 ## Media export filenames — approved (Option A)
 
-Media ZIP entries use only the predefined media category directories. Archive filenames are derived from sanitized basenames after discarding source directory components; collisions receive deterministic suffixes and must never overwrite an existing entry. The original source filename remains available in the media manifest but is never used as an archive path. Reject names/paths that remain invalid after normalization. Exact sanitization and suffix rules, path validation, and entry-count limits remain implementation-design details. This is approved target behavior, not implemented; documentation-only, with no application code, schema, migrations, or tests changed/run.
+Media ZIP entries use only the predefined media category directories. Archive filenames are generated deterministically from export-local `media_ref` values, with only validated safe extensions where known; original filenames are not preserved in ZIP paths or manifest metadata because they may contain personal or third-party information. Validate generated paths and resolve any collision deterministically without overwriting. Exact safe-extension mapping and path validation remain implementation-design details. This is approved target behavior, not implemented; documentation-only, with no application code, schema, migrations, or tests changed/run.
 
 
 ## Oversized primary export — approved (Option A)
