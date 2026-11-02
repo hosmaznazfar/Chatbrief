@@ -1660,62 +1660,62 @@ This is a concrete additive proposal based on inspection of the committed storag
 
 ### Existing constraints
 
-- The current SQLite/PostgreSQL message storage is optional (\`storage.enabled\`) and is initialized with inline \`CREATE TABLE IF NOT EXISTS\` statements. There is no versioned migration runner or existing application-wide user table.
-- The current \`messages\` table has no trustworthy owner, stable source identity, Telegram message identity, or source-authorization record. It is not a safe source for export-job ownership or cross-user message backfill.
-- Export jobs must remain available when optional message-history storage is disabled. They therefore require a separate required application-storage boundary and lifecycle, not an extension of \`StorageBackend\`.
+- The current SQLite/PostgreSQL message storage is optional (`storage.enabled`) and is initialized with inline `CREATE TABLE IF NOT EXISTS` statements. There is no versioned migration runner or existing application-wide user table.
+- The current `messages` table has no trustworthy owner, stable source identity, Telegram message identity, or source-authorization record. It is not a safe source for export-job ownership or cross-user message backfill.
+- Export jobs must remain available when optional message-history storage is disabled. They therefore require a separate required application-storage boundary and lifecycle, not an extension of `StorageBackend`.
 
 ### Recommended storage boundary and migration mechanism
 
 - Introduce an application-state database/store independent of optional message-history storage. SQLite is the initial implementation; preserve an interface that can later support PostgreSQL without changing export business logic.
-- Use a dedicated default SQLite file (provisionally \`data/application.db\`) and an explicit application-database path setting. Keep the existing optional \`data/messages.db\` behavior unchanged.
-- Add a minimal versioned migration runner using the existing \`aiosqlite\`/\`asyncpg\` dependencies; do not add Alembic or another migration dependency for this first slice.
-- Track applied migrations in \`schema_migrations(version, applied_at, checksum)\`. Apply each migration transactionally, reject checksum drift for an already-applied version, and enable SQLite foreign-key enforcement on every connection.
+- Use a dedicated default SQLite file (provisionally `data/application.db`) and an explicit application-database path setting. Keep the existing optional `data/messages.db` behavior unchanged.
+- Add a minimal versioned migration runner using the existing `aiosqlite`/`asyncpg` dependencies; do not add Alembic or another migration dependency for this first slice.
+- Track applied migrations in `schema_migrations(version, applied_at, checksum)`. Apply each migration transactionally, reject checksum drift for an already-applied version, and enable SQLite foreign-key enforcement on every connection.
 - SQLite is the only required backend for the first export implementation. Keep SQL/repository boundaries backend-neutral; add PostgreSQL migrations and integration coverage as a later explicit compatibility step.
 - Do not hold transactions across collection, archive creation, or Telegram network calls.
 
 ### Proposed tables
 
-#### \`export_jobs\`
+#### `export_jobs`
 
 One row per accepted export request.
 
-- \`id\`: internal opaque UUID primary key; never exported.
-- \`export_id\`: separate opaque UUID written into all archive JSON documents; unique and immutable.
-- \`owner_telegram_user_id\`: required Telegram identity of the requesting Chatbrief user, used only for authorization/ownership queries; never included in any export archive, report, log, or user-visible identifier.
-- \`state\`: constrained to the approved job states: \`queued\`, \`collecting\`, \`packaging\`, \`ready\`, \`cancelled\`, \`failed\`, \`invalidated\`, \`expired\`.
-- \`media_outcome\`: nullable until resolved; then constrained to the approved media outcomes \`sent\`, \`omitted\`, \`failed\`, or \`delivery_unknown\`.
-- \`accepted_at\`, \`cutoff_at\`, \`created_at\`, \`updated_at\`, \`primary_delivered_at\`, \`expires_at\`, and optional terminal timestamp fields.
-- \`lease_owner\`, \`lease_expires_at\`, and monotonically increasing \`lease_generation\` for database-backed worker claims/fencing.
-- \`next_run_at\` for delayed retry/recovery scheduling.
-- \`staging_key\`: opaque generated staging identifier only; never an absolute filesystem path.
-- \`report_json\` and \`media_manifest_json\`: optional validated JSON snapshots needed for status/recovery. Do not store archive binaries.
-- \`last_error_code\`: bounded stable error code only; no raw exception text or trace.
+- `id`: internal opaque UUID primary key; never exported.
+- `export_id`: separate opaque UUID written into all archive JSON documents; unique and immutable.
+- `owner_telegram_user_id`: required Telegram identity of the requesting Chatbrief user, used only for authorization/ownership queries; never included in any export archive, report, log, or user-visible identifier.
+- `state`: constrained to the approved job states: `queued`, `collecting`, `packaging`, `ready`, `cancelled`, `failed`, `invalidated`, `expired`.
+- `media_outcome`: nullable until resolved; then constrained to the approved media outcomes `sent`, `omitted`, `failed`, or `delivery_unknown`.
+- `cutoff_at`, `created_at`, `updated_at`, `primary_delivered_at`, `expires_at`, and optional terminal timestamp fields.
+- `lease_owner`, `lease_expires_at`, and monotonically increasing `lease_generation` for database-backed worker claims/fencing.
+- `next_run_at` for delayed retry/recovery scheduling.
+- `staging_key`: opaque generated staging identifier only; never an absolute filesystem path.
+- `report_json` and `media_manifest_json`: optional validated JSON snapshots needed for status/recovery. Do not store archive binaries.
+- `last_error_code`: bounded stable error code only; no raw exception text or trace.
 
-#### \`export_delivery_attempts\`
+#### `export_delivery_attempts`
 
 Append-only record for every primary or media Telegram document send/retry.
 
-- Internal primary key and required \`job_id\` foreign key with cascade deletion when job metadata is removed.
-- \`document_kind\` constrained to \`primary\` or \`media\`; positive \`attempt_number\`; unique pair of job/document-kind/attempt-number.
-- \`outcome\` constrained to \`started\`, \`succeeded\`, \`failed\`, or \`delivery_unknown\`.
-- \`started_at\`, optional \`finished_at\`, and optional \`retry_after_at\`.
-- Optional Telegram \`chat_id\`, \`message_id\`, and \`file_id\` needed for delivery reconciliation/cleanup. Treat these as sensitive operational metadata: restrict database/log access and never export them.
-- \`error_code\` and \`retry_after_seconds\` only; no raw response dumps, exception traces, or credentials.
+- Internal primary key and required `job_id` foreign key with cascade deletion when job metadata is removed.
+- `document_kind` constrained to `primary` or `media`; positive `attempt_number`; unique pair of job/document-kind/attempt-number.
+- `outcome` constrained to `started`, `succeeded`, `failed`, or `delivery_unknown`.
+- `started_at`, optional `finished_at`, and optional `retry_after_at`.
+- Optional Telegram `chat_id`, `message_id`, and `file_id` needed for delivery reconciliation/cleanup. Treat these as sensitive operational metadata: restrict database/log access and never export them.
+- `error_code` and `retry_after_seconds` only; no raw response dumps, exception traces, or credentials.
 - Never overwrite an earlier ambiguous attempt; every retry creates a new attempt row.
 
-#### \`export_cleanup_tasks\`
+#### `export_cleanup_tasks`
 
 Durable work queue for deletion and staging cleanup, including cleanup that must survive account/job deletion.
 
-- Internal primary key; nullable \`job_id\` foreign key using \`ON DELETE SET NULL\`, so actionable cleanup survives removal of the job.
-- \`task_type\` constrained to \`telegram_message_delete\` or \`staging_delete\`; \`state\` constrained to \`pending\`, \`succeeded\`, or \`abandoned\`.
-- For Telegram deletion: target \`chat_id\` and \`message_id\`. For staging deletion: opaque \`staging_key\`, resolved only beneath the configured private staging root.
-- \`attempt_count\`, \`next_attempt_at\`, optional \`deadline_at\`, \`last_error_code\`, \`created_at\`, and \`updated_at\`.
+- Internal primary key; nullable `job_id` foreign key using `ON DELETE SET NULL`, so actionable cleanup survives removal of the job.
+- `task_type` constrained to `telegram_message_delete` or `staging_delete`; `state` constrained to `pending`, `succeeded`, or `abandoned`.
+- For Telegram deletion: target `chat_id` and `message_id`. For staging deletion: opaque `staging_key`, resolved only beneath the configured private staging root.
+- `attempt_count`, `next_attempt_at`, optional `deadline_at`, `last_error_code`, `created_at`, and `updated_at`.
 - Do not require an owner/user foreign key for cleanup tasks. On account deletion, retain only the minimum target identifiers and task state required to finish or expire cleanup; remove the task once no longer actionable.
 
 ### Constraints and indexes
 
-- Enforce at most one blocking export per Telegram user with a partial unique index over \`owner_telegram_user_id\` for states \`queued\`, \`collecting\`, \`packaging\`, and \`ready\`. \`ready\` continues blocking until expiry/revocation under the approved policy.
+- Enforce at most one blocking export per Telegram user with a partial unique index over `owner_telegram_user_id` for states `queued`, `collecting`, `packaging`, and `ready`. `ready` continues blocking until expiry/revocation under the approved policy.
 - Add indexes for job state/next-run selection, owner plus accepted time, lease expiry, ready-job expiry, attempt lookup by job/document kind, and pending cleanup by state/next-attempt/deadline.
 - Add checks for valid state/outcome values, positive attempt numbers and lease generations, and non-negative retry/count values.
 - Use foreign keys for job-to-attempt and cleanup-to-job relationships. Enable SQLite foreign keys explicitly for every connection.
@@ -1723,24 +1723,24 @@ Durable work queue for deletion and staging cleanup, including cleanup that must
 
 ### Legacy data and compatibility
 
-- Migration is additive: do not drop, rename, rewrite, or repurpose the existing \`messages\` table, JSON delivery tracking, configuration file, or Telethon session data in this phase.
-- Do not automatically backfill legacy \`messages\` rows into the future shared archive in this migration. Existing rows have only \`channel_name\`, no reliable source ID or message ID, and no stored owner; the current configured \`target_user_id\` cannot prove historical ownership if configuration changed. Guessing would risk cross-user exposure or attaching messages to the wrong source.
+- Migration is additive: do not drop, rename, rewrite, or repurpose the existing `messages` table, JSON delivery tracking, configuration file, or Telethon session data in this phase.
+- Do not automatically backfill legacy `messages` rows into the future shared archive in this migration. Existing rows have only `channel_name`, no reliable source ID or message ID, and no stored owner; the current configured `target_user_id` cannot prove historical ownership if configuration changed. Guessing would risk cross-user exposure or attaching messages to the wrong source.
 - Preserve the legacy message table unchanged. A separate later backfill proposal may migrate only rows whose owner and source can be established unambiguously, with unmatched/ambiguous rows retained in legacy storage and excluded from shared exports until resolved.
 - No data migration is needed for export tables because they are new. Existing config values and delivery JSON remain untouched; any later move into user-scoped tables requires its own reviewed mapping and rollback plan.
 
 ### Migration order and acceptance checks
 
-1. Create the application database directory/file securely and initialize \`schema_migrations\`.
-2. Apply the first additive migration creating \`export_jobs\`, \`export_delivery_attempts\`, \`export_cleanup_tasks\`, checks, foreign keys, and indexes.
+1. Create the application database directory/file securely and initialize `schema_migrations`.
+2. Apply the first additive migration creating `export_jobs`, `export_delivery_attempts`, `export_cleanup_tasks`, checks, foreign keys, and indexes.
 3. Verify idempotent startup, transactional rollback on migration failure, checksum drift rejection, and SQLite foreign-key enforcement.
-4. Verify export persistence initializes and operates when \`storage.enabled=false\`; confirm the legacy message store remains unchanged.
+4. Verify export persistence initializes and operates when `storage.enabled=false`; confirm the legacy message store remains unchanged.
 5. Verify two users can have independent jobs concurrently, one user cannot create a second blocking job, and terminal/expired states release the per-user constraint correctly.
 6. Verify lease generation fences stale workers; attempt history preserves ambiguous sends; deleting a job preserves actionable cleanup tasks; account deletion leaves no non-actionable personal export metadata.
 7. Verify all persisted Telegram identifiers, internal keys, staging keys, and error codes are absent from generated archives and user-facing status output.
 
 ### Explicitly out of scope for this migration
 
-- Creating or migrating the future shared \`users\`, \`sources\`, \`subscriptions\`, \`messages\`, collection-coverage, or linked-session domain tables.
+- Creating or migrating the future shared `users`, `sources`, `subscriptions`, `messages`, collection-coverage, or linked-session domain tables.
 - Backfilling old message rows or changing the existing message-history schema.
 - Implementing the worker, commands, ZIP generation, Bot API delivery, retry logic, cleanup, or export JSON serializers.
 - PostgreSQL support for the new export tables.
