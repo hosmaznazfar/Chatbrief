@@ -1058,3 +1058,9 @@ Schema v1 requires the common metadata plus all six approved primary sections: `
 ## Export report and media validation — working defaults
 
 Report results are `complete` or `complete_with_omissions`; omissions use stable reason codes, category, count, and explanation. Counts/byte sizes are non-negative integers. Media manifest entries use SHA-256 of exact archived bytes, exact uncompressed byte size, MIME type only when known, and one of four predefined media categories. ZIP paths are safe relative paths under the corresponding category directory; sanitized filenames get deterministic numeric collision suffixes, checked case-insensitively. Manifest entries and ZIP binaries must match one-to-one. Authorization revocation/source deletion invalidates the export rather than becoming a normal omission. Implementation details remain unverified/not implemented.
+
+
+
+## Exported message privacy — approved
+
+Include authorized retained message content, captions, timestamps, and necessary message metadata, but exclude third-party profile/identity data: sender display names, usernames, Telegram user IDs, profile photos, phone numbers, participant/contact lists, and forwarded/quoted author identity metadata. Do not expose Telegram transport IDs. This excludes profile data, not the authorized message content itself. Approved policy; not implemented.
