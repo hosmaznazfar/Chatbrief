@@ -15,6 +15,18 @@
 - **Implementation status:** the foundation/refactor and validation are complete. The project is transitioning from architecture/design into implementation of the approved migrations and capabilities. Approval does not mean those future capabilities, schemas, migrations, or workflows have already been implemented.
 - **Next stage:** begin implementation in dependency order, starting with the approved application-state database/migration foundation for export persistence, while keeping the separate Telegram hybrid-ingestion domain migration sequenced and documented. Inspect current source and tests before each slice; update tests and docs with implementation.
 
+## Implementation update — application-state database foundation
+
+**Step 1 is committed to source; local validation is pending.** The branch now contains:
+
+- src/chatbrief/application_storage/: required application database boundary and SQLite migration runner.
+- Migration 1: export_jobs, export_delivery_attempts, and export_cleanup_tasks with approved checks, foreign keys, and indexes.
+- application_storage.path configuration, defaulting to data/application.db; the existing optional storage.path / data/messages.db remains independent.
+- Focused tests in tests/test_application_storage.py and configuration path tests.
+- Implementation notes in docs/plans/application-state-database.md.
+
+The application startup lifecycle is intentionally not wired yet. The remote GitHub editing environment cannot run local uv checks, so these tests and static checks must be run in the developer checkout before the next slice. No legacy message schema or data was modified, and no backfill was attempted.
+
 ## Working rules for the implementation stage
 
 1. Treat approved ADRs and plans as binding architecture; do not reopen decisions without a concrete implementation contradiction.
