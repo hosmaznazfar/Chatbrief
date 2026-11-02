@@ -840,6 +840,21 @@ chatbrief-media.zip
   evolve independently from both primary-archive documents.
 - `README.md`: archive structure, usage, and the schema versions of the JSON document(s) in that archive. Explain that each JSON document's top-level `schema_version` is independent of the other export documents and the Chatbrief application release, and that incompatible format changes increment that document's version.
 
+##### Versioned JSON schema compatibility — approved (Option A)
+
+Apply this compatibility policy independently to `export.json`, `export-report.json`, and
+`media-manifest.json`:
+
+- Adding an optional field is a compatible change and does not require a `schema_version`
+  increment.
+- Removing or renaming an existing field, changing an existing field's type, or changing
+  the meaning/semantics of an existing field is incompatible and requires incrementing
+  that document's `schema_version`.
+- Keep each document's version independent; a change to one document does not by itself
+  change either of the other document versions.
+- Define any additional compatibility edge cases when the exact fields and consumers are
+  designed. Do not treat this policy as permission to silently change existing semantics.
+
 Use safe archive-relative filenames in both archives; never expose internal storage paths
 or identifiers. Text data must not depend on the media archive being present.
 
@@ -1284,7 +1299,7 @@ handler structure must follow the existing command conventions after source insp
   boundaries extensible to multiple instances/workers later.
 - Complete the atomic state-transition matrix and authorization race handling through
   finalization. Define durable cleanup retries and reconciliation after crashes/restarts.
-- Exact export JSON/report/manifest field schemas, message fields, and media metadata; define compatible versus incompatible field evolution separately for each document's independent `schema_version`. Exact relational columns, keys, indexes, JSON payload boundaries, and transaction constraints for the approved hybrid job schema.
+- Exact export JSON/report/manifest field schemas, message fields, and media metadata; apply the approved per-document compatibility policy and define any additional edge cases for field evolution. Exact relational columns, keys, indexes, JSON payload boundaries, and transaction constraints for the approved hybrid job schema.
 - **Media archive filenames — approved (Option A):** Store files only under the predefined media category directories (`media/images/`, `media/videos/`, `media/documents/`, and `media/audio/`). Derive each archive filename from a sanitized basename, discarding all source directory components. Resolve collisions deterministically with a suffix and never overwrite an existing entry. Preserve the original source filename in the media manifest for reference, but never use it as an archive path. Reject a filename/path that remains invalid after normalization. Exact sanitization rules, collision suffix format, archive path validation, and entry-count limits must be defined during implementation design after inspecting the existing media/storage boundaries.
 ##### Export invalidation when included source data is removed — approved (Option A)
 
