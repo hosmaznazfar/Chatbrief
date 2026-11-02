@@ -1023,3 +1023,8 @@ In `export.json`, `export-report.json`, and `media-manifest.json`, `schema_versi
 ## Export missing `schema_version` — approved (Option A)
 
 `export.json`, `export-report.json`, and `media-manifest.json` are invalid if the top-level `schema_version` field is missing. Consumers must not infer a default version, including version `1`. Apply independently to each document. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export JSON object member-name case sensitivity — approved (Option A)
+
+JSON object member names are case-sensitive. Consumers must match documented field names exactly (`schema_version` and `Schema_Version` are different names). A differently cased name does not satisfy a required field; if the exact required spelling is absent, the document is invalid. Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
