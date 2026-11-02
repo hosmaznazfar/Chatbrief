@@ -57,7 +57,9 @@ async def add_source(
         source.id,
         access_method,
         access_state,
-        owner_telegram_user_id=owner if access_method is AccessMethod.TELETHON else None,
+        owner_telegram_user_id=(
+            owner if access_method is AccessMethod.TELETHON else None
+        ),
         verified_at=BEFORE_CUTOFF if access_state is AccessState.AVAILABLE else None,
         updated_at=BEFORE_CUTOFF,
     )
@@ -208,9 +210,10 @@ async def test_unknown_visibility_is_excluded_and_reported(snapshot_context):
 
     assert snapshot.sources == ()
     assert snapshot.messages == ()
-    assert [(item.category, item.reason_code, item.count) for item in snapshot.omissions] == [
-        ("messages", "not_exportable", 1)
-    ]
+    assert [
+        (item.category, item.reason_code, item.count)
+        for item in snapshot.omissions
+    ] == [("messages", "not_exportable", 1)]
 
 
 @pytest.mark.asyncio
@@ -363,7 +366,9 @@ async def test_snapshot_scope_is_user_owned_and_only_active_subscriptions(
 
 
 @pytest.mark.asyncio
-async def test_existing_subscription_changed_after_cutoff_fails_closed(snapshot_context):
+async def test_existing_subscription_changed_after_cutoff_fails_closed(
+    snapshot_context,
+):
     _, archive, _, snapshots = snapshot_context
     source = await add_source(archive)
     await archive.upsert_subscription(
