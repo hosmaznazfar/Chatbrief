@@ -6,7 +6,10 @@ import aiosqlite
 import pytest
 
 from chatbrief.application_storage import ApplicationDatabase, MigrationError
-from chatbrief.application_storage.migrations.versions import Migration
+from chatbrief.application_storage.migrations.versions import (
+    FAIR_EXPORT_CLAIM_MIGRATION,
+    Migration,
+)
 
 
 @asynccontextmanager
@@ -29,8 +32,7 @@ async def test_initial_migration_creates_export_schema_and_is_idempotent(tmp_pat
     async with _connected(database) as connection:
         async with connection.execute("SELECT version, checksum FROM schema_migrations") as cursor:
             rows = await cursor.fetchall()
-        assert len(rows) == 1
-        assert rows[0][0] == 1
+        assert [row[0] for row in rows] == [1, 2]
 
         async with connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'table'"
@@ -42,6 +44,10 @@ async def test_initial_migration_creates_export_schema_and_is_idempotent(tmp_pat
             "export_delivery_attempts",
             "export_cleanup_tasks",
         } <= tables
+
+        async with connection.execute("PRAGMA table_info(export_jobs)") as cursor:
+            columns = {row[1] for row in await cursor.fetchall()}
+        assert "last_claimed_at" in columns
 
 
 @pytest.mark.asyncio
@@ -105,7 +111,9 @@ async def test_applied_migration_checksum_drift_is_rejected(tmp_path):
     changed = Migration(version=1, statements=("CREATE TABLE changed (id INTEGER)",))
 
     with pytest.raises(MigrationError, match="Checksum mismatch"):
-        await ApplicationDatabase(path, migrations=(changed,)).initialize()
+        await ApplicationDatabase(
+            path, migrations=(changed, FAIR_EXPORT_CLAIM_MIGRATION)
+        ).initialize()
 
 
 @pytest.mark.asyncio
