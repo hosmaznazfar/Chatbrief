@@ -1,11 +1,11 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2 implemented in source; local validation of the startup integration is pending  
+**Status:** Steps 1–2 implemented and developer-validated; Step 3a export-job repository implemented, local validation pending  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
 
-Establish a required application-state SQLite database independently from the optional legacy message-history store. The first implementation slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export repositories, workers, commands, archive generation, and delivery remain out of scope.
+Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job persistence is now being implemented separately from delivery attempts, workers, commands, archive generation, and Telegram delivery.
 
 ## Step 1 — database foundation
 
@@ -33,30 +33,28 @@ Establish a required application-state SQLite database independently from the op
 - Database initialization failure aborts startup before platform services are created.
 - Existing migration/configuration tests continue to cover schema creation, idempotency, foreign keys, partial uniqueness, checksum drift, rollback, and path validation.
 
-## Test collection correction
+## Step 2 — local verification
 
-The first Step 2 local run exposed a pytest import-path issue: the lifecycle test imports the root-level `main.py`, while pytest only had the installed/source package path available. The focused suite and full suite both stopped during collection with `ModuleNotFoundError: No module named 'main'`; no lifecycle test body ran. Ruff lint, Ruff format, and Pyright passed.
+The developer confirmed that the focused lifecycle/migration/configuration tests and the full pytest suite passed after the `pytest.ini` repository-root import-path correction. Ruff lint, Ruff formatting, and Pyright had also passed. Exact pytest counts for this follow-up were not included in the confirmation, so no counts are recorded here.
 
-Added `pythonpath = .` to `pytest.ini` so pytest can import the root-level composition root in the same way the application entry point is laid out. This changes test discovery/import configuration only; it does not alter runtime package imports or move the entry point. Re-run the commands below after syncing this correction.
+The developer ran `./pj graph sync`; Graphify reported that no code-graph topology changes were detected. The developer reviewed/updated the graph and pushed commit `ab53ac1`. That graph revision describes the source before the Step 3a changes below and must be refreshed after those changes are complete.
 
-## Local verification
+## Step 3a — export-job repository and atomic state transitions
 
-The developer confirmed that Step 1's focused tests, full suite, Ruff lint, Pyright, and formatting checks passed before this lifecycle change. The GitHub editing environment cannot run the developer's local `uv` commands, so Step 2 has **not** been locally validated yet.
+Implemented in source; local validation is pending.
 
-Run from the repository root after syncing the branch:
+- `ExportRepository.create_job()` creates an opaque internal job UUID and a separate opaque export UUID, assigns the authenticated Telegram user as owner, and starts the job in `queued`.
+- The database partial unique index remains the final concurrency guard enforcing one blocking export per user. The repository translates that specific uniqueness conflict into `ActiveExportExistsError`.
+- `get_job()` supports owner-scoped reads; `get_active_job()` returns the user's blocking job, including a `ready` job within its availability period.
+- `transition_job()` uses a short `BEGIN IMMEDIATE` transaction and expected-state compare-and-set. Invalid lifecycle edges are rejected; a stale competing transition returns `None`.
+- Mutable fields are allowlisted, JSON metadata is checked before persistence, and terminal timestamps are assigned atomically.
+- A job cannot become `ready` unless a successful primary delivery attempt is already recorded, and the persisted primary-delivery timestamp must match that attempt. The delivery-attempt repository is a subsequent slice; this guard intentionally prevents premature `ready` transitions in the meantime.
+- Worker claims, lease renewal/generation fencing, delivery-attempt APIs, cleanup-task APIs, cancellation cleanup orchestration, and workers remain out of scope for this slice.
 
-```bash
-uv run pytest --no-cov tests/test_application_storage.py tests/test_config.py tests/test_application_lifecycle.py -q
-uv run ruff check main.py src/chatbrief/application_storage tests/test_application_storage.py tests/test_application_lifecycle.py
-uv run ruff format --check main.py src/chatbrief/application_storage tests/test_application_storage.py tests/test_application_lifecycle.py
-uv run pyright
-uv run pytest -q
-```
-
-Record the actual output here and in the handover. Do not mark Step 2 validated until these checks pass locally.
+Focused tests were added for owner scoping, per-user uniqueness, terminal-state release, allowed/forbidden transitions, stale compare-and-set behavior, metadata validation, and the confirmed-primary-delivery guard.
 
 ## Next steps
 
-1. Sync the lifecycle integration and run the focused/static/full checks above.
-2. Implement export persistence repositories and atomic job-state operations as a separate slice.
-3. Add worker claims/lease-generation fencing only when the repository/state-transition layer is in place.
+1. Run focused export repository, application storage, configuration, and lifecycle tests plus Ruff, formatting, and Pyright locally.
+2. Review the repository implementation and add delivery-attempt/cleanup-task persistence APIs.
+3. Add worker claims and lease-generation fencing after the job and attempt repository operations are established.
