@@ -39,6 +39,18 @@ from .exports import (
     ExportRepository,
     InvalidExportTransitionError,
 )
+from .snapshot import (
+    ExportSnapshot,
+    ExportSnapshotRepository,
+    SnapshotAuthorizationError,
+    SnapshotCoverageGap,
+    SnapshotError,
+    SnapshotMessage,
+    SnapshotOmission,
+    SnapshotSource,
+    SnapshotStateChangedError,
+    SnapshotUserNotFoundError,
+)
 from .migrations import ApplicationDatabase, MigrationError
 from .worker import ExportLeaseLostError, ExportWorker
 
@@ -68,10 +80,20 @@ __all__ = [
     "ExportLeaseLostError",
     "ExportMediaOutcome",
     "ExportRepository",
+    "ExportSnapshot",
+    "ExportSnapshotRepository",
     "ExportWorker",
     "InvalidExportTransitionError",
     "MessageMediaType",
     "MigrationError",
+    "SnapshotAuthorizationError",
+    "SnapshotCoverageGap",
+    "SnapshotError",
+    "SnapshotMessage",
+    "SnapshotOmission",
+    "SnapshotSource",
+    "SnapshotStateChangedError",
+    "SnapshotUserNotFoundError",
     "SourceAccess",
     "SourceAuthorization",
     "SourceType",
