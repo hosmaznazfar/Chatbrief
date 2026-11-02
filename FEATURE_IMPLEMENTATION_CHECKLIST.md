@@ -71,6 +71,15 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Run full suite after Step 3a — developer-confirmed **612 passed, 7 skipped**, coverage **94.42%**.
 - [x] Refresh and commit the graph after Step 3a — developer reported the updated graph was committed; exact commit not yet recorded here.
 
+## Export persistence — Step 3c: worker claims and lease fencing
+
+- [x] Add atomic selection and claiming of the next due queued/collecting/packaging job.
+- [x] Assign worker owner, bounded lease expiry, and incremented generation on each claim/reclaim.
+- [x] Add live-owner/generation-checked lease renewal and release with optional retry scheduling.
+- [x] Add lease-generation-fenced worker state transitions; clear leases when work reaches ready or a terminal state.
+- [x] Add focused tests for competing claims, expiry/reclaim, stale-worker rejection, renewal/release, scheduling, and invalid parameters.
+- [ ] Run focused tests, Ruff lint/format, Pyright, and full pytest locally; implementation is committed but local validation is pending.
+
 ## Export persistence — Step 3b: delivery attempts and cleanup tasks
 
 - [x] Add typed delivery document-kind, attempt-outcome, cleanup-task-type/state models.
@@ -82,9 +91,9 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add owner-checked Telegram-message and staging-object cleanup task creation.
 - [x] Add due-task listing, task lookup, retry/result recording, and parent-job deletion survival.
 - [x] Add focused tests for delivery attempts, ownership, retries, media outcome, cleanup scheduling, and orphan cleanup.
-- [ ] Rerun focused Step 3b tests after fix commit `44ec74e` — previous run: **118 passed, 1 failed**; the failure exposed stale-attempt validation ordering and has been fixed in source.
-- [ ] Rerun Ruff lint and Pyright after fix commit `44ec74e` — previous run found Ruff C901 in delivery metadata validation and a Pyright optional-row issue; both have been fixed in source.
-- [ ] Rerun Ruff format check after fix commit `44ec74e` — previous run passed (**8 files already formatted**).
-- [ ] Rerun full pytest suite after fix commit `44ec74e` — previous run: **621 passed, 1 failed, 7 skipped**, coverage **94.02%**.
-- [ ] Review complete Step 3b/fix diff and refresh/review Graphify after source changes.
-- [ ] Validate Step 3a formatter correction and close its remaining validation item.
+- [x] Rerun focused Step 3b tests after fix commit `44ec74e` — developer-confirmed **119 passed**.
+- [x] Rerun Ruff lint and Pyright after fix commit `44ec74e` — Ruff passed; Pyright **0 errors, 0 warnings, 0 informations**.
+- [x] Rerun Ruff format check after fix commit `44ec74e` — developer-confirmed pass (**8 files already formatted**).
+- [x] Rerun full pytest suite after fix commit `44ec74e` — developer-confirmed **622 passed, 7 skipped**, coverage **94.07%**.
+- [x] Format Step 3a files and rerun the application-storage/export formatter check — developer-confirmed **8 files already formatted**.
+- [x] Review and fix the Step 3b implementation issues; Graphify is development tooling and is not a project implementation deliverable.
