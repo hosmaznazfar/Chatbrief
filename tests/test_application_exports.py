@@ -88,7 +88,7 @@ async def test_transition_is_compare_and_set_and_updates_metadata(export_reposit
         job.id,
         12345,
         [ExportJobState.QUEUED],
-        ExportJobState.CANCELLED,
+        ExportJobState.FAILED,
         updated_at="2026-11-02T01:01:00Z",
     )
     assert stale_transition is None
@@ -178,7 +178,7 @@ async def test_terminal_states_release_active_export_constraint(export_repositor
         job.id,
         12345,
         [ExportJobState.QUEUED],
-        ExportJobState.CANCELLED,
+        ExportJobState.FAILED,
     )
     assert cancelled is not None
     assert cancelled.terminal_at is not None
