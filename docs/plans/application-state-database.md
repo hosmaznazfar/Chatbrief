@@ -33,6 +33,12 @@ Establish a required application-state SQLite database independently from the op
 - Database initialization failure aborts startup before platform services are created.
 - Existing migration/configuration tests continue to cover schema creation, idempotency, foreign keys, partial uniqueness, checksum drift, rollback, and path validation.
 
+## Test collection correction
+
+The first Step 2 local run exposed a pytest import-path issue: the lifecycle test imports the root-level `main.py`, while pytest only had the installed/source package path available. The focused suite and full suite both stopped during collection with `ModuleNotFoundError: No module named 'main'`; no lifecycle test body ran. Ruff lint, Ruff format, and Pyright passed.
+
+Added `pythonpath = .` to `pytest.ini` so pytest can import the root-level composition root in the same way the application entry point is laid out. This changes test discovery/import configuration only; it does not alter runtime package imports or move the entry point. Re-run the commands below after syncing this correction.
+
 ## Local verification
 
 The developer confirmed that Step 1's focused tests, full suite, Ruff lint, Pyright, and formatting checks passed before this lifecycle change. The GitHub editing environment cannot run the developer's local `uv` commands, so Step 2 has **not** been locally validated yet.
