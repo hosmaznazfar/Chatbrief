@@ -45,6 +45,21 @@ async def test_foreign_keys_are_enabled_on_every_database_connection(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_foreign_key_constraints_reject_orphaned_delivery_attempts(tmp_path):
+    database = ApplicationDatabase(str(tmp_path / "application.db"))
+    await database.initialize()
+
+    async with await database.connect() as connection:
+        with pytest.raises(aiosqlite.IntegrityError):
+            await connection.execute(
+                """INSERT INTO export_delivery_attempts(
+                    id, job_id, document_kind, attempt_number, outcome, started_at
+                ) VALUES (?, ?, ?, ?, ?, ?)""",
+                ("attempt-1", "missing-job", "primary", 1, "started", "now"),
+            )
+
+
+@pytest.mark.asyncio
 async def test_partial_unique_index_allows_only_one_blocking_job_per_user(tmp_path):
     database = ApplicationDatabase(str(tmp_path / "application.db"))
     await database.initialize()
