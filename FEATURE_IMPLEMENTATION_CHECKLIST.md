@@ -67,7 +67,7 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add focused tests for ownership, uniqueness, state transitions, terminal release, and metadata validation.
 - [x] Run focused export/storage/config/lifecycle pytest tests locally — developer-confirmed **109 passed**.
 - [x] Run Ruff lint and Pyright locally — developer-confirmed; Pyright **0 errors, 0 warnings, 0 informations**.
-- [ ] Run Ruff format check locally — last reported two files requiring formatting (`exports.py`, `test_application_exports.py`); rerun after formatting.
+- [x] Run Ruff format locally — developer formatted the application-storage and export test files; Ruff format check then reported **8 files already formatted**.
 - [x] Run full suite after Step 3a — developer-confirmed **612 passed, 7 skipped**, coverage **94.42%**.
 - [x] Refresh and commit the graph after Step 3a — developer reported the updated graph was committed; exact commit not yet recorded here.
 
@@ -82,7 +82,9 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add owner-checked Telegram-message and staging-object cleanup task creation.
 - [x] Add due-task listing, task lookup, retry/result recording, and parent-job deletion survival.
 - [x] Add focused tests for delivery attempts, ownership, retries, media outcome, cleanup scheduling, and orphan cleanup.
-- [ ] Run focused Step 3b tests locally.
-- [ ] Run Ruff lint/format and Pyright for Step 3b; run full pytest suite at the integration milestone.
-- [ ] Review complete Step 3b diff and refresh/review Graphify after source changes.
+- [ ] Rerun focused Step 3b tests after fix commit `44ec74e` — previous run: **118 passed, 1 failed**; the failure exposed stale-attempt validation ordering and has been fixed in source.
+- [ ] Rerun Ruff lint and Pyright after fix commit `44ec74e` — previous run found Ruff C901 in delivery metadata validation and a Pyright optional-row issue; both have been fixed in source.
+- [ ] Rerun Ruff format check after fix commit `44ec74e` — previous run passed (**8 files already formatted**).
+- [ ] Rerun full pytest suite after fix commit `44ec74e` — previous run: **621 passed, 1 failed, 7 skipped**, coverage **94.02%**.
+- [ ] Review complete Step 3b/fix diff and refresh/review Graphify after source changes.
 - [ ] Validate Step 3a formatter correction and close its remaining validation item.
