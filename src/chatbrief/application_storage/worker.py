@@ -122,48 +122,63 @@ class ExportWorker:  # pylint: disable=too-many-instance-attributes
         self._running = True
         self._stop_event.clear()
         try:
-            while not self._stop_event.is_set():
-                self._discard_finished_tasks()
-                if len(self._active_tasks) < self.max_concurrency:
-                    job = await self.repository.claim_next_job(
-                        self.worker_id,
-                        lease_seconds=self.lease_seconds,
-                    )
-                    if job is not None:
-                        if self._stop_event.is_set():
-                            await self.repository.release_lease(
-                                job.id, self.worker_id, job.lease_generation
-                            )
-                            break
-                        task = asyncio.create_task(
-                            self._process_job(job),
-                            name=f"chatbrief-export-{job.id}",
-                        )
-                        self._active_tasks.add(task)
-                        continue
-                try:
-                    await asyncio.wait_for(
-                        self._stop_event.wait(),
-                        timeout=self.poll_interval_seconds,
-                    )
-                except TimeoutError:
-                    pass
+            await self._poll_for_jobs()
         finally:
             self._stop_event.set()
-            if self._active_tasks:
-                _, pending = await asyncio.wait(
-                    self._active_tasks,
-                    timeout=self.shutdown_grace_seconds,
-                )
-                for task in pending:
-                    task.cancel()
-                if pending:
-                    await asyncio.gather(*pending, return_exceptions=True)
-                completed = self._active_tasks - pending
-                if completed:
-                    await asyncio.gather(*completed, return_exceptions=True)
+            await self._drain_active_tasks()
             self._active_tasks.clear()
             self._running = False
+
+    async def _poll_for_jobs(self) -> None:
+        while not self._stop_event.is_set():
+            self._discard_finished_tasks()
+            if len(self._active_tasks) < self.max_concurrency:
+                if await self._claim_and_dispatch():
+                    continue
+            try:
+                await asyncio.wait_for(
+                    self._stop_event.wait(),
+                    timeout=self.poll_interval_seconds,
+                )
+            except TimeoutError:
+                pass
+
+    async def _claim_and_dispatch(self) -> bool:
+        job = await self.repository.claim_next_job(
+            self.worker_id,
+            lease_seconds=self.lease_seconds,
+        )
+        if job is None:
+            return False
+        if self._stop_event.is_set():
+            await self.repository.release_lease(
+                job.id,
+                self.worker_id,
+                job.lease_generation,
+            )
+            return False
+
+        task = asyncio.create_task(
+            self._process_job(job),
+            name=f"chatbrief-export-{job.id}",
+        )
+        self._active_tasks.add(task)
+        return True
+
+    async def _drain_active_tasks(self) -> None:
+        if not self._active_tasks:
+            return
+        _, pending = await asyncio.wait(
+            self._active_tasks,
+            timeout=self.shutdown_grace_seconds,
+        )
+        for task in pending:
+            task.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        completed = self._active_tasks - pending
+        if completed:
+            await asyncio.gather(*completed, return_exceptions=True)
 
     def _discard_finished_tasks(self) -> None:
         self._active_tasks = {task for task in self._active_tasks if not task.done()}
@@ -229,7 +244,7 @@ class ExportWorker:  # pylint: disable=too-many-instance-attributes
         job: ExportJob,
         handler: ExportPhaseHandler,
     ) -> None:
-        handler_task = asyncio.create_task(handler(job))
+        handler_task = asyncio.ensure_future(handler(job))
         renewal_interval = max(0.1, self.lease_seconds / 3)
         try:
             while True:
