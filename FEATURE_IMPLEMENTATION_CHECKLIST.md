@@ -104,5 +104,5 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add a migration-backed persisted last-claimed marker to export jobs.
 - [x] Prefer users never previously served, then rotate by least-recently-claimed order.
 - [x] Keep candidate selection, lease assignment, and fairness-marker update in one short transaction.
-- [x] Add a focused multi-user rotation test.
+- [x] Add focused multi-user rotation and existing-database migration-upgrade tests.
 - [ ] Run focused tests, Ruff lint/format, Pyright, and full pytest locally.
