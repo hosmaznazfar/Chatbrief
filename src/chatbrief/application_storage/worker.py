@@ -42,6 +42,7 @@ class ExportWorker:
         poll_interval_seconds: float = 1.0,
         lease_seconds: int = 300,
         retry_delay_seconds: int = 30,
+        shutdown_grace_seconds: float = 30.0,
     ) -> None:
         if isinstance(max_concurrency, bool) or not isinstance(max_concurrency, int):
             raise ValueError("max_concurrency must be an integer")
@@ -66,6 +67,12 @@ class ExportWorker:
         ):
             raise ValueError("retry_delay_seconds must be between 1 and 3600")
 
+        if (
+            isinstance(shutdown_grace_seconds, bool)
+            or not isinstance(shutdown_grace_seconds, (int, float))
+            or not 0.01 <= shutdown_grace_seconds <= 3600
+        ):
+            raise ValueError("shutdown_grace_seconds must be between 0.01 and 3600")
         normalized_handlers = {
             ExportJobState(state): handler for state, handler in phase_handlers.items()
         }
@@ -80,6 +87,7 @@ class ExportWorker:
         self.poll_interval_seconds = float(poll_interval_seconds)
         self.lease_seconds = lease_seconds
         self.retry_delay_seconds = retry_delay_seconds
+        self.shutdown_grace_seconds = float(shutdown_grace_seconds)
         self._stop_event = asyncio.Event()
         self._running = False
         self._active_tasks: set[asyncio.Task[None]] = set()
@@ -134,7 +142,17 @@ class ExportWorker:
         finally:
             self._stop_event.set()
             if self._active_tasks:
-                await asyncio.gather(*self._active_tasks, return_exceptions=True)
+                _, pending = await asyncio.wait(
+                    self._active_tasks,
+                    timeout=self.shutdown_grace_seconds,
+                )
+                for task in pending:
+                    task.cancel()
+                if pending:
+                    await asyncio.gather(*pending, return_exceptions=True)
+                completed = self._active_tasks - pending
+                if completed:
+                    await asyncio.gather(*completed, return_exceptions=True)
             self._active_tasks.clear()
             self._running = False
 
