@@ -175,6 +175,8 @@ def _validate_finish_metadata(
     ):
         raise ValueError("retry_after_seconds must be a non-negative integer")
     if outcome is DeliveryAttemptOutcome.SUCCEEDED:
+        if telegram_chat_id is None or telegram_message_id is None:
+            raise ValueError("Confirmed Telegram delivery requires chat and message IDs")
         if retry_after_at is not None or retry_after_seconds is not None or error_code is not None:
             raise ValueError("Successful delivery cannot include retry or error metadata")
     elif (
@@ -519,8 +521,12 @@ class ExportCleanupRepository:
         ):
             raise ValueError("Telegram cleanup requires chat and message IDs")
         if task_type is CleanupTaskType.TELEGRAM_MESSAGE_DELETE:
-            if isinstance(telegram_chat_id, bool) or not isinstance(telegram_chat_id, int):
-                raise ValueError("telegram_chat_id must be an integer")
+            if (
+                isinstance(telegram_chat_id, bool)
+                or not isinstance(telegram_chat_id, int)
+                or telegram_chat_id == 0
+            ):
+                raise ValueError("telegram_chat_id must be a non-zero integer")
             _validate_positive_identifier(telegram_message_id, "telegram_message_id")
         timestamp = _utc_now()
         task_id = str(uuid.uuid4())
