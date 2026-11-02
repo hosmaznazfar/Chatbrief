@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Sequence
@@ -30,15 +31,16 @@ class ApplicationDatabase:
 
     @staticmethod
     def _checksum(migration: Migration) -> str:
-        payload = "\\n-- statement --\\n".join(
+        payload = "\n-- statement --\n".join(
             statement.strip() for statement in migration.statements
         )
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     async def initialize(self) -> None:
         """Create the database directory and apply every unapplied migration."""
-        Path(self.path).parent.mkdir(parents=True, exist_ok=True)
+        Path(self.path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         async with aiosqlite.connect(self.path) as connection:
+            os.chmod(self.path, 0o600)
             await connection.execute("PRAGMA foreign_keys = ON")
             async with connection.execute("PRAGMA foreign_keys") as cursor:
                 row = await cursor.fetchone()
@@ -105,6 +107,7 @@ class ApplicationDatabase:
     async def connect(self) -> aiosqlite.Connection:
         """Open a configured connection with foreign-key enforcement enabled."""
         connection = await aiosqlite.connect(self.path)
+        os.chmod(self.path, 0o600)
         await connection.execute("PRAGMA foreign_keys = ON")
         async with connection.execute("PRAGMA foreign_keys") as cursor:
             row = await cursor.fetchone()
