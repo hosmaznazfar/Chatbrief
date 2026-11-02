@@ -185,8 +185,6 @@ class ExportSnapshotRepository:
                 SELECT
                     s.id, s.platform, s.display_name, s.visibility,
                     s.updated_at AS source_updated_at,
-                    sub.created_at AS subscription_created_at,
-                    sub.updated_at AS subscription_updated_at,
                     access.state AS bot_access_state,
                     access.verified_at AS bot_verified_at,
                     access.updated_at AS bot_access_updated_at,
