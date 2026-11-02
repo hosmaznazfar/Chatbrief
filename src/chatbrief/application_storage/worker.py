@@ -73,6 +73,13 @@ class ExportWorker:
             or not 0.01 <= shutdown_grace_seconds <= 3600
         ):
             raise ValueError("shutdown_grace_seconds must be between 0.01 and 3600")
+        if worker_id is not None and (
+            not isinstance(worker_id, str)
+            or not worker_id
+            or worker_id != worker_id.strip()
+            or len(worker_id) > 128
+        ):
+            raise ValueError("worker_id must be a non-empty opaque identifier of at most 128 characters")
         normalized_handlers = {
             ExportJobState(state): handler for state, handler in phase_handlers.items()
         }
@@ -82,7 +89,7 @@ class ExportWorker:
         self.repository = repository
         self.phase_handlers = normalized_handlers
         self.logger = logger
-        self.worker_id = worker_id or str(uuid.uuid4())
+        self.worker_id = str(uuid.uuid4()) if worker_id is None else worker_id
         self.max_concurrency = max_concurrency
         self.poll_interval_seconds = float(poll_interval_seconds)
         self.lease_seconds = lease_seconds
