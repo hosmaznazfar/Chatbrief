@@ -1352,3 +1352,11 @@ migrations, or tests.
 - The top-level object contains that document's `schema_version` and its document-specific fields.
 - Top-level arrays and scalar JSON values (strings, numbers, booleans, or `null`) are invalid.
 - Apply this root-shape requirement independently to all three documents.
+
+
+### Duplicate JSON object keys — approved (Option A)
+
+- Reject a JSON document if any object contains duplicate member names, at any nesting level.
+- Treat duplicate keys as invalid input rather than relying on parser-specific behavior such as keeping the first or last value.
+- Apply this rule independently to `export.json`, `export-report.json`, and `media-manifest.json`.
+- This prevents ambiguous interpretation and inconsistent validation across parsers. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
