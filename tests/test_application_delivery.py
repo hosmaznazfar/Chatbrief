@@ -189,13 +189,21 @@ async def test_media_attempt_requires_primary_success_and_updates_job_outcome(
     )
     assert primary is not None
     assert await deliveries.finish_attempt(
-        primary.id, 12345, DeliveryAttemptOutcome.SUCCEEDED
+        primary.id,
+        12345,
+        DeliveryAttemptOutcome.SUCCEEDED,
+        telegram_chat_id=12345,
+        telegram_message_id=988,
     )
 
     media = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.MEDIA)
     assert media is not None
     sent = await deliveries.finish_attempt(
-        media.id, 12345, DeliveryAttemptOutcome.SUCCEEDED
+        media.id,
+        12345,
+        DeliveryAttemptOutcome.SUCCEEDED,
+        telegram_chat_id=12345,
+        telegram_message_id=989,
     )
     assert sent is not None
     refreshed = await jobs.get_job(job.id, owner_telegram_user_id=12345)
