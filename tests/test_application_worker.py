@@ -265,3 +265,26 @@ async def test_shutdown_cancels_handler_after_grace_and_releases_lease(export_re
     assert current is not None
     assert current.state is ExportJobState.QUEUED
     assert current.lease_owner is None
+
+
+
+@pytest.mark.parametrize(
+    ("options", "message"),
+    [
+        ({"worker_id": ""}, "worker_id"),
+        ({"max_concurrency": 0}, "max_concurrency"),
+        ({"max_concurrency": 33}, "max_concurrency"),
+        ({"lease_seconds": 0}, "lease_seconds"),
+        ({"poll_interval_seconds": 0}, "poll_interval_seconds"),
+        ({"retry_delay_seconds": 0}, "retry_delay_seconds"),
+        ({"shutdown_grace_seconds": 0}, "shutdown_grace_seconds"),
+    ],
+)
+def test_worker_rejects_invalid_configuration(export_repository, options, message):
+    with pytest.raises(ValueError, match=message):
+        ExportWorker(
+            export_repository,
+            {},
+            logging.getLogger("test.export.worker"),
+            **options,
+        )
