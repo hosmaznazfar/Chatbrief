@@ -33,7 +33,6 @@ class SnapshotSource:
     id: str
     platform: str
     display_name: str
-    source_type: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,7 +65,6 @@ class SnapshotOmission:
 
 @dataclass(frozen=True, slots=True)
 class ExportSnapshot:
-    owner_telegram_user_id: int
     cutoff_at: str
     retention_start_at: str
     sources: tuple[SnapshotSource, ...]
@@ -265,7 +263,6 @@ class ExportSnapshotRepository:
                         id=source_id,
                         platform=row["platform"],
                         display_name=row["display_name"],
-                        source_type=row["source_type"],
                     )
                 )
 
@@ -334,7 +331,6 @@ class ExportSnapshotRepository:
                 for (category, reason), count in sorted(omission_counts.items())
             )
             return ExportSnapshot(
-                owner_telegram_user_id=owner_telegram_user_id,
                 cutoff_at=cutoff_text,
                 retention_start_at=retention_text,
                 sources=tuple(sources),
