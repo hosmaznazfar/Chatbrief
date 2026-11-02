@@ -7,15 +7,15 @@ Python: `>=3.14`; package/dependency manager: `uv`
 
 ## Current project status — 2026-11-02
 
-- Active branch: `refactor/chatbrief-package-layout`; latest locally reported synchronized commit: `487727f`.
+- Active branch: `refactor/chatbrief-package-layout`; latest developer-reported local sync: `ab53ac1` (remote implementation commits after that point must be fast-forwarded locally).
 - Package-layout/platform refactor is complete.
 - All project packages/dependencies have been upgraded.
 - Tests have passed, confirmed by the developer.
 - Major architecture decisions and proposals are approved, including the Telegram hybrid-ingestion direction and Phase 1 export-persistence migration proposal.
 - The project is now in the implementation stage. Do not treat tests, dependency upgrades, or architecture approvals as pending, and do not reopen approved decisions without a concrete implementation-level contradiction.
-- The required application-state SQLite database foundation and root application startup integration are now implemented. The database initializes before platform/application services; local validation of the lifecycle integration is the current gate. The optional legacy message-history database remains independent and unchanged.
+- The required application-state SQLite database foundation and root application startup integration are implemented and developer-validated. The optional legacy message-history database remains independent and unchanged. Step 3a adds an export-job repository with owner-scoped reads and atomic expected-state transitions; focused tests are added but local validation is pending. Delivery-attempt/cleanup APIs and worker leases remain future slices.
 - Approved architecture is not the same as implemented functionality. Implement in small dependency-ordered slices, add focused tests, and update plans/handover as each slice lands.
-- Local Graphify output was reported modified after a post-merge background rebuild; inspect local status and rebuild completion before staging it.
+- The developer synchronized Graphify and pushed `ab53ac1`; that graph predates Step 3a source changes and must be refreshed/reviewed after local validation.
 
 ## Read first
 
