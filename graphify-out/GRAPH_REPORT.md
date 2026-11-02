@@ -1,17 +1,17 @@
 # Graph Report - ChatBrief  (2026-11-02)
 
 ## Corpus Check
-- 110 files · ~118,732 words
+- 110 files · ~118,791 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 13 file(s) not represented in the graph (top: (none) 8, .example 2, .toml 1)
 
 ## Summary
-- 2496 nodes · 5673 edges · 130 communities (96 shown, 34 thin omitted)
+- 2496 nodes · 5674 edges · 130 communities (96 shown, 34 thin omitted)
 - Extraction: 80% EXTRACTED · 20% INFERRED · 0% AMBIGUOUS · INFERRED: 1129 edges (avg confidence: 0.91)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `538432f0`
+- Built from commit: `480f1f40`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -19,7 +19,7 @@
 - SQLiteBackend
 - test_filters.py
 - test_summarizer.py
-- TelegramBot
+- unit
 - grouper.py
 - GroupedPoint
 - load_config
@@ -33,7 +33,7 @@
 - test_mcp_server.py
 - message.py
 - CommandService
-- mcp_server.py
+- collector.py
 - with
 - AsyncContextManager
 - .transition_job
@@ -45,12 +45,12 @@
 - ._build_extractor_prompt
 - config/models.py
 - test_telegram_bot.py
-- TelegramMessageSender
+- TelegramBot
 - test_ui_strings.py
 - telebrief
 - _quality_gate_filter
 - ._build_group_definitions
-- telegram_source.py
+- test_message_source.py
 - DefaultComposer
 - attributes
 - unit
@@ -64,29 +64,29 @@
 - test_grouper.py
 - DigestFormatter
 - OllamaProvider
-- asyncio
+- capture
 - Settings
 - ._create_header
-- capture
+- asyncio
 - unit
 - ._create_channel_section
 - escape_xml_delimiters
 - ._extract_bullets_from_channel
-- CommandResult
+- test_run_without_application
 - hooks
 - AGENTS.md
 - test_application_delivery.py
 - Extensibility Architecture: Filters, Prompts, Storage Read API, Plugin Loader
-- test_application_storage.py
+- CommandResult
 - test_mcp_config_rejects_invalid
 - Config
 - conftest.py
-- runner.py
+- ._classify_bullets
 - _apply_filters
 - README.md
 - Personal data export — detailed approved design
 - .send_channel_messages_with_tracking
-- ._classify_bullets
+- ._collect_group_points
 - contact_links
 - .__init__
 - ai_providers.py
@@ -97,6 +97,7 @@
 - Delivery status and diagnostics command — approved
 - exports.py
 - Telegram Hybrid Ingestion and Multi-User Support
+- test_application_storage.py
 - test_telegram_sender.py
 - Current status — 2026-11-02 (authoritative update)
 - DigestScheduler
@@ -104,11 +105,11 @@
 - Implementation sequence
 - create_session.sh script
 - _strip_channel_summary_noise
-- get_digest_message_ids
+- os
 - Phase 1 export persistence migration proposal — approved for implementation
 - Contributor Covenant Code of Conduct
+- get_digest_message_ids
 - test_send_message_with_tracking_markdown_fallback
-- test_send_summary_message_error
 - Chatbrief — AI development guide
 - Export JSON root shape — approved (Option A)
 - grouper.py
@@ -116,11 +117,11 @@
 - Export schema: top-level document and section shapes — recommended defaults
 - Export schema: shared metadata, references, timestamps, and ordering — recommended defaults
 - Graphify — local CLI and Git-shared code graph
-- TestBuildGroupDefinitions
+- test_send_summary_message_error
 - 📊 Example Output
 - Chatbrief implementation checklist
 - Export report v1 semantics and media-only message handling — recommended defaults
-- test_load_config_invalid_lookback_hours_type
+- TestBuildGroupDefinitions
 - Pull Request
 - Security Policy
 - chatbrief
@@ -128,9 +129,8 @@
 - 🔗 MCP Server
 - Chatbrief-side image limits before provider upload — approved
 - 🗄️ Persistent Storage
-- unit
 - collect_channel_messages
-- ._collect_group_points
+- test_load_config_invalid_lookback_hours_type
 - test_load_config_no_channels
 - test_application_storage_path_rejects_blank_value
 - test_load_config_missing_file
@@ -177,9 +177,9 @@ Nodes (38): ADR 0001: Extensibility Architecture — Filters, Prompts, Storage R
 Cohesion: 0.09
 Nodes (16): _make_messages(), test_default_template_path_points_to_existing_file(), test_format_messages_for_prompt(), test_format_messages_includes_link(), test_format_messages_prompt_always_includes_at_least_one(), test_format_messages_prompt_no_truncation_within_budget(), test_format_messages_prompt_truncation_keeps_recent(), test_format_messages_prompt_warns_on_truncation() (+8 more)
 
-### Community 3 - "TelegramBot"
-Cohesion: 0.12
-Nodes (4): test_run_without_application(), test_setup_bot_menu_exception(), test_setup_bot_menu_uses_output_language(), test_setup_bot_menu_without_application()
+### Community 3 - "unit"
+Cohesion: 0.09
+Nodes (12): test_handle_help_unauthorized(), test_handle_help_uses_output_language(), test_handle_help_without_message(), test_handle_help_without_user(), test_handle_status_displays_command_service_result(), test_handle_status_unauthorized(), test_handle_status_uses_output_language(), test_handle_status_without_message() (+4 more)
 
 ### Community 4 - "grouper.py"
 Cohesion: 0.11
@@ -233,7 +233,7 @@ Nodes (6): Running Tests and Checks, Testing conventions, mock_env_vars(), mock_
 Cohesion: 0.11
 Nodes (16): CommandStatus, english_config(), _make_command_service(), test_cleanup_failure(), test_cleanup_rate_limited(), test_cleanup_success(), test_digest_exception(), test_digest_failure() (+8 more)
 
-### Community 17 - "mcp_server.py"
+### Community 17 - "collector.py"
 Cohesion: 0.10
 Nodes (9): Tools, build_digest(), validate_hours(), build_server(), get_channel_messages(), get_digest(), get_last_digest(), _format_messages() (+1 more)
 
@@ -281,7 +281,7 @@ Nodes (3): join_parts(), write_last_digest(), generate_and_send_digest()
 Cohesion: 0.12
 Nodes (10): english_config(), _make_update(), test_cleanup_rate_limited(), test_handle_cleanup_exception(), test_handle_cleanup_failure(), test_handle_cleanup_messages_use_output_language(), test_handle_cleanup_rate_limited(), test_handle_cleanup_unauthorized() (+2 more)
 
-### Community 29 - "TelegramMessageSender"
+### Community 29 - "TelegramBot"
 Cohesion: 0.08
 Nodes (18): Architecture guardrails, Current implementation status, Architectural decisions to preserve, Current refactor status (2026-10-30), Chatbrief-specific guardrails, Current architecture, Package/platform refactor status, Current lifecycle and boundaries (+10 more)
 
@@ -297,7 +297,7 @@ Nodes (20): build, container_name, env_file, environment, healthcheck, image, lo
 Cohesion: 0.10
 Nodes (6): _dedup_extracted(), ExtractedBullet, _qg_has_concrete_entity(), _quality_gate_filter(), TestDedupExtracted, TestQualityGateFilter
 
-### Community 35 - "telegram_source.py"
+### Community 35 - "test_message_source.py"
 Cohesion: 0.09
 Nodes (8): async_messages(), message_source(), test_fetch_channel_messages_empty_without_media(), test_fetch_channel_messages_media_only(), test_fetch_channel_messages_sorts_messages(), test_fetch_channel_messages_stops_at_lookback(), test_fetch_channel_messages_text(), test_fetch_messages_success()
 
@@ -349,9 +349,9 @@ Nodes (7): DigestFormatter, main(), test_create_digest(), test_create_statistics
 Cohesion: 0.11
 Nodes (13): OllamaProvider, _redact_url(), AsyncContextManager, test_ollama_provider_accepts_reasoning_effort_param(), test_ollama_provider_chat_completion(), test_ollama_provider_debug_logging(), test_ollama_provider_empty_content_raises(), test_ollama_provider_error() (+5 more)
 
-### Community 51 - "asyncio"
-Cohesion: 0.16
-Nodes (8): save_digest_message_ids(), test_cleanup_old_digests_default_user_id(), test_cleanup_old_digests_deletion_failure(), test_cleanup_old_digests_message_not_found(), test_cleanup_old_digests_no_messages(), test_cleanup_old_digests_partial_failure(), test_cleanup_old_digests_success(), test_cleanup_old_digests_unauthorized()
+### Community 51 - "capture"
+Cohesion: 0.08
+Nodes (9): test_channel_without_group_uses_base_and_channel_prompt_extra(), test_language_instruction_only_in_system_prompt(), test_summarize_channel_applies_prompt_extra(), test_summarize_channel_includes_truncation_note(), test_summarize_channel_prompt_instructs_two_tier_format(), capture(), test_summarize_channel_retry_includes_shorten_instruction(), test_summarize_channel_unknown_channel_uses_default_prompt() (+1 more)
 
 ### Community 52 - "Settings"
 Cohesion: 0.09
@@ -361,9 +361,9 @@ Nodes (21): Export schema v1 message/source/media defaults — working recommend
 Cohesion: 0.25
 Nodes (3): test_create_header(), test_create_header_russian_month_name(), test_create_header_uses_output_language()
 
-### Community 54 - "capture"
-Cohesion: 0.08
-Nodes (9): test_channel_without_group_uses_base_and_channel_prompt_extra(), test_language_instruction_only_in_system_prompt(), test_summarize_channel_applies_prompt_extra(), test_summarize_channel_includes_truncation_note(), test_summarize_channel_prompt_instructs_two_tier_format(), capture(), test_summarize_channel_retry_includes_shorten_instruction(), test_summarize_channel_unknown_channel_uses_default_prompt() (+1 more)
+### Community 54 - "asyncio"
+Cohesion: 0.16
+Nodes (8): save_digest_message_ids(), test_cleanup_old_digests_default_user_id(), test_cleanup_old_digests_deletion_failure(), test_cleanup_old_digests_message_not_found(), test_cleanup_old_digests_no_messages(), test_cleanup_old_digests_partial_failure(), test_cleanup_old_digests_success(), test_cleanup_old_digests_unauthorized()
 
 ### Community 55 - "unit"
 Cohesion: 0.15
@@ -372,6 +372,10 @@ Nodes (7): test_send_message_default_user_id(), test_send_message_markdown_fallb
 ### Community 58 - "._extract_bullets_from_channel"
 Cohesion: 0.11
 Nodes (3): _run(), TestExtractAllBullets, TestExtractBulletsFromChannel
+
+### Community 59 - "test_run_without_application"
+Cohesion: 0.12
+Nodes (4): test_run_without_application(), test_setup_bot_menu_exception(), test_setup_bot_menu_uses_output_language(), test_setup_bot_menu_without_application()
 
 ### Community 60 - "hooks"
 Cohesion: 0.18
@@ -384,10 +388,6 @@ Nodes (13): _leased_packaging_job(), _packaging_job(), test_attempt_cannot_be_fi
 ### Community 63 - "Extensibility Architecture: Filters, Prompts, Storage Read API, Plugin Loader"
 Cohesion: 0.12
 Nodes (14): Config schema additions (all optional), Development Approach, Extensibility Architecture: Filters, Prompts, Storage Read API, Plugin Loader, Filter chain insertion point, Overview, Plugin loader semantics, Post-Completion, Progress Tracking (+6 more)
-
-### Community 64 - "test_application_storage.py"
-Cohesion: 0.27
-Nodes (9): _connected(), test_applied_migration_checksum_drift_is_rejected(), test_delivery_fencing_migration_upgrades_version_two_database(), test_failed_migration_rolls_back_schema_and_version_record(), test_fair_claim_migration_upgrades_existing_version_one_database(), test_foreign_key_constraints_reject_orphaned_delivery_attempts(), test_foreign_keys_are_enabled_on_every_database_connection(), test_initial_migration_creates_export_schema_and_is_idempotent() (+1 more)
 
 ### Community 65 - "test_mcp_config_rejects_invalid"
 Cohesion: 0.20
@@ -453,6 +453,10 @@ Nodes (7): ExportMediaOutcome, InvalidExportTransitionError, _normalize_updates(
 Cohesion: 0.17
 Nodes (12): Acceptance criteria, Documentation and decision tracking, Export report and media manifest validation details — recommended defaults, Goal, Important constraints and risks, Manual pending-digest recovery command — approved, Media manifest integrity and archive paths, Message content privacy in personal exports — approved (+4 more)
 
+### Community 84 - "test_application_storage.py"
+Cohesion: 0.27
+Nodes (9): _connected(), test_applied_migration_checksum_drift_is_rejected(), test_delivery_fencing_migration_upgrades_version_two_database(), test_failed_migration_rolls_back_schema_and_version_record(), test_fair_claim_migration_upgrades_existing_version_one_database(), test_foreign_key_constraints_reject_orphaned_delivery_attempts(), test_foreign_keys_are_enabled_on_every_database_connection(), test_initial_migration_creates_export_schema_and_is_idempotent() (+1 more)
+
 ### Community 85 - "test_telegram_sender.py"
 Cohesion: 0.19
 Nodes (5): test_send_channel_messages_default_user_id(), test_send_channel_messages_long_message(), test_send_channel_messages_success(), test_send_channel_messages_unauthorized(), test_send_channel_messages_with_failure()
@@ -469,10 +473,6 @@ Nodes (16): Bug fixing, Chat workflow conventions, Chatbrief — AI-assisted dev
 Cohesion: 0.18
 Nodes (11): Configuration and identity constraints, Current persistence behavior, Implementation sequence, Migration proposal — design direction, not an approved schema, Phase 1 findings — verified 2026-10-31, Phase 1 verification scope, Phase 2 — Establish a normalized ingestion boundary, Phase 3 — Add central Bot API ingestion (+3 more)
 
-### Community 92 - "get_digest_message_ids"
-Cohesion: 0.25
-Nodes (4): get_digest_message_ids(), test_send_channel_messages_with_tracking(), test_save_and_get_digest_message_ids(), test_save_digest_message_ids_multiple_users()
-
 ### Community 93 - "Phase 1 export persistence migration proposal — approved for implementation"
 Cohesion: 0.18
 Nodes (11): Constraints and indexes, Existing constraints, Explicitly out of scope for this migration, `export_cleanup_tasks`, `export_delivery_attempts`, `export_jobs`, Legacy data and compatibility, Migration order and acceptance checks (+3 more)
@@ -480,6 +480,10 @@ Nodes (11): Constraints and indexes, Existing constraints, Explicitly out of sco
 ### Community 94 - "Contributor Covenant Code of Conduct"
 Cohesion: 0.17
 Nodes (12): 1. Correction, 2. Warning, 3. Temporary Ban, 4. Permanent Ban, Attribution, Contributor Covenant Code of Conduct, Enforcement, Enforcement Guidelines (+4 more)
+
+### Community 95 - "get_digest_message_ids"
+Cohesion: 0.25
+Nodes (4): get_digest_message_ids(), test_send_channel_messages_with_tracking(), test_save_and_get_digest_message_ids(), test_save_digest_message_ids_multiple_users()
 
 ### Community 97 - "Chatbrief — AI development guide"
 Cohesion: 0.18
@@ -541,10 +545,6 @@ Nodes (4): Enabling it, 🔗 MCP Server, Reading a single channel, Security
 Cohesion: 0.50
 Nodes (4): 🗄️ Persistent Storage, PostgreSQL (optional backend), Schema, SQLite (default backend)
 
-### Community 122 - "unit"
-Cohesion: 0.09
-Nodes (12): test_handle_help_unauthorized(), test_handle_help_uses_output_language(), test_handle_help_without_message(), test_handle_help_without_user(), test_handle_status_displays_command_service_result(), test_handle_status_unauthorized(), test_handle_status_uses_output_language(), test_handle_status_without_message() (+4 more)
-
 ### Community 123 - "collect_channel_messages"
 Cohesion: 0.11
 Nodes (9): ADR 0002: Stored Message History Is Not Proof of Collection Completeness, Consequences, Context, Decision, collect_channel_messages(), _resolve_channel(), test_collect_channel_messages_keeps_newest_within_limit(), test_collect_channel_messages_uses_live_source_even_when_storage_enabled() (+1 more)
@@ -557,15 +557,15 @@ Nodes (9): ADR 0002: Stored Message History Is Not Proof of Collection Completen
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Config` connect `Config` to `SQLiteBackend`, `grouper.py`, `_apply_filters`, `load_config`, `validation.py`, `collect_channel_messages`, `test_digest.py`, `TelegramMessageSender`, `.__init__`, `Summarizer`, `mcp_server.py`, `DigestFormatter`, `Settings`, `DigestScheduler`, `Implementation sequence`, `config/models.py`, `TelegramMessageSender`, `Extensibility Architecture: Filters, Prompts, Storage Read API, Plugin Loader`?**
-  _High betweenness centrality (0.130) - this node is a cross-community bridge._
+- **Why does `Config` connect `Config` to `SQLiteBackend`, `grouper.py`, `_apply_filters`, `load_config`, `validation.py`, `collect_channel_messages`, `test_digest.py`, `TelegramMessageSender`, `.__init__`, `Summarizer`, `collector.py`, `DigestFormatter`, `Settings`, `DigestScheduler`, `Implementation sequence`, `config/models.py`, `TelegramBot`, `Extensibility Architecture: Filters, Prompts, Storage Read API, Plugin Loader`?**
+  _High betweenness centrality (0.133) - this node is a cross-community bridge._
 - **Are the 77 inferred relationships involving `load_config()` (e.g. with `main()` and `.initialize()`) actually correct?**
   _`load_config()` has 77 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `chatbrief` to the rest of the system?**
   _1 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SQLiteBackend` be split into smaller, more focused modules?**
   _Cohesion score 0.07440699126092384 - nodes in this community are weakly interconnected._
-- **Why does `Message` connect `SQLiteBackend` to `test_filters.py`, `test_summarizer.py`, `._summarize_channel`, `message.py`, `mcp_server.py`, `config/models.py`, `TelegramMessageSender`, `telegram_source.py`, `unit`, `Summarizer`, `DigestFormatter`, `Settings`, `_apply_filters`, `.__init__`, `Decisions`, `Current status — 2026-11-02 (authoritative update)`, `grouper.py`, `collect_channel_messages`, `.fetch_messages`?**
+- **Why does `Message` connect `SQLiteBackend` to `test_filters.py`, `test_summarizer.py`, `._summarize_channel`, `message.py`, `collector.py`, `config/models.py`, `TelegramBot`, `test_message_source.py`, `unit`, `Summarizer`, `DigestFormatter`, `Settings`, `_apply_filters`, `.__init__`, `Decisions`, `Current status — 2026-11-02 (authoritative update)`, `grouper.py`, `collect_channel_messages`, `.fetch_messages`?**
   _High betweenness centrality (0.091) - this node is a cross-community bridge._
 - **Are the 34 inferred relationships involving `Message` (e.g. with `Architecture guardrails` and `Architectural decisions to preserve`) actually correct?**
   _`Message` has 34 INFERRED edges - model-reasoned connections that need verification._
