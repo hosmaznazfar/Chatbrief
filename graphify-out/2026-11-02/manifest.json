@@ -687,27 +687,27 @@
     "semantic_hash": ""
   },
   "src/chatbrief/application_storage/archive.py": {
-    "mtime": 1793640990.2993984,
-    "seen": 1793641000.2478213,
-    "ast_hash": "edda47bc0641c1510ab4e5afd20379b4",
+    "mtime": 1793641205.2687104,
+    "seen": 1793641210.9559238,
+    "ast_hash": "9b5e4fa511e5200a5956d2e537f5a393",
     "semantic_hash": ""
   },
   "src/chatbrief/application_storage/archive_content.py": {
-    "mtime": 1793640990.2993984,
-    "seen": 1793641000.2478259,
-    "ast_hash": "082bbc565c7be7f1507193f1b366b068",
+    "mtime": 1793641205.2687104,
+    "seen": 1793641210.955929,
+    "ast_hash": "e98337483c0769c85b9b31fbe683dde0",
     "semantic_hash": ""
   },
   "tests/test_application_archive.py": {
-    "mtime": 1793640990.3003986,
-    "seen": 1793641000.248038,
-    "ast_hash": "37ce8a725c45019bd55c572972ae84c9",
+    "mtime": 1793641205.2687104,
+    "seen": 1793641210.9561284,
+    "ast_hash": "c7633a864008babc09dc4c4c1c84aee0",
     "semantic_hash": ""
   },
   "tests/test_application_archive_content.py": {
-    "mtime": 1793640990.3003986,
-    "seen": 1793641000.2480416,
-    "ast_hash": "7b4ea5ff2e2475c921f25221246f4818",
+    "mtime": 1793641205.2687104,
+    "seen": 1793641210.956132,
+    "ast_hash": "6173ba4abc0fb7c7d67e1ce0f423c494",
     "semantic_hash": ""
   }
 }

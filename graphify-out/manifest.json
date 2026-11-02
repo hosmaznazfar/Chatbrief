@@ -693,9 +693,9 @@
     "semantic_hash": ""
   },
   "src/chatbrief/application_storage/archive_content.py": {
-    "mtime": 1793641205.2687104,
-    "seen": 1793641210.955929,
-    "ast_hash": "e98337483c0769c85b9b31fbe683dde0",
+    "mtime": 1793641413.9699254,
+    "seen": 1793641423.365607,
+    "ast_hash": "c204acacca81dcedbe4c0e6811bd3eb5",
     "semantic_hash": ""
   },
   "tests/test_application_archive.py": {
