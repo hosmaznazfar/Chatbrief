@@ -1,6 +1,6 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2, Steps 3a–3e, Step 4a, and Step 4b-1 are implemented and developer-validated. Step 4b-2 adds typed shared-archive repositories; local validation is pending. The authorization-aware snapshot query is the next slice.  
+**Status:** Steps 1–2, Steps 3a–3e, Step 4a, Step 4b-1, and Step 4b-2 are implemented. Step 4b-2 passed the developer's focused and full pytest runs; Ruff/format cleanup has been pushed and awaits a rerun. Step 4b-3 implements the authorization-aware snapshot query; local validation is pending.  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
@@ -125,10 +125,9 @@ Migration 4 adds the identity-only user table and the first shared source/messag
 
 ## Next steps
 
-1. Add typed repository operations for user registration, source/access upsert, authorization grants/revocation, subscription lifecycle, message upsert/edit/delete, and coverage intervals.
-2. Add a single authorization-aware snapshot query that checks both user authorization and source access at the fixed cutoff; shared storage must never imply shared access.
-3. Only after the snapshot query exists, implement the collecting handler with cancellation-safe checkpoints and lease-generation-fenced transitions. Then proceed to packaging, Telegram delivery, cleanup, and commands.
-4. Do not read or automatically backfill the legacy message-history store: its rows lack trustworthy owner, stable source identity, and message identity.
+1. Implement the collecting phase handler only after the snapshot query is validated, using cancellation-safe checkpoints and lease-generation-fenced transitions.
+2. Then proceed to packaging, Telegram delivery, cleanup, and user-facing commands.
+3. Do not read or automatically backfill the legacy message-history store: its rows lack trustworthy owner, stable source identity, and message identity.
 
 
 ## Step 4b-2 — typed shared-archive repositories
@@ -145,5 +144,19 @@ Implemented in source; local validation is pending. This slice adds persistence 
 - All timestamps accepted by these repositories must be offset-aware ISO 8601 values and are normalized to UTC. Foreign keys remain enabled through the database connection factory.
 - Added focused tests for identity idempotency, stable source identity, user-scoped technical access, authorization revocation, subscription/authorization separation, message deduplication/edit/deletion behavior, media consistency, and coverage interval merging/gaps.
 - No Bot API or Telethon network calls, source discovery, linked-session storage, media binary storage, legacy-store reads/backfill, snapshot query, worker handler, or startup wiring is added.
+- Developer validation on 2026-11-02: focused archive/storage/export/worker/lifecycle tests **62 passed**; full suite **658 passed, 7 skipped**, coverage **93.52%**; Pyright **0 errors, 0 warnings, 0 informations**. Ruff identified one unused import and Ruff format identified one existing test-file formatting issue; both corrections were pushed for the next local rerun. Seven PostgreSQL tests remain skipped without `TELEBRIEF_TEST_PG_URL`.
 
-**Local validation — pending:** run the focused archive/migration tests, Ruff lint/format, Pyright, and the full pytest suite. Record exact results after developer confirmation. PostgreSQL integration remains optional and requires `TELEBRIEF_TEST_PG_URL`; the current application database implementation is SQLite-first.
+## Step 4b-3 — authorization-aware retained-message snapshot
+
+Implemented in source; local validation is pending. This slice adds `ExportSnapshotRepository` as a single read-transaction boundary over the shared archive.
+
+- The snapshot is scoped to the requesting user's active subscriptions at the fixed cutoff. An existing subscription modified after the cutoff cannot be reconstructed because subscription history is not stored; the query fails closed with `SnapshotStateChangedError`. A source metadata change after cutoff also fails closed.
+- Public visibility is sufficient for source authorization. A private source requires an active explicit grant created no later than the cutoff; missing, revoked, or post-cutoff grants raise `SnapshotAuthorizationError`, invalidating the snapshot rather than silently omitting protected data. Unknown visibility is excluded with a `not_exportable` omission.
+- An active subscription requires available central Bot API access verified by the cutoff. Telethon access, including the requester's own session, is not a substitute: the approved architecture reserves Telethon for explicitly requested one-time historical backfill, not ongoing subscriptions. Bot API access that is unavailable or cannot be established by cutoff is omitted as `unavailable`.
+- The snapshot includes non-deleted messages within the configured rolling-retention boundary and collected no later than cutoff. The retention boundary is passed as `retention_start_at` by the caller; it is a system retention limit, not a user-selectable export lookback. The message event-time boundary uses `COALESCE(source_timestamp, collected_at)`; rows with a future source timestamp or collected after cutoff are excluded.
+- Message snapshots omit sender labels, message links, Telegram message IDs, and Telegram chat IDs. Source snapshots expose only safe display metadata and internal archive IDs for in-process relationship mapping.
+- Coverage is evaluated only from Bot API coverage intervals across the retained window. Telethon coverage does not prove completeness for an ongoing subscription. Every uncovered interval is returned and aggregated into a safe `unavailable` messages omission; missing coverage is never treated as an empty source.
+- Added tests for cutoff/retention filtering, deletion exclusion, private/public/unknown visibility, grant timing/revocation, Bot API versus Telethon access, user/subscription isolation, changed post-cutoff state, and coverage gaps.
+- No media binary reads, network calls, serializers/ZIP generation, worker phase handler, startup wiring, or legacy-store reads/backfill are added.
+
+**Local validation — pending:** pull the snapshot implementation, run focused tests, Ruff lint/format, Pyright, and the full suite. The caller must supply `retention_start_at` from the configured archive-retention policy; no export-specific lookback setting is introduced.
