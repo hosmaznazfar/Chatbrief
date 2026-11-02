@@ -191,3 +191,137 @@ async def test_terminal_states_release_active_export_constraint(export_repositor
 async def test_owner_id_must_be_positive(export_repository):
     with pytest.raises(ValueError, match="positive integer"):
         await export_repository.create_job(0, "2026-11-02T00:00:00Z")
+
+@pytest.mark.asyncio
+async def test_worker_claim_is_atomic_and_assigns_first_lease_generation(export_repository):
+    import asyncio
+
+    job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
+    first, second = await asyncio.gather(
+        export_repository.claim_next_job(
+            "worker-a", now="2026-11-02T01:00:00Z", lease_seconds=60
+        ),
+        export_repository.claim_next_job(
+            "worker-b", now="2026-11-02T01:00:00Z", lease_seconds=60
+        ),
+    )
+
+    claims = [claim for claim in (first, second) if claim is not None]
+    assert len(claims) == 1
+    assert claims[0].id == job.id
+    assert claims[0].lease_generation == 1
+    assert claims[0].lease_owner in {"worker-a", "worker-b"}
+    assert claims[0].lease_expires_at == "2026-11-02T01:01:00+00:00"
+
+
+@pytest.mark.asyncio
+async def test_expired_lease_reclaim_fences_stale_worker(export_repository):
+    job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
+    first_claim = await export_repository.claim_next_job(
+        "worker-a", now="2026-11-02T01:00:00Z", lease_seconds=60
+    )
+    assert first_claim is not None
+
+    reclaimed = await export_repository.claim_next_job(
+        "worker-b", now="2026-11-02T01:01:00Z", lease_seconds=60
+    )
+    assert reclaimed is not None
+    assert reclaimed.id == job.id
+    assert reclaimed.lease_owner == "worker-b"
+    assert reclaimed.lease_generation == first_claim.lease_generation + 1
+
+    assert (
+        await export_repository.renew_lease(
+            job.id,
+            "worker-a",
+            first_claim.lease_generation,
+            now="2026-11-02T01:01:01Z",
+        )
+        is None
+    )
+    assert (
+        await export_repository.release_lease(
+            job.id,
+            "worker-a",
+            first_claim.lease_generation,
+            now="2026-11-02T01:01:01Z",
+        )
+        is None
+    )
+    assert (
+        await export_repository.transition_claimed_job(
+            job.id,
+            "worker-a",
+            first_claim.lease_generation,
+            [ExportJobState.QUEUED],
+            ExportJobState.COLLECTING,
+            updated_at="2026-11-02T01:01:01Z",
+        )
+        is None
+    )
+
+    collecting = await export_repository.transition_claimed_job(
+        job.id,
+        "worker-b",
+        reclaimed.lease_generation,
+        [ExportJobState.QUEUED],
+        ExportJobState.COLLECTING,
+        updated_at="2026-11-02T01:01:02Z",
+    )
+    assert collecting is not None
+    assert collecting.state is ExportJobState.COLLECTING
+    assert collecting.lease_owner == "worker-b"
+
+
+@pytest.mark.asyncio
+async def test_worker_lease_can_be_renewed_and_released_with_backoff(export_repository):
+    job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
+    claimed = await export_repository.claim_next_job(
+        "worker-a", now="2026-11-02T01:00:00Z", lease_seconds=60
+    )
+    assert claimed is not None
+
+    renewed = await export_repository.renew_lease(
+        job.id,
+        "worker-a",
+        claimed.lease_generation,
+        now="2026-11-02T01:00:30Z",
+        lease_seconds=120,
+    )
+    assert renewed is not None
+    assert renewed.lease_expires_at == "2026-11-02T01:02:30+00:00"
+
+    released = await export_repository.release_lease(
+        job.id,
+        "worker-a",
+        claimed.lease_generation,
+        now="2026-11-02T01:00:40Z",
+        next_run_at="2026-11-02T02:00:00Z",
+    )
+    assert released is not None
+    assert released.lease_owner is None
+    assert released.lease_expires_at is None
+    assert released.next_run_at == "2026-11-02T02:00:00+00:00"
+    assert (
+        await export_repository.claim_next_job(
+            "worker-b", now="2026-11-02T01:59:59Z"
+        )
+        is None
+    )
+
+    next_claim = await export_repository.claim_next_job(
+        "worker-b", now="2026-11-02T02:00:00Z"
+    )
+    assert next_claim is not None
+    assert next_claim.lease_generation == claimed.lease_generation + 1
+
+
+@pytest.mark.asyncio
+async def test_worker_lease_rejects_invalid_parameters(export_repository):
+    with pytest.raises(ValueError, match="Worker ID"):
+        await export_repository.claim_next_job(" ")
+    with pytest.raises(ValueError, match="Lease duration"):
+        await export_repository.claim_next_job("worker-a", lease_seconds=0)
+    with pytest.raises(ValueError, match="timezone"):
+        await export_repository.claim_next_job("worker-a", now="2026-11-02T01:00:00")
+
