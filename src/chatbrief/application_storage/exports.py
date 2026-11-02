@@ -271,117 +271,163 @@ class ExportRepository:
     ) -> ExportJob | None:
         """Atomically transition a job only if its current state is expected.
 
-        Returns None when another operation has already changed the state. This
-        compare-and-set operation prevents competing progression/failure updates
-        from both winning a race. Cancellation, invalidation, and expiry require
-        cleanup-aware operations and are intentionally not exposed here yet.
-        Worker lease-generation fencing is a separate later step.
+        Returns None for a missing, unauthorized, or stale job. Cancellation,
+        invalidation, and expiry require cleanup-aware operations and are not
+        exposed through this generic transition method.
         """
         self._validate_owner(owner_telegram_user_id)
-        expected = tuple(dict.fromkeys(ExportJobState(state) for state in expected_states))
-        if not expected:
-            raise ValueError("At least one expected state is required")
-        target = ExportJobState(new_state)
-        if any(target not in _ALLOWED_TRANSITIONS[state] for state in expected):
-            raise InvalidExportTransitionError(
-                f"Transition from {', '.join(state.value for state in expected)} "
-                f"to {target.value} is not permitted"
-            )
-
-        changes = dict(updates or {})
-        unknown_fields = set(changes) - _MUTABLE_FIELDS
-        if unknown_fields:
-            raise ValueError(f"Unsupported export-job fields: {sorted(unknown_fields)}")
-        if "media_outcome" in changes and changes["media_outcome"] is not None:
-            changes["media_outcome"] = ExportMediaOutcome(
-                changes["media_outcome"]
-            ).value
-        for json_field in ("report_json", "media_manifest_json"):
-            if json_field in changes and changes[json_field] is not None:
-                try:
-                    json.loads(changes[json_field])
-                except (TypeError, json.JSONDecodeError) as error:
-                    raise ValueError(f"{json_field} must contain valid JSON") from error
-
+        expected, target = _validate_transition(expected_states, new_state)
+        changes = _normalize_updates(updates)
         timestamp = updated_at or _utc_now()
-        placeholders = ", ".join("?" for _ in expected)
 
         async with self._connection() as connection:
-            try:
-                await connection.execute("BEGIN IMMEDIATE")
-                async with connection.execute(
-                    "SELECT * FROM export_jobs WHERE id = ? AND owner_telegram_user_id = ?",
-                    (job_id, owner_telegram_user_id),
-                ) as cursor:
-                    current = await cursor.fetchone()
-                if current is None or ExportJobState(current["state"]) not in expected:
-                    await connection.rollback()
-                    return None
-
-                if target is ExportJobState.READY:
-                    async with connection.execute(
-                        """
-                        SELECT finished_at FROM export_delivery_attempts
-                        WHERE job_id = ? AND document_kind = 'primary'
-                          AND outcome = 'succeeded'
-                        ORDER BY attempt_number DESC LIMIT 1
-                        """,
-                        (job_id,),
-                    ) as cursor:
-                        successful_attempt = await cursor.fetchone()
-                    if successful_attempt is None:
-                        raise ValueError(
-                            "A ready export requires a confirmed primary delivery attempt"
-                        )
-                    delivered_at = successful_attempt["finished_at"]
-                    expires_at = changes.get("expires_at", current["expires_at"])
-                    if not delivered_at or not expires_at:
-                        raise ValueError(
-                            "A ready export requires primary delivery and expiry timestamps"
-                        )
-                    if (
-                        "primary_delivered_at" in changes
-                        and changes["primary_delivered_at"] != delivered_at
-                    ):
-                        raise ValueError(
-                            "Primary delivery timestamp must match the confirmed attempt"
-                        )
-                    changes["primary_delivered_at"] = delivered_at
-
-                assignments = ["state = ?", "updated_at = ?"]
-                parameters: list[object] = [target.value, timestamp]
-                for field_name, value in changes.items():
-                    assignments.append(f"{field_name} = ?")
-                    parameters.append(value)
-                if target in _TERMINAL_STATES:
-                    assignments.append("terminal_at = COALESCE(terminal_at, ?)")
-                    parameters.append(timestamp)
-                else:
-                    assignments.append("terminal_at = NULL")
-                parameters.extend(
-                    (job_id, owner_telegram_user_id, *(state.value for state in expected))
-                )
-
-                result = await connection.execute(
-                    f"""
-                    UPDATE export_jobs
-                    SET {", ".join(assignments)}
-                    WHERE id = ? AND owner_telegram_user_id = ? AND state IN ({placeholders})
-                    """,
-                    parameters,
-                )
-                if result.rowcount != 1:
-                    await connection.rollback()
-                    return None
-                async with connection.execute(
-                    "SELECT * FROM export_jobs WHERE id = ?", (job_id,)
-                ) as cursor:
-                    updated = await cursor.fetchone()
-                await connection.commit()
-            except Exception:
-                await connection.rollback()
-                raise
+            updated = await _transition_in_transaction(
+                connection,
+                job_id,
+                owner_telegram_user_id,
+                expected,
+                target,
+                changes,
+                timestamp,
+            )
 
         if updated is None:
-            raise RuntimeError("Updated export job could not be read back")
+            return None
         return _job_from_row(updated)
+
+
+def _validate_transition(
+    expected_states: Sequence[ExportJobState],
+    new_state: ExportJobState,
+) -> tuple[tuple[ExportJobState, ...], ExportJobState]:
+    expected = tuple(dict.fromkeys(ExportJobState(state) for state in expected_states))
+    if not expected:
+        raise ValueError("At least one expected state is required")
+    target = ExportJobState(new_state)
+    if any(target not in _ALLOWED_TRANSITIONS[state] for state in expected):
+        raise InvalidExportTransitionError(
+            f"Transition from {', '.join(state.value for state in expected)} "
+            f"to {target.value} is not permitted"
+        )
+    return expected, target
+
+
+def _normalize_updates(
+    updates: Mapping[str, str | None] | None,
+) -> dict[str, str | None]:
+    changes = dict(updates or {})
+    unknown_fields = set(changes) - _MUTABLE_FIELDS
+    if unknown_fields:
+        raise ValueError(f"Unsupported export-job fields: {sorted(unknown_fields)}")
+    if changes.get("media_outcome") is not None:
+        changes["media_outcome"] = ExportMediaOutcome(changes["media_outcome"]).value
+
+    for json_field in ("report_json", "media_manifest_json"):
+        value = changes.get(json_field)
+        if value is not None:
+            if not isinstance(value, str):
+                raise ValueError(f"{json_field} must contain valid JSON")
+            try:
+                json.loads(value)
+            except json.JSONDecodeError as error:
+                raise ValueError(f"{json_field} must contain valid JSON") from error
+    return changes
+
+
+async def _require_confirmed_primary_delivery(
+    connection: aiosqlite.Connection,
+    job_id: str,
+    current: aiosqlite.Row,
+    changes: dict[str, str | None],
+) -> None:
+    async with connection.execute(
+        """
+        SELECT finished_at FROM export_delivery_attempts
+        WHERE job_id = ? AND document_kind = 'primary'
+          AND outcome = 'succeeded'
+        ORDER BY attempt_number DESC LIMIT 1
+        """,
+        (job_id,),
+    ) as cursor:
+        successful_attempt = await cursor.fetchone()
+    if successful_attempt is None:
+        raise ValueError(
+            "A ready export requires a confirmed primary delivery attempt"
+        )
+
+    delivered_at = successful_attempt["finished_at"]
+    expires_at = changes.get("expires_at", current["expires_at"])
+    if not delivered_at or not expires_at:
+        raise ValueError(
+            "A ready export requires primary delivery and expiry timestamps"
+        )
+    if (
+        "primary_delivered_at" in changes
+        and changes["primary_delivered_at"] != delivered_at
+    ):
+        raise ValueError(
+            "Primary delivery timestamp must match the confirmed attempt"
+        )
+    changes["primary_delivered_at"] = delivered_at
+
+
+async def _transition_in_transaction(
+    connection: aiosqlite.Connection,
+    job_id: str,
+    owner_telegram_user_id: int,
+    expected: tuple[ExportJobState, ...],
+    target: ExportJobState,
+    changes: dict[str, str | None],
+    timestamp: str,
+) -> aiosqlite.Row | None:
+    placeholders = ", ".join("?" for _ in expected)
+    await connection.execute("BEGIN IMMEDIATE")
+    try:
+        async with connection.execute(
+            "SELECT * FROM export_jobs WHERE id = ? AND owner_telegram_user_id = ?",
+            (job_id, owner_telegram_user_id),
+        ) as cursor:
+            current = await cursor.fetchone()
+        if current is None or ExportJobState(current["state"]) not in expected:
+            await connection.rollback()
+            return None
+
+        if target is ExportJobState.READY:
+            await _require_confirmed_primary_delivery(
+                connection, job_id, current, changes
+            )
+
+        assignments = ["state = ?", "updated_at = ?"]
+        parameters: list[object] = [target.value, timestamp]
+        for field_name, value in changes.items():
+            assignments.append(f"{field_name} = ?")
+            parameters.append(value)
+        if target in _TERMINAL_STATES:
+            assignments.append("terminal_at = COALESCE(terminal_at, ?)")
+            parameters.append(timestamp)
+        else:
+            assignments.append("terminal_at = NULL")
+        parameters.extend(
+            (job_id, owner_telegram_user_id, *(state.value for state in expected))
+        )
+
+        result = await connection.execute(
+            f"""
+            UPDATE export_jobs
+            SET {", ".join(assignments)}
+            WHERE id = ? AND owner_telegram_user_id = ? AND state IN ({placeholders})
+            """,
+            parameters,
+        )
+        if result.rowcount != 1:
+            await connection.rollback()
+            return None
+        async with connection.execute(
+            "SELECT * FROM export_jobs WHERE id = ?", (job_id,)
+        ) as cursor:
+            updated = await cursor.fetchone()
+        await connection.commit()
+        return updated
+    except Exception:
+        await connection.rollback()
+        raise
