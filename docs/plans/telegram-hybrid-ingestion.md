@@ -1318,3 +1318,10 @@ Implementation must proceed in small reviewable stages with tests and this plan 
 alongside each stage. This documentation change does not alter application code, schema,
 migrations, or tests.
 
+### Unknown fields in versioned export documents — approved (Option A)
+
+- Consumers of `export.json`, `export-report.json`, and `media-manifest.json` must ignore fields they do not recognize rather than reject the document solely because it contains an unknown field.
+- This preserves forward compatibility when a later compatible schema revision adds optional fields.
+- This rule complements the approved per-document compatibility policy: producers may add optional fields without incrementing that document's `schema_version`; consumers must tolerate those additions.
+- Required-field validation, malformed values, and other structural validation remain governed by each document's detailed schema and are not relaxed by this rule.
+
