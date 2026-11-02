@@ -36,7 +36,7 @@ async def test_initial_migration_creates_export_schema_and_is_idempotent(tmp_pat
             "SELECT version, checksum FROM schema_migrations ORDER BY version"
         ) as cursor:
             rows = await cursor.fetchall()
-        assert [row[0] for row in rows] == [1, 2, 3]
+        assert [row[0] for row in rows] == [1, 2, 3, 4]
 
         async with connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'table'"
@@ -47,6 +47,13 @@ async def test_initial_migration_creates_export_schema_and_is_idempotent(tmp_pat
             "export_jobs",
             "export_delivery_attempts",
             "export_cleanup_tasks",
+            "users",
+            "sources",
+            "source_access",
+            "source_authorizations",
+            "subscriptions",
+            "messages",
+            "source_collection_coverage",
         } <= tables
 
         async with connection.execute("PRAGMA table_info(export_jobs)") as cursor:
@@ -69,7 +76,7 @@ async def test_fair_claim_migration_upgrades_existing_version_one_database(tmp_p
         async with connection.execute(
             "SELECT version FROM schema_migrations ORDER BY version"
         ) as cursor:
-            assert [row[0] for row in await cursor.fetchall()] == [1, 2, 3]
+            assert [row[0] for row in await cursor.fetchall()] == [1, 2, 3, 4]
         async with connection.execute("PRAGMA table_info(export_jobs)") as cursor:
             columns = {row[1] for row in await cursor.fetchall()}
         assert "last_claimed_at" in columns
@@ -93,6 +100,137 @@ async def test_delivery_fencing_migration_upgrades_version_two_database(tmp_path
         async with connection.execute("PRAGMA table_info(export_delivery_attempts)") as cursor:
             columns = {row[1] for row in await cursor.fetchall()}
         assert {"worker_id", "lease_generation"} <= columns
+
+
+@pytest.mark.asyncio
+async def test_shared_archive_migration_creates_identity_and_collection_constraints(tmp_path):
+    database = ApplicationDatabase(str(tmp_path / "application.db"))
+    await database.initialize()
+
+    async with _connected(database) as connection:
+        await connection.execute(
+            "INSERT INTO users(telegram_user_id, created_at) VALUES (?, ?)",
+            (1001, "2026-11-02T00:00:00Z"),
+        )
+        await connection.execute(
+            """
+            INSERT INTO sources(
+                id, platform, platform_chat_id, display_name, source_type,
+                visibility, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "source-1", "telegram", "-100123", "Example channel", "channel",
+                "public", "now", "now",
+            ),
+        )
+        await connection.execute(
+            """
+            INSERT INTO source_access(
+                id, source_id, access_method, owner_telegram_user_id,
+                state, created_at, updated_at
+            ) VALUES (?, ?, 'bot_api', NULL, 'available', ?, ?)
+            """,
+            ("access-1", "source-1", "now", "now"),
+        )
+        await connection.execute(
+            """
+            INSERT INTO subscriptions(
+                id, telegram_user_id, source_id, state, created_at, updated_at
+            ) VALUES (?, ?, ?, 'active', ?, ?)
+            """,
+            ("subscription-1", 1001, "source-1", "now", "now"),
+        )
+        await connection.execute(
+            """
+            INSERT INTO messages(
+                id, source_id, platform_message_id, text, has_media,
+                collected_at
+            ) VALUES (?, ?, ?, ?, 0, ?)
+            """,
+            ("message-1", "source-1", "42", "hello", "now"),
+        )
+        await connection.execute(
+            """
+            INSERT INTO source_collection_coverage(
+                id, source_id, ingestion_method, covered_from, covered_until, recorded_at
+            ) VALUES (?, ?, 'bot_api', ?, ?, ?)
+            """,
+            ("coverage-1", "source-1", "2026-11-01T00:00:00Z",
+             "2026-11-02T00:00:00Z", "now"),
+        )
+
+        with pytest.raises(aiosqlite.IntegrityError):
+            await connection.execute(
+                """
+                INSERT INTO messages(
+                    id, source_id, platform_message_id, text, has_media, collected_at
+                ) VALUES (?, ?, ?, ?, 0, ?)
+                """,
+                ("message-2", "source-1", "42", "duplicate", "now"),
+            )
+
+        with pytest.raises(aiosqlite.IntegrityError):
+            await connection.execute(
+                """
+                INSERT INTO source_access(
+                    id, source_id, access_method, owner_telegram_user_id,
+                    state, created_at, updated_at
+                ) VALUES (?, ?, 'bot_api', NULL, 'available', ?, ?)
+                """,
+                ("access-2", "source-1", "now", "now"),
+            )
+
+        with pytest.raises(aiosqlite.IntegrityError):
+            await connection.execute(
+                """
+                INSERT INTO subscriptions(
+                    id, telegram_user_id, source_id, state, created_at, updated_at
+                ) VALUES (?, ?, ?, 'active', ?, ?)
+                """,
+                ("subscription-2", 1001, "source-1", "now", "now"),
+            )
+
+
+@pytest.mark.asyncio
+async def test_shared_archive_migration_rejects_invalid_access_and_media_shapes(tmp_path):
+    database = ApplicationDatabase(str(tmp_path / "application.db"))
+    await database.initialize()
+
+    async with _connected(database) as connection:
+        await connection.execute(
+            "INSERT INTO users(telegram_user_id, created_at) VALUES (?, ?)",
+            (1001, "now"),
+        )
+        await connection.execute(
+            """
+            INSERT INTO sources(
+                id, platform, platform_chat_id, display_name, source_type,
+                visibility, created_at, updated_at
+            ) VALUES (?, 'telegram', ?, ?, 'channel', 'private', ?, ?)
+            """,
+            ("source-1", "-100123", "Private channel", "now", "now"),
+        )
+        with pytest.raises(aiosqlite.IntegrityError):
+            await connection.execute(
+                """
+                INSERT INTO source_access(
+                    id, source_id, access_method, owner_telegram_user_id,
+                    state, created_at, updated_at
+                ) VALUES (?, ?, 'telethon', NULL, 'available', ?, ?)
+                """,
+                ("invalid-access", "source-1", "now", "now"),
+            )
+        with pytest.raises(aiosqlite.IntegrityError):
+            await connection.execute(
+                """
+                INSERT INTO messages(
+                    id, source_id, platform_message_id, text, has_media,
+                    media_type, collected_at
+                ) VALUES (?, ?, ?, ?, 1, NULL, ?)
+                """,
+                ("invalid-message", "source-1", "42", "", "now"),
+            )
 
 
 @pytest.mark.asyncio
