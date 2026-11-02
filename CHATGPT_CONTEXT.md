@@ -212,3 +212,9 @@ Consumers reject any of `export.json`, `export-report.json`, or `media-manifest.
 ## Export schema conventions — working defaults
 
 Use one opaque UUID `export_id` and common RFC 3339 UTC `created_at` across all included export JSON documents; `export.json` additionally records the request acceptance `cutoff_at`. Timestamps are UTC strings ending in `Z`, preserving sub-second precision where present. Relationships use export-local `src-`, `msg-`, and `media-` references, never internal/Telegram IDs; references are valid only within one export. Arrays and ZIP entries use deterministic ordering except where user-configured order is meaningful. Exact fields and shapes remain open. Recommended working defaults; not implemented.
+
+
+
+## Export JSON document shapes — working defaults
+
+In schema v1, require common metadata and all primary sections: `preferences` object; `schedules`, `subscriptions`, `delivery_history`, `messages`, and `sources` arrays. Empty sections are `{}`/`[]`, never omitted or null. Report structure: result, included-record counts, structured omissions, warnings. Media manifest lists only included files and records media/message references, safe ZIP-relative path, type/content type, byte size, and SHA-256. Validate shared export metadata, counts, ZIP paths, and references. Exact domain fields, author/privacy rules, and model alignment remain open; not implemented.
