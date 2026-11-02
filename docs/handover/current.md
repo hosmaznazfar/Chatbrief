@@ -1013,3 +1013,8 @@ Consumers must reject `export.json`, `export-report.json`, or `media-manifest.js
 ## Export JSON duplicate-key handling — approved (Option A)
 
 Reject `export.json`, `export-report.json`, or `media-manifest.json` if any JSON object contains duplicate member names, at any nesting level. Do not rely on parser-specific first/last-key behavior. This prevents ambiguous interpretation across parsers. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export `schema_version` value validation — approved (Option A)
+
+In `export.json`, `export-report.json`, and `media-manifest.json`, `schema_version` must be a JSON integer greater than zero. Reject zero, negative values, decimals (including `1.0`), strings (including `"1"`), booleans, null, and all other non-integer or non-positive values. Do not coerce or normalize values. Apply independently to each document. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
