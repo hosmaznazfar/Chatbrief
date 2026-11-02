@@ -1383,3 +1383,11 @@ migrations, or tests.
 - A differently cased name does not satisfy a required field. If the exact required spelling is absent, the document is invalid under the required-field and missing-`schema_version` rules.
 - Apply this rule at every object level in `export.json`, `export-report.json`, and `media-manifest.json`.
 - Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+### JSON object member-name Unicode handling — approved (Option A)
+
+- Compare JSON object member names using their exact Unicode code-point sequences; do not normalize names before comparison.
+- Names that look identical but use different Unicode code-point sequences are distinct member names.
+- Apply this rule at every object level in `export.json`, `export-report.json`, and `media-manifest.json`, alongside the approved case-sensitive comparison rule.
+- Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
