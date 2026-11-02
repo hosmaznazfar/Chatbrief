@@ -139,9 +139,7 @@ async def test_coverage_merges_only_overlapping_or_adjacent_intervals(
     )
     assert len(telethon) == 1
     assert len(await repository.list_coverage(source_id)) == 3
-    assert len(
-        await repository.list_coverage(source_id, CollectionMethod.BOT_API)
-    ) == 2
+    assert len(await repository.list_coverage(source_id, CollectionMethod.BOT_API)) == 2
 
 
 @pytest.mark.asyncio

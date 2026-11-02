@@ -25,12 +25,8 @@ async def archive_repository(tmp_path):
 
 @pytest.mark.asyncio
 async def test_user_identity_stores_only_telegram_id_and_is_idempotent(archive_repository):
-    first = await archive_repository.ensure_user(
-        1234, created_at="2026-11-02T01:00:00Z"
-    )
-    second = await archive_repository.ensure_user(
-        1234, created_at="2026-11-03T01:00:00Z"
-    )
+    first = await archive_repository.ensure_user(1234, created_at="2026-11-02T01:00:00Z")
+    second = await archive_repository.ensure_user(1234, created_at="2026-11-03T01:00:00Z")
 
     assert first == second
     assert first.telegram_user_id == 1234
@@ -111,17 +107,18 @@ async def test_access_records_keep_bot_api_shared_and_telethon_user_scoped(
     assert changed.id == user_access.id
     assert changed.state is AccessState.REVOKED
     assert changed.verified_at == user_access.verified_at
-    assert await archive_repository.set_access(
-        source.id,
-        AccessMethod.TELETHON,
-        AccessState.UNKNOWN,
-        owner_telegram_user_id=1002,
-    ) != changed
+    assert (
+        await archive_repository.set_access(
+            source.id,
+            AccessMethod.TELETHON,
+            AccessState.UNKNOWN,
+            owner_telegram_user_id=1002,
+        )
+        != changed
+    )
 
     with pytest.raises(ValueError, match="requires its owning user"):
-        await archive_repository.set_access(
-            source.id, AccessMethod.TELETHON, AccessState.AVAILABLE
-        )
+        await archive_repository.set_access(source.id, AccessMethod.TELETHON, AccessState.AVAILABLE)
     with pytest.raises(ValueError, match="must not have a user owner"):
         await archive_repository.set_access(
             source.id,
@@ -167,9 +164,7 @@ async def test_authorization_is_explicit_and_revocation_is_persisted(archive_rep
     assert await archive_repository.get_authorization(source.id, 2002) is None
 
     with pytest.raises(ValueError, match="does not exist"):
-        await archive_repository.set_authorization(
-            source.id, 2002, AuthorizationState.REVOKED
-        )
+        await archive_repository.set_authorization(source.id, 2002, AuthorizationState.REVOKED)
 
 
 @pytest.mark.asyncio
@@ -196,9 +191,7 @@ async def test_subscription_does_not_create_or_imply_authorization(archive_repos
     suspended = await archive_repository.upsert_subscription(
         1001, source.id, SubscriptionState.SUSPENDED
     )
-    ended = await archive_repository.upsert_subscription(
-        1001, source.id, SubscriptionState.ENDED
-    )
+    ended = await archive_repository.upsert_subscription(1001, source.id, SubscriptionState.ENDED)
     assert suspended.id == subscription.id
     assert suspended.ended_at is None
     assert ended.id == subscription.id

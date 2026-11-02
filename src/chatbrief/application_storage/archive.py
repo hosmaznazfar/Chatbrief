@@ -133,31 +133,49 @@ def _user(row: aiosqlite.Row) -> ArchiveUser:
 
 def _source(row: aiosqlite.Row) -> ArchiveSource:
     return ArchiveSource(
-        row["id"], row["platform"], row["platform_chat_id"], row["display_name"],
-        SourceType(row["source_type"]), SourceVisibility(row["visibility"]),
-        row["created_at"], row["updated_at"],
+        row["id"],
+        row["platform"],
+        row["platform_chat_id"],
+        row["display_name"],
+        SourceType(row["source_type"]),
+        SourceVisibility(row["visibility"]),
+        row["created_at"],
+        row["updated_at"],
     )
 
 
 def _access(row: aiosqlite.Row) -> SourceAccess:
     return SourceAccess(
-        row["id"], row["source_id"], AccessMethod(row["access_method"]),
-        row["owner_telegram_user_id"], AccessState(row["state"]), row["verified_at"],
-        row["created_at"], row["updated_at"],
+        row["id"],
+        row["source_id"],
+        AccessMethod(row["access_method"]),
+        row["owner_telegram_user_id"],
+        AccessState(row["state"]),
+        row["verified_at"],
+        row["created_at"],
+        row["updated_at"],
     )
 
 
 def _authorization(row: aiosqlite.Row) -> SourceAuthorization:
     return SourceAuthorization(
-        row["source_id"], row["telegram_user_id"], row["granted_by_telegram_user_id"],
-        AuthorizationState(row["state"]), row["granted_at"], row["revoked_at"],
+        row["source_id"],
+        row["telegram_user_id"],
+        row["granted_by_telegram_user_id"],
+        AuthorizationState(row["state"]),
+        row["granted_at"],
+        row["revoked_at"],
     )
 
 
 def _subscription(row: aiosqlite.Row) -> ArchiveSubscription:
     return ArchiveSubscription(
-        row["id"], row["telegram_user_id"], row["source_id"],
-        SubscriptionState(row["state"]), row["created_at"], row["updated_at"],
+        row["id"],
+        row["telegram_user_id"],
+        row["source_id"],
+        SubscriptionState(row["state"]),
+        row["created_at"],
+        row["updated_at"],
         row["ended_at"],
     )
 
@@ -248,8 +266,16 @@ class ArchiveRepository:
                             visibility, created_at, updated_at
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         """,
-                        (identifier, platform, platform_chat_id, display_name,
-                         kind.value, visible.value, timestamp, timestamp),
+                        (
+                            identifier,
+                            platform,
+                            platform_chat_id,
+                            display_name,
+                            kind.value,
+                            visible.value,
+                            timestamp,
+                            timestamp,
+                        ),
                     )
                     identifier_to_read = identifier
                 else:
@@ -326,8 +352,16 @@ class ArchiveRepository:
                             state, verified_at, created_at, updated_at
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         """,
-                        (access_id, source_id, method.value, owner_telegram_user_id,
-                         status.value, verified, timestamp, timestamp),
+                        (
+                            access_id,
+                            source_id,
+                            method.value,
+                            owner_telegram_user_id,
+                            status.value,
+                            verified,
+                            timestamp,
+                            timestamp,
+                        ),
                     )
                 else:
                     access_id = existing["id"]
@@ -480,8 +514,15 @@ class ArchiveRepository:
                             created_at, updated_at, ended_at
                         ) VALUES (?, ?, ?, ?, ?, ?, ?)
                         """,
-                        (subscription_id, telegram_user_id, source_id, status.value,
-                         timestamp, timestamp, ended_at),
+                        (
+                            subscription_id,
+                            telegram_user_id,
+                            source_id,
+                            status.value,
+                            timestamp,
+                            timestamp,
+                            ended_at,
+                        ),
                     )
                 else:
                     subscription_id = existing["id"]

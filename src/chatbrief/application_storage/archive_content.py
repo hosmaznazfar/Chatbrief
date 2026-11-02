@@ -57,18 +57,29 @@ class CollectionCoverage:
 
 def _message(row: aiosqlite.Row) -> ArchiveMessage:
     return ArchiveMessage(
-        row["id"], row["source_id"], row["platform_message_id"], row["text"],
-        row["sender_label"], row["source_timestamp"], row["link"],
+        row["id"],
+        row["source_id"],
+        row["platform_message_id"],
+        row["text"],
+        row["sender_label"],
+        row["source_timestamp"],
+        row["link"],
         bool(row["has_media"]),
         MessageMediaType(row["media_type"]) if row["media_type"] is not None else None,
-        row["collected_at"], row["edited_at"], row["deleted_at"],
+        row["collected_at"],
+        row["edited_at"],
+        row["deleted_at"],
     )
 
 
 def _coverage(row: aiosqlite.Row) -> CollectionCoverage:
     return CollectionCoverage(
-        row["id"], row["source_id"], CollectionMethod(row["ingestion_method"]),
-        row["covered_from"], row["covered_until"], row["recorded_at"],
+        row["id"],
+        row["source_id"],
+        CollectionMethod(row["ingestion_method"]),
+        row["covered_from"],
+        row["covered_until"],
+        row["recorded_at"],
     )
 
 
@@ -150,9 +161,17 @@ class ArchiveContentRepository:
                     edited_at = COALESCE(excluded.edited_at, messages.edited_at)
                 """,
                 (
-                    identifier, source_id, platform_message_id, text, sender_label,
-                    source_time, link, int(has_media), kind.value if kind else None,
-                    collected, edited,
+                    identifier,
+                    source_id,
+                    platform_message_id,
+                    text,
+                    sender_label,
+                    source_time,
+                    link,
+                    int(has_media),
+                    kind.value if kind else None,
+                    collected,
+                    edited,
                 ),
             )
             async with connection.execute(
@@ -165,9 +184,7 @@ class ArchiveContentRepository:
             raise RuntimeError("Message could not be read after upsert")
         return _message(row)
 
-    async def get_message(
-        self, source_id: str, platform_message_id: str
-    ) -> ArchiveMessage | None:
+    async def get_message(self, source_id: str, platform_message_id: str) -> ArchiveMessage | None:
         _nonempty(source_id, "source_id")
         _nonempty(platform_message_id, "platform_message_id")
         async with self._connection() as connection:
@@ -226,8 +243,9 @@ class ArchiveContentRepository:
         """
         _nonempty(source_id, "source_id")
         method = CollectionMethod(ingestion_method)
-        start, end = _interval(covered_from, "covered_from"), _interval(
-            covered_until, "covered_until"
+        start, end = (
+            _interval(covered_from, "covered_from"),
+            _interval(covered_until, "covered_until"),
         )
         if end < start:
             raise ValueError("covered_until must not precede covered_from")
@@ -255,10 +273,9 @@ class ArchiveContentRepository:
                             continue
                         row_start = datetime.fromisoformat(row["covered_from"])
                         row_end = datetime.fromisoformat(row["covered_until"])
-                        if (
-                            row_start <= merge_end + timedelta(microseconds=1)
-                            and row_end >= merge_start - timedelta(microseconds=1)
-                        ):
+                        if row_start <= merge_end + timedelta(
+                            microseconds=1
+                        ) and row_end >= merge_start - timedelta(microseconds=1):
                             merge_start = min(merge_start, row_start)
                             merge_end = max(merge_end, row_end)
                             merged_ids.append(row["id"])
@@ -282,8 +299,12 @@ class ArchiveContentRepository:
                     ) VALUES (?, ?, ?, ?, ?, ?)
                     """,
                     (
-                        keep_id, source_id, method.value, merge_start.isoformat(),
-                        merge_end.isoformat(), recorded,
+                        keep_id,
+                        source_id,
+                        method.value,
+                        merge_start.isoformat(),
+                        merge_end.isoformat(),
+                        recorded,
                     ),
                 )
                 async with connection.execute(
