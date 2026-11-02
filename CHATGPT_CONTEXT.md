@@ -189,3 +189,11 @@ Consumers reject any of `export.json`, `export-report.json`, or `media-manifest.
 - A differently cased name does not satisfy a required field; the exact required spelling must be present.
 - Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`.
 - Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+### JSON object member-name Unicode handling — approved (Option A)
+
+- Compare JSON object member names by their exact Unicode code-point sequences; do not normalize before comparison.
+- Visually identical names with different code-point sequences are distinct.
+- Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`, in addition to case-sensitive matching.
+- Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
