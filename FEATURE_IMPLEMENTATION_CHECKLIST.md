@@ -128,5 +128,8 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add focused tests for dispatch, bounded concurrency, lease renewal/loss, cooperative shutdown, and retry scheduling.
 - [x] Run Ruff lint, Ruff format, Pyright, and the full pytest suite locally — developer-confirmed on 2026-11-02: Ruff passed; **102 files already formatted**; Pyright **0 errors, 0 warnings, 0 informations**; pytest collected **652 tests**, with **7 skipped** and **93.19% coverage**. The pasted output omitted pytest's final passed count.
 - [x] Keep startup wiring deferred until at least one real phase handler is implemented.
-- [ ] Implement the user-scoped source/subscription/message persistence and authorization-aware snapshot query needed for safe export collection; do not backfill legacy message-history rows.
-- [ ] After the snapshot query exists, implement the collecting phase handler with cancellation-safe checkpoints and lease-generation-fenced state transitions.
+- [x] Add migration 4 for identity-only users, sources, technical source access, explicit user authorizations, subscriptions, normalized deduplicated messages, and known-complete collection coverage intervals.
+- [ ] Validate migration 4 upgrade/idempotency, foreign keys, uniqueness, and constraints locally; run Ruff, Pyright, and the full suite.
+- [ ] Add typed repository operations for user/source/access/authorization/subscription/message/coverage records.
+- [ ] Add an authorization-aware export snapshot query that enforces source access and user grants independently of subscription state.
+- [ ] Implement the collecting phase handler only after the snapshot query exists; use cancellation-safe checkpoints and lease-generation-fenced transitions. Do not backfill legacy message-history rows.
