@@ -40,7 +40,7 @@ async def test_create_and_read_export_job_is_scoped_to_its_owner(export_reposito
         job.id,
         99999,
         [ExportJobState.QUEUED],
-        ExportJobState.CANCELLED,
+        ExportJobState.COLLECTING,
     )
     assert unauthorized_transition is None
     assert await export_repository.get_active_job(12345) == job
