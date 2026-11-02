@@ -15,6 +15,12 @@
 - **Implementation status:** application-state database configuration, migration runner, export persistence schema migration, and startup integration are implemented in source. Lifecycle tests have been added but have **not** been run locally yet. Approval does not mean export repositories, workers, commands, archive generation, delivery, or the broader hybrid-ingestion migration are implemented.
 - **Next stage:** sync this branch, run the Step 2 focused/static/full checks, refresh and review Graphify against the new source relationship, then proceed to export persistence repositories and atomic state transitions.
 
+## Step 2 validation follow-up — 2026-11-02
+
+The developer synced the lifecycle integration and ran the prescribed checks. Ruff lint passed, Ruff format reported all 7 files already formatted, and Pyright reported 0 errors, 0 warnings, and 0 informations. Both focused and full pytest runs failed during collection because `tests/test_application_lifecycle.py` imports the root-level `main.py`, but the pytest configuration did not include the repository root on `sys.path`. No lifecycle test body ran; this is a test import-path failure, not a passed test run.
+
+A correction was committed to `pytest.ini` adding `pythonpath = .`, and the application database plan records the issue and fix. Re-run the focused and full suites after syncing before marking Step 2 validated. Graphify's post-pull background rebuild was also triggered; inspect its completion and generated changes before committing graph artifacts.
+
 ## Implementation update — application-state database foundation and startup lifecycle
 
 **Step 1 — database foundation:** implemented and developer-validated.
