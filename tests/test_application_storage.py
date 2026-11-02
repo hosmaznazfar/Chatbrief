@@ -32,7 +32,9 @@ async def test_initial_migration_creates_export_schema_and_is_idempotent(tmp_pat
     await database.initialize()
 
     async with _connected(database) as connection:
-        async with connection.execute("SELECT version, checksum FROM schema_migrations ORDER BY version") as cursor:
+        async with connection.execute(
+            "SELECT version, checksum FROM schema_migrations ORDER BY version"
+        ) as cursor:
             rows = await cursor.fetchall()
         assert [row[0] for row in rows] == [1, 2, 3]
 
@@ -64,7 +66,9 @@ async def test_fair_claim_migration_upgrades_existing_version_one_database(tmp_p
     await ApplicationDatabase(path).initialize()
 
     async with _connected(ApplicationDatabase(path)) as connection:
-        async with connection.execute("SELECT version FROM schema_migrations ORDER BY version") as cursor:
+        async with connection.execute(
+            "SELECT version FROM schema_migrations ORDER BY version"
+        ) as cursor:
             assert [row[0] for row in await cursor.fetchall()] == [1, 2, 3]
         async with connection.execute("PRAGMA table_info(export_jobs)") as cursor:
             columns = {row[1] for row in await cursor.fetchall()}
@@ -86,9 +90,7 @@ async def test_delivery_fencing_migration_upgrades_version_two_database(tmp_path
             "SELECT version FROM schema_migrations ORDER BY version"
         ) as cursor:
             assert [row[0] for row in await cursor.fetchall()] == [1, 2, 3]
-        async with connection.execute(
-            "PRAGMA table_info(export_delivery_attempts)"
-        ) as cursor:
+        async with connection.execute("PRAGMA table_info(export_delivery_attempts)") as cursor:
             columns = {row[1] for row in await cursor.fetchall()}
         assert {"worker_id", "lease_generation"} <= columns
 
@@ -155,7 +157,8 @@ async def test_applied_migration_checksum_drift_is_rejected(tmp_path):
 
     with pytest.raises(MigrationError, match="Checksum mismatch"):
         await ApplicationDatabase(
-            path, migrations=(changed, FAIR_EXPORT_CLAIM_MIGRATION, DELIVERY_LEASE_FENCING_MIGRATION)
+            path,
+            migrations=(changed, FAIR_EXPORT_CLAIM_MIGRATION, DELIVERY_LEASE_FENCING_MIGRATION),
         ).initialize()
 
 

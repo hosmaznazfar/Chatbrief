@@ -40,7 +40,6 @@ async def _packaging_job(jobs: ExportRepository, owner: int = 12345):
     return packaging
 
 
-
 async def _leased_packaging_job(jobs: ExportRepository, owner: int = 12345):
     job = await jobs.create_job(owner, "2026-11-02T00:00:00Z")
     worker_id = "delivery-test-worker"
@@ -65,8 +64,6 @@ async def _leased_packaging_job(jobs: ExportRepository, owner: int = 12345):
     return packaging, worker_id, claimed.lease_generation
 
 
-
-
 @pytest.mark.asyncio
 async def test_primary_delivery_attempt_can_be_confirmed_and_job_becomes_ready(
     export_repositories,
@@ -79,7 +76,9 @@ async def test_primary_delivery_attempt_can_be_confirmed_and_job_becomes_ready(
         12345,
         DeliveryDocumentKind.PRIMARY,
         started_at="2026-11-02T01:00:00Z",
-     worker_id=worker_id, lease_generation=lease_generation,)
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert attempt is not None
     assert attempt.attempt_number == 1
     assert attempt.outcome is DeliveryAttemptOutcome.STARTED
@@ -92,7 +91,9 @@ async def test_primary_delivery_attempt_can_be_confirmed_and_job_becomes_ready(
         telegram_chat_id=12345,
         telegram_message_id=987,
         telegram_file_id="opaque-telegram-file-id",
-     worker_id=worker_id, lease_generation=lease_generation,)
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert succeeded is not None
     assert succeeded.outcome is DeliveryAttemptOutcome.SUCCEEDED
     assert succeeded.telegram_message_id == 987
@@ -113,10 +114,34 @@ async def test_primary_delivery_attempt_can_be_confirmed_and_job_becomes_ready(
 async def test_delivery_attempts_are_owner_scoped(export_repositories):
     _, jobs, deliveries, _ = export_repositories
     job, worker_id, lease_generation = await _leased_packaging_job(jobs)
-    assert await deliveries.start_attempt(job.id, 99999, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation) is None
-    attempt = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation)
+    assert (
+        await deliveries.start_attempt(
+            job.id,
+            99999,
+            DeliveryDocumentKind.PRIMARY,
+            worker_id=worker_id,
+            lease_generation=lease_generation,
+        )
+        is None
+    )
+    attempt = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.PRIMARY,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert attempt is not None
-    assert await deliveries.finish_attempt(attempt.id, 99999, DeliveryAttemptOutcome.FAILED, worker_id=worker_id, lease_generation=lease_generation) is None
+    assert (
+        await deliveries.finish_attempt(
+            attempt.id,
+            99999,
+            DeliveryAttemptOutcome.FAILED,
+            worker_id=worker_id,
+            lease_generation=lease_generation,
+        )
+        is None
+    )
     assert await deliveries.list_attempts(job.id, 99999) is None
     assert await deliveries.list_attempts(job.id, 12345) == (attempt,)
 
@@ -125,7 +150,13 @@ async def test_delivery_attempts_are_owner_scoped(export_repositories):
 async def test_failed_delivery_can_retry_with_a_new_attempt_number(export_repositories):
     _, jobs, deliveries, _ = export_repositories
     job, worker_id, lease_generation = await _leased_packaging_job(jobs)
-    first = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation)
+    first = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.PRIMARY,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert first is not None
 
     failed = await deliveries.finish_attempt(
@@ -136,11 +167,19 @@ async def test_failed_delivery_can_retry_with_a_new_attempt_number(export_reposi
         error_code="telegram_rate_limited",
         retry_after_seconds=30,
         retry_after_at="2026-11-02T01:00:30Z",
-     worker_id=worker_id, lease_generation=lease_generation,)
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert failed is not None
     assert failed.retry_after_seconds == 30
 
-    second = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation)
+    second = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.PRIMARY,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert second is not None
     assert second.attempt_number == 2
     attempts = await deliveries.list_attempts(job.id, 12345)
@@ -152,33 +191,80 @@ async def test_failed_delivery_can_retry_with_a_new_attempt_number(export_reposi
 async def test_started_or_delivery_unknown_attempt_cannot_be_retried(export_repositories):
     _, jobs, deliveries, _ = export_repositories
     job, worker_id, lease_generation = await _leased_packaging_job(jobs)
-    started = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation)
+    started = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.PRIMARY,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert started is not None
     with pytest.raises(ValueError, match="previous delivery attempt"):
-        await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation)
+        await deliveries.start_attempt(
+            job.id,
+            12345,
+            DeliveryDocumentKind.PRIMARY,
+            worker_id=worker_id,
+            lease_generation=lease_generation,
+        )
 
     unknown = await deliveries.finish_attempt(
-        started.id, 12345, DeliveryAttemptOutcome.DELIVERY_UNKNOWN
-    , worker_id=worker_id, lease_generation=lease_generation)
+        started.id,
+        12345,
+        DeliveryAttemptOutcome.DELIVERY_UNKNOWN,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert unknown is not None
     with pytest.raises(ValueError, match="previous delivery attempt"):
-        await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation)
+        await deliveries.start_attempt(
+            job.id,
+            12345,
+            DeliveryDocumentKind.PRIMARY,
+            worker_id=worker_id,
+            lease_generation=lease_generation,
+        )
 
 
 @pytest.mark.asyncio
 async def test_attempt_cannot_be_finished_twice_or_with_started_outcome(export_repositories):
     _, jobs, deliveries, _ = export_repositories
     job, worker_id, lease_generation = await _leased_packaging_job(jobs)
-    attempt = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation)
+    attempt = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.PRIMARY,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert attempt is not None
 
     with pytest.raises(ValueError, match="final outcome"):
-        await deliveries.finish_attempt(attempt.id, 12345, DeliveryAttemptOutcome.STARTED, worker_id=worker_id, lease_generation=lease_generation)
+        await deliveries.finish_attempt(
+            attempt.id,
+            12345,
+            DeliveryAttemptOutcome.STARTED,
+            worker_id=worker_id,
+            lease_generation=lease_generation,
+        )
 
-    failed = await deliveries.finish_attempt(attempt.id, 12345, DeliveryAttemptOutcome.FAILED, worker_id=worker_id, lease_generation=lease_generation)
+    failed = await deliveries.finish_attempt(
+        attempt.id,
+        12345,
+        DeliveryAttemptOutcome.FAILED,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert failed is not None
     assert (
-        await deliveries.finish_attempt(attempt.id, 12345, DeliveryAttemptOutcome.SUCCEEDED, worker_id=worker_id, lease_generation=lease_generation) is None
+        await deliveries.finish_attempt(
+            attempt.id,
+            12345,
+            DeliveryAttemptOutcome.SUCCEEDED,
+            worker_id=worker_id,
+            lease_generation=lease_generation,
+        )
+        is None
     )
 
 
@@ -190,9 +276,21 @@ async def test_media_attempt_requires_primary_success_and_updates_job_outcome(
     job, worker_id, lease_generation = await _leased_packaging_job(jobs)
 
     with pytest.raises(ValueError, match="confirmed primary"):
-        await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.MEDIA, worker_id=worker_id, lease_generation=lease_generation)
+        await deliveries.start_attempt(
+            job.id,
+            12345,
+            DeliveryDocumentKind.MEDIA,
+            worker_id=worker_id,
+            lease_generation=lease_generation,
+        )
 
-    primary = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY, worker_id=worker_id, lease_generation=lease_generation)
+    primary = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.PRIMARY,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert primary is not None
     assert await deliveries.finish_attempt(
         primary.id,
@@ -200,9 +298,17 @@ async def test_media_attempt_requires_primary_success_and_updates_job_outcome(
         DeliveryAttemptOutcome.SUCCEEDED,
         telegram_chat_id=12345,
         telegram_message_id=988,
-     worker_id=worker_id, lease_generation=lease_generation,)
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
 
-    media = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.MEDIA, worker_id=worker_id, lease_generation=lease_generation)
+    media = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.MEDIA,
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert media is not None
     sent = await deliveries.finish_attempt(
         media.id,
@@ -210,7 +316,9 @@ async def test_media_attempt_requires_primary_success_and_updates_job_outcome(
         DeliveryAttemptOutcome.SUCCEEDED,
         telegram_chat_id=12345,
         telegram_message_id=989,
-     worker_id=worker_id, lease_generation=lease_generation,)
+        worker_id=worker_id,
+        lease_generation=lease_generation,
+    )
     assert sent is not None
     refreshed = await jobs.get_job(job.id, owner_telegram_user_id=12345)
     assert refreshed is not None
