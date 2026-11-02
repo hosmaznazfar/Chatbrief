@@ -335,3 +335,65 @@ async def test_claimed_terminal_transition_releases_lease(export_repository):
     assert failed.terminal_at == "2026-11-02T01:00:10+00:00"
     assert failed.lease_owner is None
     assert failed.lease_expires_at is None
+
+
+@pytest.mark.asyncio
+async def test_claims_rotate_fairly_across_users(export_repository):
+    """A recently served user moves behind users who have not been served."""
+    jobs = []
+    for owner in (101, 202, 303):
+        jobs.append(
+            await export_repository.create_job(
+                owner,
+                "2026-11-02T00:00:00Z",
+                created_at="2026-11-02T00:00:00Z",
+            )
+        )
+
+    first = await export_repository.claim_next_job(
+        "worker-a", now="2026-11-02T01:00:00Z", lease_seconds=60
+    )
+    assert first is not None
+    assert first.owner_telegram_user_id == 101
+
+    released = await export_repository.release_lease(
+        first.id,
+        "worker-a",
+        first.lease_generation,
+        now="2026-11-02T01:00:01Z",
+    )
+    assert released is not None
+
+    second = await export_repository.claim_next_job(
+        "worker-b", now="2026-11-02T01:00:02Z", lease_seconds=60
+    )
+    assert second is not None
+    assert second.owner_telegram_user_id == 202
+
+    released_second = await export_repository.release_lease(
+        second.id,
+        "worker-b",
+        second.lease_generation,
+        now="2026-11-02T01:00:03Z",
+    )
+    assert released_second is not None
+
+    third = await export_repository.claim_next_job(
+        "worker-a", now="2026-11-02T01:00:04Z", lease_seconds=60
+    )
+    assert third is not None
+    assert third.owner_telegram_user_id == 303
+
+    released_third = await export_repository.release_lease(
+        third.id,
+        "worker-a",
+        third.lease_generation,
+        now="2026-11-02T01:00:05Z",
+    )
+    assert released_third is not None
+
+    next_round = await export_repository.claim_next_job(
+        "worker-b", now="2026-11-02T01:00:06Z", lease_seconds=60
+    )
+    assert next_round is not None
+    assert next_round.owner_telegram_user_id == 101
