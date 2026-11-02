@@ -332,7 +332,8 @@ class ArchiveRepository:
                     access_id = existing["id"]
                     await connection.execute(
                         """
-                        UPDATE source_access SET state = ?, verified_at = ?, updated_at = ?
+                        UPDATE source_access SET state = ?, verified_at = COALESCE(?, verified_at),
+                            updated_at = ?
                         WHERE id = ?
                         """,
                         (status.value, verified, timestamp, access_id),
