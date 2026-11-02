@@ -1,6 +1,6 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2 and Steps 3a–3c implemented and developer-validated; Step 3d fair per-user claim scheduling implemented, local validation pending  
+**Status:** Steps 1–2 and Steps 3a–3d implemented and developer-validated; Step 3e delivery-attempt lease fencing implemented, local validation pending  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
@@ -88,8 +88,20 @@ Implemented in source; local validation is pending. Migration 2 adds nullable `e
 - No priority tiers, external queue, in-memory-only round robin, or additional user profile data are introduced.
 - Focused tests exercise rotation across three users and upgrade an existing version-1 database to migration 2.
 
+## Step 3e — delivery-attempt lease fencing
+
+Implemented in source; local validation is pending. Migration 3 adds nullable `worker_id` and `lease_generation` columns to delivery attempts.
+
+- Starting an attempt requires the caller's current worker ID and lease generation, and the export job must still be in `packaging` with that live lease.
+- The attempt persists the exact worker ID and generation that created it.
+- Finishing an attempt requires both the current live job lease and an exact match with the worker ID/generation recorded on that attempt. A replacement worker cannot finalize an earlier worker's attempt merely by presenting its newer lease.
+- The lease check uses the repository operation's current UTC time, not a caller-supplied historical delivery timestamp.
+- Existing attempts from before migration 3 receive NULL fencing fields and are not silently assigned to a worker. They cannot be finalized through the new fenced API; no ownership inference is performed.
+- All checks and attempt writes remain inside short `BEGIN IMMEDIATE` transactions.
+- Focused tests cover current-lease writes and stale-worker rejection after lease release/reclaim.
+
 ## Next steps
 
-1. Developer pulls the fair-scheduling commits and runs focused export/storage/delivery/lifecycle tests, Ruff lint/format, Pyright, and the full suite.
-2. Fix any validation issues before adding worker orchestration.
-3. Worker orchestration then connects lease-fenced claims to application lifecycle and phase handlers; collection, packaging, Telegram delivery, cleanup execution, bounded concurrency configuration, and graceful shutdown remain separate implementation slices.
+1. Developer pulls and validates Step 3e with focused delivery/storage tests, Ruff lint/format, Pyright, and the full suite.
+2. Then implement the worker orchestration service around lease claims, phase handlers, bounded concurrency, and cooperative application shutdown.
+3. Collection, packaging, actual Telegram network calls, cleanup execution, and user-facing commands remain separate phases; each worker-owned persistence mutation must carry the lease fencing token.
