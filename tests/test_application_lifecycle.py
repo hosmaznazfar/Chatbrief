@@ -1,5 +1,7 @@
 """Application startup and shutdown lifecycle tests."""
 
+# pylint: disable=unused-argument
+
 from unittest.mock import MagicMock
 
 import pytest
