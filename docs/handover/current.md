@@ -6,6 +6,19 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
+- **Latest implementation commits:** Step 3e validation follow-up was completed by the developer locally; worker orchestration commits: worker service and follow-up refinements through `cc85074`; worker tests and fixes through `3c13191`; package export `2dd0f3f`.
+- **Local worktree:** not visible from the GitHub editing environment. Preserve local Graphify output and other uncommitted work when pulling.
+- **Package/layout and platform-abstraction migration:** complete.
+- **Dependency/package upgrades:** complete.
+- **Step 3e validation:** developer-confirmed — focused delivery/storage tests **19 passed**; full suite **631 passed, 7 skipped**, coverage **93.40%**; Ruff lint passed; Ruff format passed (**8 files already formatted**); Pyright **0 errors, 0 warnings, 0 informations**.
+- **Step 4a implementation:** `ExportWorker` now provides injected state-based phase dispatch, bounded concurrency, renewable leases, stale-handler cancellation, retry backoff, and bounded shutdown grace. Focused worker tests are committed; local validation is pending.
+- **Graphify:** optional development tooling for code navigation and impact analysis, not a runtime feature or implementation deliverable.
+- **Next stage:** developer pulls and validates Step 4a. Then implement the first real collection phase handler with cancellation-safe checkpoints and lease-fenced transitions. Do not wire an idle worker into application startup before phase handlers exist.
+
+> This section supersedes older status statements later in this handover. Historical notes remain for audit context; use this section for the current implementation stage.
+
+- **Repository:** `hosmaznazfar/Chatbrief`
+- **Active branch:** `refactor/chatbrief-package-layout`
 - **Latest implementation commits:** `982f82f` (migration 3), `e455ccf` (fenced delivery repository), `0cd3686` / `c279805` (lease-aware delivery tests), `b887b24` (migration tests), `e8cc771` (plan), `6abb408` (checklist), and `342d3c1` (replacement-worker fencing assertion).
 - **Local worktree:** not visible from the GitHub editing environment. Preserve local Graphify output and other uncommitted work when pulling.
 - **Package/layout and platform-abstraction migration:** complete.
