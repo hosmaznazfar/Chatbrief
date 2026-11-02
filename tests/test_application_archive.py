@@ -160,9 +160,16 @@ async def test_authorization_is_explicit_and_revocation_is_persisted(archive_rep
     assert grant.state is AuthorizationState.ACTIVE
     assert grant.revoked_at is None
     assert revoked.state is AuthorizationState.REVOKED
+    assert revoked.granted_at == grant.granted_at
+    assert revoked.granted_by_telegram_user_id == grant.granted_by_telegram_user_id
     assert revoked.revoked_at == "2026-11-02T02:00:00+00:00"
     assert await archive_repository.get_authorization(source.id, 1001) == revoked
     assert await archive_repository.get_authorization(source.id, 2002) is None
+
+    with pytest.raises(ValueError, match="does not exist"):
+        await archive_repository.set_authorization(
+            source.id, 2002, AuthorizationState.REVOKED
+        )
 
 
 @pytest.mark.asyncio
