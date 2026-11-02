@@ -215,7 +215,10 @@ class ExportRepository:
                 await connection.commit()
             except aiosqlite.IntegrityError as error:
                 await connection.rollback()
-                if "uq_export_jobs_one_blocking_per_user" in str(error):
+                if (
+                    "uq_export_jobs_one_blocking_per_user" in str(error)
+                    or "export_jobs.owner_telegram_user_id" in str(error)
+                ):
                     raise ActiveExportExistsError(
                         "User already has an active export"
                     ) from error
