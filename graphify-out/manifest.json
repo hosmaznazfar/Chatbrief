@@ -477,15 +477,15 @@
     "semantic_hash": ""
   },
   "AI_README.md": {
-    "mtime": 1793448155.9627836,
-    "seen": 1793448159.839021,
-    "ast_hash": "d1731da4d5c2d4d2cef94edfc5d09c0d",
+    "mtime": 1793605574.938376,
+    "seen": 1793605584.951554,
+    "ast_hash": "7e461b1829c400f73c36575e4feb3968",
     "semantic_hash": ""
   },
   "CHATGPT_CONTEXT.md": {
-    "mtime": 1793448155.9627836,
-    "seen": 1793448159.8390245,
-    "ast_hash": "04629bbb5dea6eda13cfcebf062cc1f6",
+    "mtime": 1793605574.939376,
+    "seen": 1793605584.9515617,
+    "ast_hash": "b630f8f3f65dc09e5406b3e6e1600675",
     "semantic_hash": ""
   },
   "CODE_OF_CONDUCT.md": {
@@ -543,9 +543,9 @@
     "semantic_hash": ""
   },
   "docs/handover/current.md": {
-    "mtime": 1793448155.9632518,
-    "seen": 1793448159.839061,
-    "ast_hash": "e0fc1e0cc007101a14d6e1409d6b172d",
+    "mtime": 1793605574.9413762,
+    "seen": 1793605584.9516144,
+    "ast_hash": "fe86cd8c420e7414dfeb3f0846c8f2a0",
     "semantic_hash": ""
   },
   "src/chatbrief/prompts/base_summary.txt": {
@@ -600,6 +600,12 @@
     "mtime": 1793448155.9632518,
     "seen": 1793448165.1341975,
     "ast_hash": "a6ffa5ce89ab7d64d2cabc60898ba191",
+    "semantic_hash": ""
+  },
+  "docs/plans/telegram-hybrid-ingestion.md": {
+    "mtime": 1793605574.9443762,
+    "seen": 1793605584.9516292,
+    "ast_hash": "ffbfef95b6422ea8108bce1216f81b72",
     "semantic_hash": ""
   }
 }

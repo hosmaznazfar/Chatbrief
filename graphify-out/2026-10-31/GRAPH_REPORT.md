@@ -1,9 +1,7 @@
 # Graph Report - ChatBrief  (2026-10-31)
 
 ## Corpus Check
-- 98 files · ~70,331 words
-- Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 13 file(s) not represented in the graph (top: (none) 8, .example 2, .toml 1)
+- cluster-only mode — file stats not available
 
 ## Summary
 - 2045 nodes · 4822 edges · 97 communities (78 shown, 19 thin omitted)
@@ -55,7 +53,7 @@
 - attributes
 - CommandResult
 - feature_request.yml
-- TelegramBot
+- MessageSource
 - test_telegram_bot.py
 - _load_base_template
 - ExtractedBullet
@@ -118,14 +116,14 @@
 10. `_make_command_service()` - 42 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `Option B: Subclass Extension` --references--> `Summarizer`  [INFERRED]
+  docs/adr/0001-extensibility-architecture.md → src/chatbrief/summarizer.py
 - `Negative / Risks` --references--> `ChannelConfig`  [INFERRED]
   docs/adr/0001-extensibility-architecture.md → src/chatbrief/config/models.py
 - `Config schema additions (all optional)` --references--> `ChannelConfig`  [INFERRED]
   docs/plans/completed/20260430-extensibility-architecture.md → src/chatbrief/config/models.py
 - `Task 1: ADR document` --references--> `ChannelConfig`  [INFERRED]
   docs/plans/completed/20260430-extensibility-architecture.md → src/chatbrief/config/models.py
-- `Filter chain insertion point` --references--> `_save_to_storage()`  [INFERRED]
-  docs/plans/completed/20260430-extensibility-architecture.md → src/chatbrief/digest/collector.py
 - `Task 7: PromptComposer Protocol + DefaultComposer` --references--> `PromptComposer`  [INFERRED]
   docs/plans/completed/20260430-extensibility-architecture.md → src/chatbrief/extensions/prompts.py
 
@@ -286,7 +284,7 @@ Nodes (16): description, label, options, placeholder, render, value, body, attri
 Cohesion: 0.12
 Nodes (15): description, label, options, placeholder, body, attributes, id, type (+7 more)
 
-### Community 41 - "TelegramBot"
+### Community 41 - "MessageSource"
 Cohesion: 0.06
 Nodes (16): Architecture guardrails, Current implementation status, Architectural decisions to preserve, Current refactor status (2026-10-30), Chatbrief-specific guardrails, Current architecture, Package/platform refactor status, main() (+8 more)
 
@@ -454,16 +452,16 @@ Nodes (4): 🗄️ Persistent Storage, PostgreSQL (optional backend), Schema, SQ
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Config` connect `Config` to `_resolve_channel`, `collect_channel_messages`, `TelegramMessageSender`, `TelegramMessageSource`, `load_config`, `CommandResult`, `DigestGrouper`, `TelegramBot`, `ChannelConfig`, `validation.py`, `Implementation Steps`, `_build_grouped_parts`, `Summarizer`, `summarizer.py`, `DigestFormatter`, `CommandStatus`, `build_server`, `TelegramBot`?**
-  _High betweenness centrality (0.155) - this node is a cross-community bridge._
+- **Why does `Config` connect `Config` to `_resolve_channel`, `collect_channel_messages`, `TelegramMessageSender`, `TelegramMessageSource`, `load_config`, `CommandResult`, `DigestGrouper`, `MessageSource`, `ChannelConfig`, `validation.py`, `Implementation Steps`, `_build_grouped_parts`, `Summarizer`, `summarizer.py`, `DigestFormatter`, `CommandStatus`, `build_server`, `TelegramBot`?**
+  _High betweenness centrality (0.158) - this node is a cross-community bridge._
 - **Are the 74 inferred relationships involving `load_config()` (e.g. with `main()` and `.initialize()`) actually correct?**
   _`load_config()` has 74 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `chatbrief` to the rest of the system?**
   _1 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SQLiteBackend` be split into smaller, more focused modules?**
   _Cohesion score 0.08271604938271605 - nodes in this community are weakly interconnected._
-- **Why does `Message` connect `Message` to `SQLiteBackend`, `.format_channel_message`, `Config`, `collect_channel_messages`, `TelegramMessageSource`, `test_summarizer.py`, `test_scheduler.py`, `TelegramBot`, `ChannelConfig`, `Summarizer`, `._summarize_channel`, `summarizer.py`, `DigestFormatter`, `build_server`?**
-  _High betweenness centrality (0.063) - this node is a cross-community bridge._
+- **Why does `Message` connect `Message` to `SQLiteBackend`, `.format_channel_message`, `Config`, `collect_channel_messages`, `TelegramMessageSource`, `test_summarizer.py`, `test_scheduler.py`, `MessageSource`, `ChannelConfig`, `Summarizer`, `._summarize_channel`, `summarizer.py`, `DigestFormatter`, `build_server`?**
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
 - **Are the 52 inferred relationships involving `Summarizer` (e.g. with `Option B: Subclass Extension` and `Task 9: Wire composer into Summarizer`) actually correct?**
   _`Summarizer` has 52 INFERRED edges - model-reasoned connections that need verification._
 - **Should `Message` be split into smaller, more focused modules?**
