@@ -1524,7 +1524,7 @@ These defaults apply across the primary export and optional media archive. Exact
 - Define `result` as `complete` or `complete_with_omissions`. A successful primary archive must never claim completeness if any eligible requested content was omitted.
 - Use non-negative JSON integers for counts and byte sizes; reject negative, fractional, string, boolean, or null values.
 - Use structured omission records with a stable machine-readable `reason_code`, a `category`, a positive `count`, and an explanatory `message`. Do not rely on parsing prose to determine the reason.
-- Initial reason-code vocabulary: `expired`, `unavailable`, `unsupported`, `size_limit`, `unsafe_filename`, `missing_content`, and `not_exportable`. Keep authorization revocation/source deletion that invalidates the whole snapshot as job outcomes, not ordinary omissions.
+- Initial reason-code vocabulary: `expired`, `unavailable`, `unsupported`, `size_limit`, `missing_content`, and `not_exportable`. Original filenames are not accepted as archive inputs or preserved metadata, so `unsafe_filename` is not a v1 omission reason; unsafe source filesystem entries are rejected before reading and reported as `not_exportable` when an otherwise eligible media item must be omitted. Keep authorization revocation/source deletion that invalidates the whole snapshot as job outcomes, not ordinary omissions.
 - Report omissions by category/reason and count rather than exporting private identifiers or copying omitted message contents into the report. Add a reference only when it resolves to an included export record and is necessary to explain the omission.
 - `warnings` should be structured as `{code, message}` records with stable warning codes. Warnings are informational and do not replace omission records or change the result by themselves.
 - Counts should cover included preferences/records/messages and media files/bytes, plus omitted media item counts where known. Do not report database totals or imply completeness outside the export cutoff and authorized retained scope.
@@ -1602,3 +1602,38 @@ Recommended schema defaults, pending final field-by-field migration alignment:
 - A future import/restore feature would require a separate explicit compatibility, conflict-resolution, authorization, and security design; it must not be inferred from the existence of the export schema.
 
 These are recommended working defaults for the detailed design, not implemented behavior. Exact v1 fields and legacy-data conversion remain subject to the Phase 1 model/migration proposal. No application code, tests, or migrations were changed or run.
+
+## Export report v1 semantics and media-only message handling — recommended defaults
+
+### Omission records and result
+
+- Use the existing initial reason-code vocabulary after removing `unsafe_filename`: `expired`, `unavailable`, `unsupported`, `size_limit`, `missing_content`, and `not_exportable`.
+- `unsafe_filename` is not a v1 reason: original filenames are not used or retained. Unsafe source filesystem entries (including symlinks, non-regular files, or paths outside the private staging root) must never be read; if an otherwise eligible media item is omitted for this reason, report `not_exportable`.
+- Use stable category values matching the exported data domains: `preferences`, `schedules`, `subscriptions`, `delivery_history`, `messages`, and `media`. Do not include private IDs, source paths, filenames, message text, or other omitted content in an omission record.
+- Each omission record has `reason_code`, `category`, positive integer `count`, and concise `message`. Omit per-record references by default: aggregate by category/reason to avoid leaking identity or creating references to records that are deliberately absent. A reference is permitted only if it resolves to an included record and is genuinely necessary.
+- `result=complete_with_omissions` when at least one eligible requested item could not be included. A category that is naturally empty is not an omission. A failed/invalidated export does not produce a successful report.
+- Authorization revocation, source deletion, or loss of the snapshot's required authorization remains a whole-job invalidation, never a per-item omission.
+
+### Report counts
+
+- Use fixed non-negative integer fields for included `preferences`, `schedules`, `subscriptions`, `delivery_history`, `messages`, `sources`, `media_files`, and `media_bytes`, plus `omitted_media_items` when the count is known.
+- Counts describe actual archive contents, not database totals or estimated eligible totals. `media_files` equals the number of media manifest items and media ZIP binaries; `media_bytes` is the sum of their exact uncompressed byte sizes.
+- An omitted count is reported only when known; do not fabricate a count from incomplete metadata. Omission records remain the authoritative explanation.
+- Do not add a separate total that can disagree with category counts; consumers can derive totals.
+
+### Warnings
+
+- Keep warnings as structured `{code, message}` records. Initial stable codes: `legacy_media_placeholder_removed` (legacy synthetic display text was not exported as authored content), `media_metadata_incomplete` (nonessential MIME/extension metadata was unavailable), and `timestamp_unavailable` (an optional source timestamp could not be supplied).
+- Warnings do not by themselves make `result` equal `complete_with_omissions`; use an omission record whenever eligible requested content is actually absent.
+- Warning messages must be fixed-template or carefully bounded explanations. Never include source text, usernames, Telegram identifiers, filenames, paths, exception traces, or secrets. Do not emit a warning for ordinary empty categories or absence of an optional media ZIP.
+
+### Message record v1 content rules
+
+- `text` is the retained message body/caption as plain text. It may be an empty string for a media-only message; do not replace it with a synthetic placeholder.
+- The source event timestamp is optional only when genuinely unavailable in retained source data. Never substitute export `created_at`, collection time, or another message's timestamp.
+- Media-only messages remain valid primary `messages` records when the message itself is retained and authorized, even if the corresponding binary is unavailable or not retained. The media omission is reported separately when a binary was eligible/requested but could not be included.
+- A legacy synthetic body created solely for display (the current Telethon adapter uses localized strings such as `[Photo]`) is not authored message content. Detect and remove it only when its synthetic origin is reliably known; never strip a matching string from genuine user-authored text. If provenance cannot distinguish placeholder from authored text, preserve the stored text rather than guessing and document the limitation.
+- v1 media categories are `image`, `video`, `document`, and `audio`. Non-binary Telegram payloads such as polls, locations, and other unsupported interactive/service payloads are not represented as media files in v1. Retain accompanying plain message text when present; report unsupported eligible payloads as `unsupported` in category `media` when the export contract otherwise requires them.
+- Do not export `has_media` as a misleading promise that a binary is included. The primary message may optionally carry export-local media references only for binaries actually present in the companion archive; the manifest remains authoritative for included media.
+
+These are recommended v1 schema semantics, not implemented behavior. Exact fields and legacy placeholder provenance must be verified against retained records during Phase 1 migration design. No application code, tests, or migrations were changed or run.
