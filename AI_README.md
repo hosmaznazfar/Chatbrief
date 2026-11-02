@@ -86,7 +86,9 @@ These are assistant workflow conventions, not native ChatGPT slash-command regis
 
 The current branch has migrated tests to `chatbrief.*`, moved legacy core behavior tests into `tests/test_digest.py`, removed the obsolete platform factory, and made `PlatformBuilder`/root `main.py` the platform composition path. `TelegramBot` requires an injected `CommandService`; the service receives `MessageSource` and `MessageSender` dependencies. Coverage configuration targets the `chatbrief` package. The default prompt template resolves from the packaged resource while older `src/prompts/base_summary.txt` configuration remains compatible. The completed extensibility and storage plans are archived under `docs/plans/completed/`.
 
-Bale remains unimplemented. The current implementation supports Telegram only.
+The required application-state SQLite database, migration runner, export persistence, lease-fenced worker foundation, and migration-4 shared archive schema are implemented. Migration 4 was developer-validated; seven PostgreSQL integration tests were skipped because `TELEBRIEF_TEST_PG_URL` was not configured. Step 4b-2 now adds typed repositories for identity, sources, technical access, explicit authorization, subscriptions, normalized messages, and collection coverage. Local validation of these repository additions is pending. The next implementation slice is the authorization-aware export snapshot query. The legacy message-history store remains separate and is never automatically backfilled.
+
+Bale remains unimplemented. The current platform adapter supports Telegram only.
 
 ## Validation commands
 
