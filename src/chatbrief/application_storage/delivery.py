@@ -511,10 +511,9 @@ class ExportCleanupRepository:
                 """
                 SELECT * FROM export_cleanup_tasks
                 WHERE state = 'pending' AND next_attempt_at <= ?
-                  AND (deadline_at IS NULL OR deadline_at >= ?)
                 ORDER BY next_attempt_at, created_at LIMIT ?
                 """,
-                (now, now, limit),
+                (now, limit),
             ) as cursor:
                 rows = await cursor.fetchall()
         return tuple(_cleanup_from_row(row) for row in rows)
@@ -551,7 +550,7 @@ class ExportCleanupRepository:
         async with self._connection() as connection:
             await connection.execute("BEGIN IMMEDIATE")
             try:
-                await connection.execute(
+                result = await connection.execute(
                     """
                     UPDATE export_cleanup_tasks
                     SET state = ?, attempt_count = attempt_count + 1,
@@ -561,13 +560,13 @@ class ExportCleanupRepository:
                     """,
                     (target.value, next_attempt_at, error_code, timestamp, task_id),
                 )
+                if result.rowcount != 1:
+                    await connection.rollback()
+                    return None
                 async with connection.execute(
                     "SELECT * FROM export_cleanup_tasks WHERE id = ?", (task_id,)
                 ) as cursor:
                     row = await cursor.fetchone()
-                if row is None or row["updated_at"] != timestamp:
-                    await connection.rollback()
-                    return None
                 await connection.commit()
             except Exception:
                 await connection.rollback()
