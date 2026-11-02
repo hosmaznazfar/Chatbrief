@@ -130,11 +130,15 @@ def _normalize_lease_timestamp(value: str, field_name: str) -> str:
     return parsed.astimezone(timezone.utc).isoformat()
 
 
-def _validate_worker_lease(worker_id: str, lease_seconds: int) -> None:
+def _validate_worker_id(worker_id: str) -> None:
     if not isinstance(worker_id, str) or not worker_id or worker_id != worker_id.strip():
         raise ValueError("Worker ID must be a non-empty opaque identifier")
     if len(worker_id) > 128:
         raise ValueError("Worker ID must not exceed 128 characters")
+
+
+def _validate_worker_lease(worker_id: str, lease_seconds: int) -> None:
+    _validate_worker_id(worker_id)
     if (
         isinstance(lease_seconds, bool)
         or not isinstance(lease_seconds, int)
@@ -304,7 +308,7 @@ class ExportRepository:
         any worker that still holds the previous generation.
         """
         _validate_worker_lease(worker_id, lease_seconds)
-        timestamp = _normalize_lease_timestamp(now or _utc_now(), "now")
+        timestamp = _normalize_lease_timestamp((_utc_now() if now is None else now), "now")
         lease_expires_at = (
             datetime.fromisoformat(timestamp) + timedelta(seconds=lease_seconds)
         ).isoformat()
@@ -436,10 +440,7 @@ class ExportRepository:
         next_run_at: str | None = None,
     ) -> ExportJob | None:
         """Release a live lease, optionally scheduling the next attempt."""
-        if not isinstance(worker_id, str) or not worker_id or worker_id != worker_id.strip():
-            raise ValueError("Worker ID must be a non-empty opaque identifier")
-        if len(worker_id) > 128:
-            raise ValueError("Worker ID must not exceed 128 characters")
+        _validate_worker_id(worker_id)
         _validate_lease_generation(lease_generation)
         timestamp = _normalize_lease_timestamp(now or _utc_now(), "now")
         scheduled_at = (
@@ -511,7 +512,7 @@ class ExportRepository:
         _validate_lease_generation(lease_generation)
         expected, target = _validate_transition(expected_states, new_state)
         changes = _normalize_updates(updates)
-        timestamp = _normalize_lease_timestamp(updated_at or _utc_now(), "updated_at")
+        timestamp = _normalize_lease_timestamp((_utc_now() if updated_at is None else updated_at), "updated_at")
         placeholders = ", ".join("?" for _ in expected)
 
         async with self._connection() as connection:
