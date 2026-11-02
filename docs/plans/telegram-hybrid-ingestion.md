@@ -1,6 +1,6 @@
 # Telegram Hybrid Ingestion and Multi-User Support
 
-**Status:** Approved direction; implementation not started  
+**Status:** Approved direction; incremental implementation started (shared archive schema migration 4 added; local validation pending)  
 **Scope:** Future Telegram architecture evolution  
 **Existing libraries:** Keep `python-telegram-bot` and Telethon
 
@@ -1774,3 +1774,21 @@ Durable work queue for deletion and staging cleanup, including cleanup that must
 - The legacy message-history database remains independent and unchanged. No legacy data backfill has been attempted.
 
 Continue in small tested steps, preserving the legacy-data exclusion and all approved constraints. Exact runtime values and library-specific behavior still marked for verification must be confirmed against the current code/dependencies.
+
+
+## Implementation update — shared archive schema foundation (2026-11-02)
+
+Migration 4 in the required application-state database establishes the first shared-archive domain tables. This is a schema foundation only; it does not mean Bot API ingestion, multi-user command flows, or export collection are implemented.
+
+- `users` contains only the Telegram user ID and creation timestamp. No username, display name, profile, or other user-profile data is stored.
+- `sources` uses a platform-qualified external chat identity and stores a safe display label, source type, and visibility classification.
+- `source_access` represents technical readability independently from user authorization: one central Bot API access record per source, plus optional Telethon access scoped to its owning Chatbrief user.
+- `source_authorizations` represents explicit per-user grants independently from subscriptions. A public source does not require a grant; a private source requires an active grant. Enforcement belongs in repository/service operations and must not be inferred from a subscription row.
+- `subscriptions` stores the user's active, suspended, or ended relationship with a source. It is not an access grant.
+- `messages` is a shared, deduplicated, platform-neutral content store. Uniqueness is enforced by source plus platform message ID; edits update the logical record and reliable deletion events set `deleted_at`.
+- `source_collection_coverage` stores independently known-complete intervals. Coverage writers must record only contiguous intervals for which collection completeness is established; message presence alone never proves coverage.
+- Foreign-key deletion behavior removes source-owned content/access/subscription data with its source and removes a user's own authorization/subscription/Telethon-access rows when that Chatbrief identity is deleted. Grantor references become NULL rather than preventing account cleanup.
+
+This migration is additive. It does not alter or backfill the legacy message-history database, change existing config or delivery JSON, or modify Telethon session files. It does not yet implement repository APIs, authorization queries, source-manager/admin verification, media binary storage, Bot API ingestion, Telethon linking, or an export snapshot.
+
+Local validation is pending. The next slice adds typed repositories and atomic message/source/subscription operations; the following slice adds the authorization-aware snapshot query. The legacy message store remains excluded from shared exports unless a separate proof-based backfill proposal is approved.
