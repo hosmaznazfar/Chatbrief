@@ -1094,3 +1094,14 @@ Report defaults:
 - Fixed non-negative included counts: preferences, schedules, subscriptions, delivery_history, messages, sources, media_files, media_bytes; `omitted_media_items` only when known. Counts reflect actual archive contents.
 - Warnings are structured `{code,message}`; initial codes: `legacy_media_placeholder_removed`, `media_metadata_incomplete`, `timestamp_unavailable`. Warnings alone do not change result. Messages must not expose source text, identifiers, filenames, paths, traces, or secrets.
 - These are recommended schema semantics, not implemented. Legacy placeholder provenance and exact field mapping remain Phase 1 migration-design items. No application code, tests, or migrations changed/run.
+
+## Export preference/source field allowlist — working defaults
+
+- Export only requesting-user-owned, user-meaningful values; do not copy the current single-user/global config wholesale.
+- Potential typed preferences: lookback, output language, digest mode, emoji/statistics choices, topic deduplication, and user-owned digest-group definitions, only when stored per user in the future domain model.
+- Subscription records may include the requester's source-specific lookback, digest-group assignment, and authored prompt override when these are user-owned. Preserve user-authored prompt text as data.
+- Exclude prompt-template paths, composer/filter Python class paths, arbitrary filter dictionaries, executable/plugin code, credentials/API keys, service endpoints, deployment limits/timeouts, global model/runtime config, and storage/database config.
+- Export filters only through stable versioned data-only allowlists. Unsupported filter configuration is omitted with `not_exportable`; never serialize arbitrary Python objects or import paths.
+- Provider/model choice is included only if Phase 1 establishes it as an explicit user-owned preference rather than operator configuration.
+- Source records contain platform enum and safe display label only; no source usernames/IDs/invite links/private URLs/transport IDs. Missing required source linkage is invalid snapshot data, not a dangling or synthetic source ref.
+- Exact field keys depend on the future user-scoped model and Phase 1 migration proposal. Documentation-only; no application code, tests, or migrations changed/run.
