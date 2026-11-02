@@ -1028,3 +1028,8 @@ In `export.json`, `export-report.json`, and `media-manifest.json`, `schema_versi
 ## Export JSON object member-name case sensitivity — approved (Option A)
 
 JSON object member names are case-sensitive. Consumers must match documented field names exactly (`schema_version` and `Schema_Version` are different names). A differently cased name does not satisfy a required field; if the exact required spelling is absent, the document is invalid. Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export JSON object member-name Unicode handling — approved (Option A)
+
+Compare JSON object member names by their exact Unicode code-point sequences; do not normalize names before comparison. Visually identical names with different code-point sequences are distinct. Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`, alongside case-sensitive matching. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
