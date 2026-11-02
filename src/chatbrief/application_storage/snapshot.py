@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from collections.abc import AsyncIterator
 
 import aiosqlite
 
@@ -132,6 +134,15 @@ class ExportSnapshotRepository:
     def __init__(self, database: ApplicationDatabase) -> None:
         self._database = database
 
+    @asynccontextmanager
+    async def _connection(self) -> AsyncIterator[aiosqlite.Connection]:
+        connection = await self._database.connect()
+        connection.row_factory = aiosqlite.Row
+        try:
+            yield connection
+        finally:
+            await connection.close()
+
     async def create_snapshot(
         self,
         owner_telegram_user_id: int,
@@ -153,8 +164,7 @@ class ExportSnapshotRepository:
         if retention_start > cutoff:
             raise ValueError("retention_start_at must not be after cutoff_at")
 
-        async with await self._database.connect() as connection:
-            connection.row_factory = aiosqlite.Row
+        async with self._connection() as connection:
             await connection.execute("BEGIN")
             async with connection.execute(
                 "SELECT 1 FROM users WHERE telegram_user_id = ?",
