@@ -140,12 +140,14 @@ class ArchiveContentRepository:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(source_id, platform_message_id) DO UPDATE SET
                     text = excluded.text,
-                    sender_label = excluded.sender_label,
-                    source_timestamp = excluded.source_timestamp,
-                    link = excluded.link,
+                    source_timestamp = COALESCE(
+                        excluded.source_timestamp, messages.source_timestamp
+                    ),
+                    sender_label = COALESCE(excluded.sender_label, messages.sender_label),
+                    link = COALESCE(excluded.link, messages.link),
                     has_media = excluded.has_media,
                     media_type = excluded.media_type,
-                    edited_at = excluded.edited_at
+                    edited_at = COALESCE(excluded.edited_at, messages.edited_at)
                 """,
                 (
                     identifier, source_id, platform_message_id, text, sender_label,
