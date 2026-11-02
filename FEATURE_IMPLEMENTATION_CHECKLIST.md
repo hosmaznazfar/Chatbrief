@@ -6,7 +6,7 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 
 - [ ] Verify repository, intended branch, latest GitHub commit, and available local worktree state.
 - [ ] Read `AI_README.md`, `CHATGPT_CONTEXT.md`, `docs/AI_WORKFLOW.md`, `docs/handover/current.md`, `docs/GRAPHIFY.md`, README, relevant ADRs/plans, source, and tests.
-- [ ] Inspect the initial source/graph context, then ask the developer to run `./pj graph refresh` and `./pj graph diff` for this task; review and commit any changed portable artifacts, then inspect the refreshed graph on GitHub.
+- [ ] Use the existing Graphify graph when it materially helps navigate an unfamiliar area; request a refresh only if the graph is stale and updating it would help the implementation. Graph artifacts are not a product deliverable or a routine completion gate.
 - [ ] Trace graph findings against source, tests, configuration, and ADRs; identify existing conventions and architecture boundaries.
 - [ ] List material design/implementation decisions. Research current external options online where relevant, cite evidence, compare trade-offs, recommend an option, and ask the developer to choose.
 - [ ] Agree on scope, acceptance criteria, non-goals, risks, and implementation steps before changing application code.
@@ -29,7 +29,7 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Run the relevant Ruff checks and formatter check.
 - [ ] Run Pyright and applicable Pylint/Bandit/Vulture checks.
 - [ ] Run pytest and record the exact result and coverage.
-- [ ] Review the complete diff, CI results, generated Graphify artifacts, and whitespace.
+- [ ] Review the complete source/test/documentation diff, CI results, and whitespace; inspect graph artifacts only when they are part of the requested work.
 - [ ] Distinguish passed, failed, skipped, and not-run checks.
 
 ## Completion and handover
