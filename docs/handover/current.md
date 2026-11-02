@@ -985,3 +985,7 @@ Both ZIP archives use `README.md` (renamed from `README.txt`). Each README docum
 ## Export JSON schema compatibility — approved (Option A)
 
 Apply this policy independently to `export.json`, `export-report.json`, and `media-manifest.json`: adding an optional field is compatible and does not increment that document's `schema_version`; removing or renaming an existing field, changing its type, or changing its meaning/semantics is incompatible and requires incrementing that document's version. Each document remains independently versioned. Additional edge cases remain for detailed schema design. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+## Export schema unknown-field handling — approved (Option A)
+
+Consumers of `export.json`, `export-report.json`, and `media-manifest.json` ignore unrecognized fields instead of rejecting a document solely for containing them. This keeps consumers forward-compatible with optional fields added in compatible revisions. It does not relax validation of required fields, malformed values, or other schema constraints. Approved target behavior, not implemented; documentation-only; no code, schema, migrations, or tests changed/run.
