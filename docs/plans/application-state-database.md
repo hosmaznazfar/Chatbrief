@@ -82,11 +82,11 @@ Implemented and developer-validated. Ruff lint and format passed; Pyright passed
 Implemented in source; local validation is pending. Migration 2 adds nullable `export_jobs.last_claimed_at` and an index for fair claim selection.
 
 - Claims prefer users who have never been served; after that, the least recently claimed eligible user's job is selected.
-- `created_at` and job ID provide deterministic FIFO/tie ordering. The existing one-blocking-export-per-user constraint means at most one eligible blocking job currently exists per user; if that constraint changes, per-user queue-head selection must be revisited.
+- `created_at`, owner Telegram user ID, and job ID provide deterministic tie ordering. The existing one-blocking-export-per-user constraint means at most one eligible blocking job currently exists per user; if that constraint changes, per-user queue-head selection must be revisited. The existing one-blocking-export-per-user constraint means at most one eligible blocking job currently exists per user; if that constraint changes, per-user queue-head selection must be revisited.
 - Claim selection and lease assignment remain in the same `BEGIN IMMEDIATE` transaction. The selected job's `last_claimed_at` is updated atomically with its lease, so fairness survives process restarts and competing workers.
 - Reclaiming an expired job counts as serving that user again.
 - No priority tiers, external queue, in-memory-only round robin, or additional user profile data are introduced.
-- A focused test exercises rotation across three users and confirms that a recently served user moves behind users not yet served.
+- Focused tests exercise rotation across three users and upgrade an existing version-1 database to migration 2.
 
 ## Next steps
 
