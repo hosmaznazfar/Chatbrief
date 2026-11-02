@@ -1471,3 +1471,46 @@ These are the working schema defaults for detailed design. They define represent
 - ZIP entry order is deterministic: README first, then JSON documents in the documented order, then media files sorted by archive-relative path. Deterministic ordering must not change the logical meaning of any collection.
 
 These defaults apply across the primary export and optional media archive. Exact field sets, section shapes, source/message identity resolution, and validation rules continue in the detailed schema design. Documentation-only; no application code, schemas, migrations, or tests changed/run.
+
+
+
+## Export schema: top-level document and section shapes — recommended defaults
+
+### `export.json`
+
+- Keep the root object flat at the category level, as approved. Require these top-level members in schema version 1: `schema_version`, `export_id`, `created_at`, `cutoff_at`, `preferences`, `schedules`, `subscriptions`, `delivery_history`, `messages`, and `sources`.
+- `preferences` is an object grouped by preference domain; use an empty object when there are no exportable preference values.
+- `schedules`, `subscriptions`, `delivery_history`, `messages`, and `sources` are arrays; use empty arrays when a category has no records. Require these sections rather than omitting them, so consumers can distinguish an empty collection from an incomplete document without per-section presence rules.
+- Do not duplicate the same source's descriptive record inside each subscription or message. Subscriptions and messages refer to the single corresponding record in `sources` through `source_ref`.
+- A source record contains only user-exportable descriptive information needed to understand the origin of messages and subscriptions. Never include Telegram chat IDs, invite links, internal source keys, session details, or authorization tokens.
+- A message record contains its export-local `message_ref`, required `source_ref`, source event timestamp where available, and the retained content/metadata that the requester is authorized to export. Message field-level privacy rules (especially author identity and quoted/forwarded third-party data) remain a separate design gate; do not infer permission to export other users' personal profile data from access to message content.
+- Subscription records describe the requesting user's subscription and its user-controlled settings; they do not embed source data or grant future access merely by appearing in an export.
+- Schedule records preserve the user's schedule configuration and its digest-group relationship. Delivery-history records describe the user's own delivery events and may reference the related schedule/source records only through export-local references. Do not export Telegram delivery chat/message IDs, file IDs, or transport credentials.
+- Preserve user-configured ordering only for fields whose semantics are ordered. All other arrays use the deterministic ordering rules above.
+- Field names and individual fields within these records will be finalized against the actual application model during the schema and Phase 1 migration review; do not invent fields from presumed current implementation.
+
+### `export-report.json`
+
+- Require top-level `schema_version`, `export_id`, and `created_at`, plus `result`, `counts`, `omissions`, and `warnings`.
+- `result` is a documented enum distinguishing a complete export from one completed with omissions; a failed or invalidated job does not produce a successful primary archive/report.
+- `counts` is an object of non-negative integer counts for exported categories and media outcomes. Counts describe what was actually included, not source database totals.
+- `omissions` is an array of structured records containing a stable reason code, affected category, and count; include a human-readable explanation where useful. Include an export-local reference only when it resolves to a record in the same archive. Never include internal IDs or paths.
+- `warnings` is an array of concise, non-secret explanatory strings. Do not put credentials, private Telegram identifiers, raw exception traces, or arbitrary source content in warnings.
+- Keep report counts and omission reasons self-contained: consumers must not need the optional media ZIP to understand why media was omitted from the export.
+
+### `media-manifest.json`
+
+- Require top-level `schema_version`, `export_id`, and `created_at`, plus `items`; include `omissions` only if there are manifest-specific omission records to report.
+- `items` is an array containing only media binaries actually present in the companion ZIP. Each item has a unique export-local `media_ref`, a `message_ref` resolving to a message in the primary export, a safe archive-relative `archive_path`, media category/type, content type when known, byte size, and SHA-256 checksum.
+- Preserve the original filename as descriptive manifest metadata when available, but never use it directly as the ZIP path. ZIP paths use the predefined media category directories and sanitized basenames.
+- Validate every `archive_path` as a relative path confined to the media archive; reject absolute paths, parent traversal, drive prefixes, NUL/control characters, and paths that remain invalid after normalization. Manifest paths must exactly match ZIP entry names.
+- The manifest lists included binaries, not missing placeholders. Media omissions and reasons are recorded in the primary report; the manifest may repeat only omissions relevant to media entries it describes.
+- Do not include source filesystem paths, storage object keys, Telegram file IDs, or authorization data.
+
+### Cross-document validation and empty-section behavior
+
+- All included JSON documents must have the same `export_id` and `created_at`; the primary document's `cutoff_at` is the authoritative snapshot boundary.
+- Every `source_ref` and `message_ref` must resolve uniquely in `export.json`; every manifest `message_ref` must resolve to an exported message. References must not point outside the archive.
+- Empty primary categories are represented by empty arrays/objects, not missing keys or `null`. The optional media ZIP is omitted entirely when it contains no eligible binaries; do not create an empty media archive just to carry an empty manifest.
+- Report `counts` must agree with the actual number of records and media entries. A mismatch between manifest entries and ZIP files, or between references and primary records, makes the archive invalid.
+- These are recommended schema-shape defaults. Exact domain fields, author/privacy treatment, import behavior, and final validation details remain open. Documentation-only; no application code, schemas, migrations, or tests changed/run.
