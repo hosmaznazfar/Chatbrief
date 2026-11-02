@@ -151,8 +151,19 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add source-scoped message upsert/deduplication, edit metadata preservation, and reliable deletion markers.
 - [x] Add method-specific known-complete coverage interval persistence and coalescing without filling gaps.
 - [x] Add focused repository tests for identity, ownership, authorization/subscription separation, message edits/deletions, media consistency, and coverage.
-- [ ] Run focused archive and migration tests locally.
-- [ ] Run Ruff lint and formatting, Pyright, and full pytest locally; record exact counts and coverage.
+- [x] Run focused archive and migration tests locally — developer-confirmed focused set: **62 passed**.
+- [x] Run Pyright and full pytest locally — developer-confirmed Pyright **0 errors, 0 warnings, 0 informations**; full suite **658 passed, 7 skipped**, coverage **93.52%**.
+- [ ] Rerun Ruff lint and formatting after the pushed corrections for one unused import and one formatting issue.
 - [ ] Review the final source/test/documentation diff and CI results.
 
-**Next:** implement the authorization-aware export snapshot query. It must fail closed for unknown source visibility, require an active grant for private sources, require an available technical access method (central Bot API or the requesting user's own Telethon access), honor the requested user's subscription/selection scope, exclude deleted and post-cutoff messages, and report uncovered intervals rather than interpreting missing messages as a complete empty result.
+## Shared archive — Step 4b-3: authorization-aware export snapshot
+
+- [x] Add a single read-transaction snapshot repository scoped to the requesting user's active subscriptions at the fixed cutoff.
+- [x] Require public visibility or an active explicit pre-cutoff grant for private sources; unknown visibility is omitted fail-closed, and missing/revoked/post-cutoff private grants invalidate the snapshot.
+- [x] Require available central Bot API access verified by cutoff; never substitute a user's Telethon session for an ongoing subscription.
+- [x] Apply the system rolling-retention boundary and fixed cutoff; exclude deleted messages, later-collected messages, and future source timestamps.
+- [x] Exclude sender labels, message links, Telegram chat IDs, and Telegram message IDs from snapshot records.
+- [x] Report uncovered Bot API collection intervals as omissions; do not infer completeness from message presence or Telethon-only coverage.
+- [x] Add focused tests for authorization, access method, user/subscription isolation, cutoff/retention, deletion, and coverage behavior.
+- [ ] Run snapshot-focused tests, Ruff lint/format, Pyright, and full pytest locally.
+- [ ] Review the final source/test/documentation diff and CI results.
