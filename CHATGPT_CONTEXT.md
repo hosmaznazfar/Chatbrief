@@ -206,3 +206,9 @@ Consumers reject any of `export.json`, `export-report.json`, or `media-manifest.
 - Whitespace is part of the name: `" schema_version"` and `"schema_version "` do not match `schema_version` and cannot satisfy that required field.
 - Apply at every object level in all three export JSON documents, alongside case-sensitive and exact Unicode code-point matching.
 - Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+
+## Export schema conventions — working defaults
+
+Use one opaque UUID `export_id` and common RFC 3339 UTC `created_at` across all included export JSON documents; `export.json` additionally records the request acceptance `cutoff_at`. Timestamps are UTC strings ending in `Z`, preserving sub-second precision where present. Relationships use export-local `src-`, `msg-`, and `media-` references, never internal/Telegram IDs; references are valid only within one export. Arrays and ZIP entries use deterministic ordering except where user-configured order is meaningful. Exact fields and shapes remain open. Recommended working defaults; not implemented.
