@@ -6,7 +6,7 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest verified GitHub HEAD:** `e99412faa85a54d4e842345bf1a0bdea1377818f` (`refactor(exports): simplify worker polling and awaitables`).
+- **Worker implementation commit:** `e99412faa85a54d4e842345bf1a0bdea1377818f` (`refactor(exports): simplify worker polling and awaitables`). Documentation updates recording Step 4a validation and collection prerequisites follow this implementation.
 - **Local worktree:** not visible from the GitHub editing environment. Preserve local Graphify output and other uncommitted work when pulling.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
