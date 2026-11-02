@@ -192,6 +192,7 @@ async def test_owner_id_must_be_positive(export_repository):
     with pytest.raises(ValueError, match="positive integer"):
         await export_repository.create_job(0, "2026-11-02T00:00:00Z")
 
+
 @pytest.mark.asyncio
 async def test_worker_claim_is_atomic_and_assigns_first_lease_generation(export_repository):
     import asyncio
@@ -324,4 +325,26 @@ async def test_worker_lease_rejects_invalid_parameters(export_repository):
         await export_repository.claim_next_job("worker-a", lease_seconds=0)
     with pytest.raises(ValueError, match="timezone"):
         await export_repository.claim_next_job("worker-a", now="2026-11-02T01:00:00")
+
+@pytest.mark.asyncio
+async def test_claimed_terminal_transition_releases_lease(export_repository):
+    job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
+    claimed = await export_repository.claim_next_job(
+        "worker-a", now="2026-11-02T01:00:00Z"
+    )
+    assert claimed is not None
+
+    failed = await export_repository.transition_claimed_job(
+        job.id,
+        "worker-a",
+        claimed.lease_generation,
+        [ExportJobState.QUEUED],
+        ExportJobState.FAILED,
+        updated_at="2026-11-02T01:00:10Z",
+    )
+    assert failed is not None
+    assert failed.state is ExportJobState.FAILED
+    assert failed.terminal_at == "2026-11-02T01:00:10+00:00"
+    assert failed.lease_owner is None
+    assert failed.lease_expires_at is None
 
