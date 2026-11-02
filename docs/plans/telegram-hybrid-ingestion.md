@@ -234,6 +234,21 @@ Implement incrementally. Do not rewrite the existing Telegram source, sender, or
 - Produce a concrete migration proposal with data model, ownership boundaries, compatibility impact, migration/backfill strategy, and acceptance criteria.
 - Do not change application code or database schema during this inspection phase.
 
+### Application-state database foundation — implementation status
+
+**Step 1: implemented in source; local validation pending.**
+
+- Added a separate required application-state database configuration with default path data/application.db and top-level application_storage.path override.
+- Added a versioned SQLite migration runner and schema_migrations(version, applied_at, checksum) metadata.
+- Migrations are applied one at a time under BEGIN IMMEDIATE; migration DDL and its checksum record commit atomically. Checksum drift and unknown applied versions fail closed.
+- Foreign-key enforcement is enabled and verified during initialization and on every connection opened through the application database boundary.
+- Added migration 1 for export_jobs, export_delivery_attempts, and export_cleanup_tasks, including state/value checks, foreign keys, operational indexes, and the one-blocking-job-per-user partial unique index.
+- Added focused tests for schema creation/idempotency, FK activation, the partial unique index, checksum drift, rollback, and application database path parsing.
+- This step does not yet wire the database into main.py; startup/shutdown integration is the next slice after local focused tests pass.
+- The optional legacy message-history store and its messages schema remain unchanged. No legacy rows are backfilled.
+
+**Validation:** not run in the remote GitHub editing environment. Run the focused commands recorded in docs/plans/application-state-database.md from the local checkout before proceeding.
+
 ### Phase 1 findings — verified 2026-10-31
 
 Phase 1 source inspection is complete. These findings describe the implementation at the
