@@ -310,17 +310,6 @@ class ExportRepository:
 
         timestamp = updated_at or _utc_now()
         placeholders = ", ".join("?" for _ in expected)
-        assignments = ["state = ?", "updated_at = ?"]
-        parameters: list[object] = [target.value, timestamp]
-        for field_name, value in changes.items():
-            assignments.append(f"{field_name} = ?")
-            parameters.append(value)
-        if target in _TERMINAL_STATES:
-            assignments.append("terminal_at = COALESCE(terminal_at, ?)")
-            parameters.append(timestamp)
-        else:
-            assignments.append("terminal_at = NULL")
-        parameters.extend((job_id, *(state.value for state in expected)))
 
         async with self._connection() as connection:
             try:
@@ -362,6 +351,18 @@ class ExportRepository:
                             "Primary delivery timestamp must match the confirmed attempt"
                         )
                     changes["primary_delivered_at"] = delivered_at
+
+                assignments = ["state = ?", "updated_at = ?"]
+                parameters: list[object] = [target.value, timestamp]
+                for field_name, value in changes.items():
+                    assignments.append(f"{field_name} = ?")
+                    parameters.append(value)
+                if target in _TERMINAL_STATES:
+                    assignments.append("terminal_at = COALESCE(terminal_at, ?)")
+                    parameters.append(timestamp)
+                else:
+                    assignments.append("terminal_at = NULL")
+                parameters.extend((job_id, *(state.value for state in expected)))
 
                 result = await connection.execute(
                     f"""
