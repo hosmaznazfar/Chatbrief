@@ -43,7 +43,6 @@ class SnapshotMessage:
     source_id: str
     text: str
     source_timestamp: str | None
-    collected_at: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -266,7 +265,7 @@ class ExportSnapshotRepository:
 
                 async with connection.execute(
                     """
-                    SELECT id, source_id, text, source_timestamp, collected_at
+                    SELECT id, source_id, text, source_timestamp
                     FROM messages
                     WHERE source_id = ?
                       AND deleted_at IS NULL
@@ -286,7 +285,6 @@ class ExportSnapshotRepository:
                         source_id=message["source_id"],
                         text=message["text"],
                         source_timestamp=message["source_timestamp"],
-                        collected_at=message["collected_at"],
                     )
                     for message in message_rows
                 )
