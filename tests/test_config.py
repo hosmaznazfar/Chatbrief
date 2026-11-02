@@ -1259,3 +1259,50 @@ def test_mcp_config_rejects_invalid(tmp_path, block, match):
     """Malformed mcp blocks fail loudly at load time, not at request time."""
     with pytest.raises(ValueError, match=match):
         load_config(_mcp_config_file(tmp_path, block))
+
+
+@pytest.mark.unit
+def test_application_storage_path_defaults_to_application_database(temp_config_file):
+    """Application state uses its own required database path by default."""
+    config = load_config(temp_config_file)
+    assert config.application_storage.path == "data/application.db"
+
+
+@pytest.mark.unit
+def test_application_storage_path_can_be_configured(tmp_path):
+    """The application-state database path is independently configurable."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+channels:
+  - id: "@test_channel"
+    name: "Test Channel"
+application_storage:
+  path: "var/state/chatbrief.db"
+settings:
+  target_user_id: 123456789
+""",
+        encoding="utf-8",
+    )
+    config = load_config(str(config_file))
+    assert config.application_storage.path == "var/state/chatbrief.db"
+
+
+@pytest.mark.unit
+def test_application_storage_path_rejects_blank_value(tmp_path):
+    """An explicitly blank application database path is invalid."""
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        """
+channels:
+  - id: "@test_channel"
+    name: "Test Channel"
+application_storage:
+  path: "   "
+settings:
+  target_user_id: 123456789
+""",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="application_storage.path"):
+        load_config(str(config_file))
