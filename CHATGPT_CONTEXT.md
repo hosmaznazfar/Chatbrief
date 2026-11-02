@@ -273,3 +273,19 @@ Report recommendations:
 - Provider/model choice is included only if Phase 1 establishes it as an explicit user-owned preference rather than operator configuration.
 - Source records contain platform enum and safe display label only; no source usernames/IDs/invite links/private URLs/transport IDs. Missing required source linkage is invalid snapshot data, not a dangling/synthetic source ref.
 - Exact field keys remain dependent on the future user-scoped model and Phase 1 migration proposal. No code/tests/migrations changed or run.
+
+## Phase 1 export persistence migration proposal — pending approval
+
+Repository inspection: existing message storage is optional, uses inline `CREATE TABLE IF NOT EXISTS`, and has no versioned migration runner or application-wide user table. It cannot safely supply export ownership or source identity.
+
+Proposed additive design:
+- Introduce required application-state storage independent of optional `StorageBackend`, SQLite first, provisionally `data/application.db`; leave optional `data/messages.db` unchanged.
+- Add a minimal versioned migration runner using existing `aiosqlite`/`asyncpg`; `schema_migrations(version, applied_at, checksum)`; transactional application; reject checksum drift; enable SQLite foreign keys on every connection. No new migration dependency.
+- `export_jobs`: internal UUID PK, unique opaque export_id, owner_telegram_user_id, constrained lifecycle state, media outcome, cutoff_at (acceptance boundary), created_at/updated_at, primary_delivered_at/expires_at, lease owner/expiry/generation, next_run_at, opaque staging_key, optional validated report/manifest JSON, stable last_error_code. No ZIP bytes or absolute paths.
+- `export_delivery_attempts`: job FK, primary/media kind, per-kind attempt number unique per job, started/succeeded/failed/delivery_unknown outcome, timestamps/retry time, restricted Telegram chat/message/file IDs, sanitized error code. Append-only attempts; never overwrite ambiguity.
+- `export_cleanup_tasks`: nullable job FK ON DELETE SET NULL, telegram-message-delete/staging-delete type, pending/succeeded/abandoned state, minimal target IDs or opaque staging key, bounded retry/deadline/error metadata. Cleanup survives account/job deletion only while actionable.
+- Partial unique index enforces one blocking job per user for queued/collecting/packaging/ready; indexes support queue claims, owner status, leases, expiry, attempts, and cleanup.
+- Short atomic transactions; worker writes fenced by lease generation; no DB transaction across archive or Telegram calls.
+- Additive migration only. Do not alter old messages, delivery JSON, config, or Telethon session. Do not backfill old message rows: they lack stored owner, stable source ID, and message ID. Any later backfill requires a separate proof-based mapping proposal.
+- First migration creates only export tables and migration metadata. PostgreSQL migrations, shared users/sources/subscriptions/messages/coverage/session tables, workers/commands/ZIP/delivery implementation, and legacy backfill remain out of scope.
+- Approval gate: approve table/column/constraint proposal and explicit legacy-data exclusion before any code or migration. No code/tests/migrations changed or run.
