@@ -128,7 +128,9 @@ async def test_failed_delivery_can_retry_with_a_new_attempt_number(export_reposi
     second = await deliveries.start_attempt(job.id, 12345, DeliveryDocumentKind.PRIMARY)
     assert second is not None
     assert second.attempt_number == 2
-    assert len(await deliveries.list_attempts(job.id, 12345)) == 2
+    attempts = await deliveries.list_attempts(job.id, 12345)
+    assert attempts is not None
+    assert len(attempts) == 2
 
 
 @pytest.mark.asyncio
@@ -198,6 +200,7 @@ async def test_media_attempt_requires_primary_success_and_updates_job_outcome(
     assert sent is not None
     refreshed = await jobs.get_job(job.id, owner_telegram_user_id=12345)
     assert refreshed is not None
+    assert refreshed.media_outcome is not None
     assert refreshed.media_outcome.value == "sent"
 
 
