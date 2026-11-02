@@ -310,8 +310,9 @@ class ExportDeliveryRepository:
                 await connection.execute(
                     """
                     INSERT INTO export_delivery_attempts(
-                        id, job_id, document_kind, attempt_number, outcome, started_at
-                    ) VALUES (?, ?, ?, ?, ?, ?)
+                        id, job_id, document_kind, attempt_number, outcome, started_at,
+                        worker_id, lease_generation
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         attempt_id,
@@ -320,6 +321,8 @@ class ExportDeliveryRepository:
                         attempt_number,
                         DeliveryAttemptOutcome.STARTED.value,
                         timestamp,
+                        worker_id,
+                        lease_generation,
                     ),
                 )
                 async with connection.execute(
@@ -367,10 +370,19 @@ class ExportDeliveryRepository:
                     SELECT a.* FROM export_delivery_attempts AS a
                     JOIN export_jobs AS j ON j.id = a.job_id
                     WHERE a.id = ? AND j.owner_telegram_user_id = ?
+                      AND a.worker_id = ? AND a.lease_generation = ?
                       AND j.lease_owner = ? AND j.lease_generation = ?
                       AND j.lease_expires_at > ?
                     """,
-                    (attempt_id, owner_telegram_user_id, worker_id, lease_generation, now),
+                    (
+                        attempt_id,
+                        owner_telegram_user_id,
+                        worker_id,
+                        lease_generation,
+                        worker_id,
+                        lease_generation,
+                        now,
+                    ),
                 ) as cursor:
                     current = await cursor.fetchone()
                 if current is None or current["outcome"] != DeliveryAttemptOutcome.STARTED.value:
@@ -394,6 +406,7 @@ class ExportDeliveryRepository:
                         telegram_chat_id = ?, telegram_message_id = ?,
                         telegram_file_id = ?, error_code = ?, retry_after_seconds = ?
                     WHERE id = ? AND outcome = 'started'
+                      AND worker_id = ? AND lease_generation = ?
                     """,
                     (
                         final_outcome.value,
@@ -405,6 +418,8 @@ class ExportDeliveryRepository:
                         error_code,
                         retry_after_seconds,
                         attempt_id,
+                        worker_id,
+                        lease_generation,
                     ),
                 )
                 if current["document_kind"] == DeliveryDocumentKind.MEDIA.value:
