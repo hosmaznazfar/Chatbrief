@@ -52,6 +52,20 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Retain the initialized database object on `ChatbriefApp` for future repository/service injection.
 - [x] Add lifecycle tests for startup ordering and fail-closed behavior when database initialization fails.
 - [x] Preserve the independent optional legacy message-history store; no legacy schema/data changes.
-- [ ] Run the new lifecycle tests and relevant static checks locally.
-- [ ] Run the full suite after the lifecycle integration and record exact output.
-- [ ] Refresh/review/commit portable Graphify artifacts after the source relationship change.
+- [x] Run the lifecycle-focused tests; the developer confirmed the focused run passed after the pytest import-path correction.
+- [x] Run the full suite after lifecycle integration; the developer confirmed it passed (exact follow-up counts were not provided).
+- [x] Run Graphify sync, review/update the portable graph, and push commit `ab53ac1` (developer-confirmed).
+
+
+## Export persistence — Step 3a: job repository and atomic transitions
+
+- [x] Add typed export job and lifecycle-state models.
+- [x] Add job creation with opaque IDs and database-enforced per-user blocking-job uniqueness.
+- [x] Add owner-scoped job reads and active-job lookup.
+- [x] Add short transactional compare-and-set state transitions with an explicit lifecycle graph.
+- [x] Reject premature `ready` transitions unless a successful primary delivery attempt is already persisted.
+- [x] Add focused tests for ownership, uniqueness, state transitions, terminal release, and metadata validation.
+- [ ] Run focused export/storage/lifecycle pytest tests locally.
+- [ ] Run Ruff lint/format and Pyright locally.
+- [ ] Review complete implementation diff; refresh/review Graphify after validation.
+- [ ] Add delivery-attempt and cleanup-task repository operations in the next slice.
