@@ -386,7 +386,7 @@ class ExportRepository:
         """Extend a lease only while its owner and generation are still current."""
         _validate_worker_lease(worker_id, lease_seconds)
         _validate_lease_generation(lease_generation)
-        timestamp = _normalize_lease_timestamp(now or _utc_now(), "now")
+        timestamp = _normalize_lease_timestamp((_utc_now() if now is None else now), "now")
         lease_expires_at = (
             datetime.fromisoformat(timestamp) + timedelta(seconds=lease_seconds)
         ).isoformat()
@@ -442,7 +442,7 @@ class ExportRepository:
         """Release a live lease, optionally scheduling the next attempt."""
         _validate_worker_id(worker_id)
         _validate_lease_generation(lease_generation)
-        timestamp = _normalize_lease_timestamp(now or _utc_now(), "now")
+        timestamp = _normalize_lease_timestamp((_utc_now() if now is None else now), "now")
         scheduled_at = (
             _normalize_lease_timestamp(next_run_at, "next_run_at")
             if next_run_at is not None
@@ -505,10 +505,7 @@ class ExportRepository:
         The lease generation is a fencing token: a worker whose lease expired
         or was reclaimed cannot commit work using an older generation.
         """
-        if not isinstance(worker_id, str) or not worker_id or worker_id != worker_id.strip():
-            raise ValueError("Worker ID must be a non-empty opaque identifier")
-        if len(worker_id) > 128:
-            raise ValueError("Worker ID must not exceed 128 characters")
+        _validate_worker_id(worker_id)
         _validate_lease_generation(lease_generation)
         expected, target = _validate_transition(expected_states, new_state)
         changes = _normalize_updates(updates)
@@ -601,7 +598,7 @@ class ExportRepository:
         self._validate_owner(owner_telegram_user_id)
         expected, target = _validate_transition(expected_states, new_state)
         changes = _normalize_updates(updates)
-        timestamp = updated_at or _utc_now()
+        timestamp = (_utc_now() if updated_at is None else updated_at)
 
         async with self._connection() as connection:
             updated = await _transition_in_transaction(
