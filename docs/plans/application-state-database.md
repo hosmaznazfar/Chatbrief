@@ -1,6 +1,6 @@
 # Application-state database and export persistence foundation
 
-**Status:** Step 1 implementation committed; local validation pending  
+**Status:** Step 1 implementation committed; validation exposed a test connection-lifecycle misuse, now corrected; rerun pending  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
@@ -27,7 +27,7 @@ Run from the repository root:
     uv run ruff format --check src/chatbrief/application_storage src/chatbrief/config tests/test_application_storage.py tests/test_config.py
     uv run pyright
 
-Record actual output before proceeding. The remote GitHub editing environment cannot execute these local project commands.
+The first focused run collected 99 tests: 95 passed and 4 application-storage tests failed because they used `async with await database.connect()`. Awaiting an `aiosqlite.Connection` starts its worker thread; entering that already-awaited connection as an async context manager starts it a second time. The tests now use a small async context manager that awaits `database.connect()` once and closes the returned connection in `finally`. Ruff lint passed and Pyright reported 0 errors, 0 warnings, and 0 informations on the first run. Ruff format identified one formatting change in the test file; the file has also been reformatted in the correction. The focused pytest command additionally hit the repository-wide coverage threshold because only two test files were run (16.49% overall against 49%); rerun the full suite after the focused tests pass. These corrections have not yet been validated locally. The remote GitHub editing environment cannot execute local project commands.
 
 ## Next steps
 
