@@ -219,6 +219,75 @@ async def test_media_attempt_requires_primary_success_and_updates_job_outcome(
 
 
 @pytest.mark.asyncio
+async def test_stale_worker_cannot_start_or_finish_delivery_after_reclaim(
+    export_repositories,
+):
+    _, jobs, deliveries, _ = export_repositories
+    job, old_worker, old_generation = await _leased_packaging_job(jobs)
+
+    old_attempt = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.PRIMARY,
+        worker_id=old_worker,
+        lease_generation=old_generation,
+    )
+    assert old_attempt is not None
+
+    released = await jobs.release_lease(
+        job.id,
+        old_worker,
+        old_generation,
+    )
+    assert released is not None
+
+    new_worker = "replacement-delivery-worker"
+    reclaimed = await jobs.claim_next_job(new_worker)
+    assert reclaimed is not None
+    assert reclaimed.id == job.id
+    assert reclaimed.lease_generation == old_generation + 1
+
+    assert (
+        await deliveries.start_attempt(
+            job.id,
+            12345,
+            DeliveryDocumentKind.PRIMARY,
+            worker_id=old_worker,
+            lease_generation=old_generation,
+        )
+        is None
+    )
+    assert (
+        await deliveries.finish_attempt(
+            old_attempt.id,
+            12345,
+            DeliveryAttemptOutcome.SUCCEEDED,
+            worker_id=old_worker,
+            lease_generation=old_generation,
+        )
+        is None
+    )
+
+    current_attempt = await deliveries.start_attempt(
+        job.id,
+        12345,
+        DeliveryDocumentKind.PRIMARY,
+        worker_id=new_worker,
+        lease_generation=reclaimed.lease_generation,
+    )
+    assert current_attempt is not None
+    finished = await deliveries.finish_attempt(
+        current_attempt.id,
+        12345,
+        DeliveryAttemptOutcome.SUCCEEDED,
+        worker_id=new_worker,
+        lease_generation=reclaimed.lease_generation,
+    )
+    assert finished is not None
+    assert finished.outcome is DeliveryAttemptOutcome.SUCCEEDED
+
+
+@pytest.mark.asyncio
 async def test_cleanup_tasks_cover_telegram_and_staging_resources(export_repositories):
     _, jobs, _, cleanup = export_repositories
     job = await _packaging_job(jobs)
