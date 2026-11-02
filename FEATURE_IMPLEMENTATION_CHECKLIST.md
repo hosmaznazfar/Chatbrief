@@ -78,7 +78,7 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Add live-owner/generation-checked lease renewal and release with optional retry scheduling.
 - [x] Add lease-generation-fenced worker state transitions; clear leases when work reaches ready or a terminal state.
 - [x] Add focused tests for competing claims, expiry/reclaim, stale-worker rejection, renewal/release, scheduling, and invalid parameters.
-- [ ] Run focused tests, Ruff lint/format, Pyright, and full pytest locally; implementation is committed but local validation is pending.
+- [x] Run focused tests, Ruff lint/format, Pyright, and full pytest locally — developer-confirmed **627 passed, 7 skipped**, coverage **93.38%**; Ruff lint/format and Pyright passed.
 
 ## Export persistence — Step 3b: delivery attempts and cleanup tasks
 
@@ -97,3 +97,12 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Rerun full pytest suite after fix commit `44ec74e` — developer-confirmed **622 passed, 7 skipped**, coverage **94.07%**.
 - [x] Format Step 3a files and rerun the application-storage/export formatter check — developer-confirmed **8 files already formatted**.
 - [x] Review and fix the Step 3b implementation issues; Graphify is development tooling and is not a project implementation deliverable.
+
+
+## Export persistence — Step 3d: fair per-user claim scheduling
+
+- [x] Add a migration-backed persisted last-claimed marker to export jobs.
+- [x] Prefer users never previously served, then rotate by least-recently-claimed order.
+- [x] Keep candidate selection, lease assignment, and fairness-marker update in one short transaction.
+- [x] Add a focused multi-user rotation test.
+- [ ] Run focused tests, Ruff lint/format, Pyright, and full pytest locally.
