@@ -6,20 +6,20 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest source/test commit:** `37886a801d6caae95cacf83a3ca7d7ace7c33974` (delivery test update); subsequent planning, checklist, AI context, and handover documentation updates are committed on this branch. Sync the latest branch tip before local validation.
-- **Local worktree:** unknown to the GitHub editing environment. Preserve local changes and inspect `git status --short` before pulling.
-- **Local worktree:** unknown to the GitHub editing environment. Preserve local changes and inspect `git status --short` before pulling.
+- **Latest source fix commit:** `44ec74e4d1cbda6d7485aa944243c1745a59c0f9` (stale-attempt validation ordering, validation helper complexity, and cleanup-row narrowing).
+- **Latest documentation commit:** `c5577228ca183f41feaf115cfa91d95bef7e9c26` (records local validation outcomes and outstanding reruns).
+- **Local worktree:** the developer's latest report showed only modified Graphify artifacts before pulling; preserve local changes and inspect `git status --short` before the next pull.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
 - **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and the final Ruff format check passed.
 - **Major architecture decisions and proposals:** approved, including Telegram hybrid ingestion/multi-user direction and the Phase 1 export-persistence migration proposal. Do not reopen these decisions without a concrete implementation contradiction.
-- **Implementation status:** application-state database configuration, migration runner, schema migration, startup integration, export-job repository, delivery-attempt repository, and cleanup-task repository are implemented in source. Steps 1–2 are developer-validated. Step 3a has developer-confirmed focused tests (**109 passed**), Ruff lint, Pyright (**0 errors/warnings/information**), and full suite (**612 passed, 7 skipped; 94.42% coverage**); its Ruff format check last failed for two files and still needs a successful rerun. Step 3b tests and static checks have not yet been run locally.
+- **Implementation status:** application-state database configuration, migration runner, schema migration, startup integration, export-job repository, delivery-attempt repository, and cleanup-task repository are implemented in source. Steps 1–2 are developer-validated. Step 3a has developer-confirmed focused tests (**109 passed**), Ruff lint, Pyright (**0 errors/warnings/information**), full suite (**612 passed, 7 skipped; 94.42% coverage**), and now a successful Ruff format check after the developer formatted the files. Step 3b's first local validation found **one test failure** (118 passed), a Ruff C901 issue, and one Pyright optional-row issue. These three issues were fixed in commit `44ec74e`; validation must be rerun against that commit before Step 3b can be marked validated.
 - **Graphify:** the developer reported refreshing/updating and committing the graph after Step 3a. Step 3b changes the source graph again; refresh and review it after local validation before treating the shared graph as current. The GitHub editing environment cannot verify the local graph artifacts.
-- **Next stage:** sync the latest branch, run focused Step 3b tests, Ruff lint/format, and Pyright; fix failures; run the full suite at the integration milestone. Also resolve the outstanding Step 3a formatting check. Then refresh/review Graphify and proceed to worker claims and lease-generation fencing.
+- **Next stage:** sync the latest branch, rerun focused Step 3b tests, Ruff lint/format, Pyright, and the full suite after commit `44ec74e`. Then refresh/review Graphify (the local pull launched a background rebuild; do not stage artifacts blindly). Only after all checks pass proceed to worker claims and lease-generation fencing.
 
 ## Step 3b implementation update — delivery attempts and cleanup tasks
 
-Implemented in source; local validation is pending. Added:
+Implemented in source; local validation is not yet clean. Initial developer run: **118 passed, 1 failed** in the focused set; full suite **621 passed, 1 failed, 7 skipped**, coverage **94.02%**. Ruff lint found C901 in `_validate_finish_metadata`; Pyright found an optional SQLite row passed to `_cleanup_from_row`. The developer also confirmed Ruff format passed (**8 files already formatted**). Fixes for the test failure and both static-check issues are committed as `44ec74e`; rerun all checks before considering this slice validated. Added:
 
 - `src/chatbrief/application_storage/delivery.py`: typed delivery-attempt and cleanup-task models, `ExportDeliveryRepository`, and `ExportCleanupRepository`.
 - `src/chatbrief/application_storage/__init__.py`: public exports for the new repository APIs and models.
@@ -29,7 +29,7 @@ Delivery attempts are created in short transactions and finalized only once. A f
 
 Cleanup tasks can target Telegram messages or opaque staging keys. They are created only for jobs owned by the supplied user, remain after parent-job deletion through the approved `ON DELETE SET NULL` relationship, and can be retried or moved to a terminal state. Due-task listing includes overdue-deadline pending tasks so a future worker can explicitly abandon them rather than silently dropping them.
 
-No schema migration, external Telegram call, archive generation, filesystem cleanup, worker lease, or user-facing command was added. The developer must run local validation; this GitHub-only environment cannot execute `uv` checks. The new source changes also require a Graphify refresh/review.
+No schema migration, external Telegram call, archive generation, filesystem cleanup, worker lease, or user-facing command was added. The developer must rerun local validation against `44ec74e`; this GitHub-only environment cannot execute `uv` checks. The new source changes also require a Graphify refresh/review.
 
 ## Step 2 validation follow-up — 2026-11-02
 
