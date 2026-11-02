@@ -8,6 +8,7 @@ import pytest
 from chatbrief.application_storage import ApplicationDatabase, MigrationError
 from chatbrief.application_storage.migrations.versions import (
     FAIR_EXPORT_CLAIM_MIGRATION,
+    INITIAL_EXPORT_MIGRATION,
     Migration,
 )
 
@@ -45,6 +46,21 @@ async def test_initial_migration_creates_export_schema_and_is_idempotent(tmp_pat
             "export_cleanup_tasks",
         } <= tables
 
+        async with connection.execute("PRAGMA table_info(export_jobs)") as cursor:
+            columns = {row[1] for row in await cursor.fetchall()}
+        assert "last_claimed_at" in columns
+
+
+@pytest.mark.asyncio
+async def test_fair_claim_migration_upgrades_existing_version_one_database(tmp_path):
+    path = str(tmp_path / "application.db")
+    await ApplicationDatabase(path, migrations=(INITIAL_EXPORT_MIGRATION,)).initialize()
+
+    await ApplicationDatabase(path).initialize()
+
+    async with _connected(ApplicationDatabase(path)) as connection:
+        async with connection.execute("SELECT version FROM schema_migrations ORDER BY version") as cursor:
+            assert [row[0] for row in await cursor.fetchall()] == [1, 2]
         async with connection.execute("PRAGMA table_info(export_jobs)") as cursor:
             columns = {row[1] for row in await cursor.fetchall()}
         assert "last_claimed_at" in columns
