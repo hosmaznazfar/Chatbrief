@@ -197,3 +197,11 @@ Consumers reject any of `export.json`, `export-report.json`, or `media-manifest.
 - Visually identical names with different code-point sequences are distinct.
 - Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`, in addition to case-sensitive matching.
 - Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+### JSON object member-name whitespace handling — approved default (Option A)
+
+- Compare JSON object member names exactly; do not trim leading or trailing whitespace.
+- Whitespace is part of the name: `" schema_version"` and `"schema_version "` do not match `schema_version` and cannot satisfy that required field.
+- Apply at every object level in all three export JSON documents, alongside case-sensitive and exact Unicode code-point matching.
+- Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
