@@ -1033,3 +1033,8 @@ JSON object member names are case-sensitive. Consumers must match documented fie
 ## Export JSON object member-name Unicode handling — approved (Option A)
 
 Compare JSON object member names by their exact Unicode code-point sequences; do not normalize names before comparison. Visually identical names with different code-point sequences are distinct. Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`, alongside case-sensitive matching. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export JSON object member-name whitespace handling — approved default (Option A)
+
+Compare JSON object member names exactly; do not trim leading or trailing whitespace. Whitespace is part of the name: `" schema_version"` and `"schema_version "` do not match `schema_version` and cannot satisfy that required field. Apply at every object level in all three export JSON documents, alongside case-sensitive and exact Unicode code-point matching. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
