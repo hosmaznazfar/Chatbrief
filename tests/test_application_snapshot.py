@@ -91,6 +91,13 @@ async def test_snapshot_includes_only_retained_non_deleted_messages_before_cutof
     )
     await content.upsert_message(
         source.id,
+        "telegram-old",
+        "Outside rolling retention",
+        collected_at="2026-10-20T10:00:00Z",
+        source_timestamp="2026-10-18T09:00:00Z",
+    )
+    await content.upsert_message(
+        source.id,
         "telegram-3",
         "Future source timestamp",
         collected_at="2026-11-02T11:00:00Z",
