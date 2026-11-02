@@ -123,7 +123,7 @@ def _user_id(value: int, field: str = "Telegram user ID") -> None:
 
 
 def _nonempty(value: str, field: str) -> None:
-    if not isinstance(value, str) or not value:
+    if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field} must be a non-empty string")
 
 
@@ -228,7 +228,7 @@ class ArchiveRepository:
         kind = SourceType(source_type)
         visible = SourceVisibility(visibility)
         timestamp = _timestamp(updated_at, "updated_at")
-        identifier = source_id or str(uuid.uuid4())
+        identifier = source_id if source_id is not None else str(uuid.uuid4())
         _nonempty(identifier, "source_id")
         async with self._connection() as connection:
             await connection.execute("BEGIN IMMEDIATE")
