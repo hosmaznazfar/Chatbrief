@@ -48,8 +48,9 @@ async def test_message_upsert_deduplicates_by_source_and_platform_identity(
 
     assert edited.id == first.id
     assert edited.text == "Edited body"
-    assert edited.sender_label is None
+    assert edited.sender_label == "Channel admin"
     assert edited.collected_at == first.collected_at
+    assert edited.source_timestamp == first.source_timestamp
     assert edited.edited_at == "2026-11-02T01:30:00+00:00"
     assert await repository.get_message(source_id, "42") == edited
 
