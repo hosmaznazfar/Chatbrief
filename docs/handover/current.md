@@ -6,13 +6,12 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Worker implementation commit:** `e99412faa85a54d4e842345bf1a0bdea1377818f` (`refactor(exports): simplify worker polling and awaitables`). Documentation updates recording Step 4a validation and collection prerequisites follow this implementation.
+- **Latest shared-archive implementation:** migration 4 `4361c70dde802828eda48b9cfe4435938cfc3154`; migration tests `5dccd349154858d3d2744c00ac4015c7f234b829` and `fc9c5ae68fe4fc26dbdcdc2585ac36d8b8cdce21`. Documentation is updated through branch HEAD `a683d76d0f408bd38f86cfbd637d0251ad28bb9f`.
 - **Local worktree:** not visible from the GitHub editing environment. Preserve local Graphify output and other uncommitted work when pulling.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
 - **Step 3e validation:** developer-confirmed — focused delivery/storage tests **19 passed**; full suite **631 passed, 7 skipped**, coverage **93.40%**; Ruff lint passed; Ruff format passed (**8 files already formatted**); Pyright **0 errors, 0 warnings, 0 informations**.
 - **Step 4a implementation and validation:** `ExportWorker` provides injected state-based phase dispatch, bounded concurrency, renewable leases, stale-handler cancellation, retry backoff, and bounded shutdown grace. Developer-confirmed validation on 2026-11-02: Ruff lint passed, Ruff format reported **102 files already formatted**, Pyright reported **0 errors, 0 warnings, 0 informations**, and pytest collected **652 tests** with **7 skipped** and **93.19% coverage**. The pasted output ended before pytest's final summary, so the exact passed count is not recorded.
-- **Graphify:** optional development tooling for code navigation and impact analysis, not a runtime feature or implementation deliverable.
 - **Step 4b-1 implementation:** migration 4 adds identity-only users, sources, technical access records, explicit user authorizations, subscriptions, normalized/deduplicated messages, and known-complete coverage intervals. No profile fields or legacy data migration are introduced. Migration tests cover table creation, uniqueness, and invalid access/media shapes; local validation is pending.
 - **Next stage:** validate migration 4 locally, then add typed repository operations and the authorization-aware snapshot query. The collector must not read or automatically backfill legacy message-history rows, which lack trustworthy ownership and stable source/message identity. Do not wire the worker into startup until real phase handlers exist.
 
