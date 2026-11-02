@@ -386,23 +386,17 @@ async def test_stale_worker_cannot_start_or_finish_delivery_after_reclaim(
         is None
     )
 
-    current_attempt = await deliveries.start_attempt(
-        job.id,
-        12345,
-        DeliveryDocumentKind.PRIMARY,
-        worker_id=new_worker,
-        lease_generation=reclaimed.lease_generation,
-    )
-    assert current_attempt is not None
-    finished = await deliveries.finish_attempt(
-        current_attempt.id,
-        12345,
-        DeliveryAttemptOutcome.SUCCEEDED,
-        worker_id=new_worker,
-        lease_generation=reclaimed.lease_generation,
-    )
-    assert finished is not None
-    assert finished.outcome is DeliveryAttemptOutcome.SUCCEEDED
+    # The replacement worker must not retry an attempt whose delivery
+    # outcome is unresolved: the previous worker may have sent it before
+    # losing its lease, so retrying could duplicate the Telegram document.
+    with pytest.raises(ValueError, match="previous delivery attempt must be resolved as failed"):
+        await deliveries.start_attempt(
+            job.id,
+            12345,
+            DeliveryDocumentKind.PRIMARY,
+            worker_id=new_worker,
+            lease_generation=reclaimed.lease_generation,
+        )
 
 
 @pytest.mark.asyncio
