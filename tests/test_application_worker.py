@@ -232,3 +232,36 @@ async def test_worker_schedules_backoff_when_handler_does_not_advance_state(expo
     assert current.lease_owner is None
     assert current.next_run_at is not None
     assert current.next_run_at > current.updated_at
+
+
+
+@pytest.mark.asyncio
+async def test_shutdown_cancels_handler_after_grace_and_releases_lease(export_repository):
+    job = (await _create_jobs(export_repository, (101,)))[0]
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def handler(_claimed):
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            cancelled.set()
+
+    worker = ExportWorker(
+        export_repository,
+        {ExportJobState.QUEUED: handler},
+        logging.getLogger("test.export.worker"),
+        poll_interval_seconds=0.05,
+        shutdown_grace_seconds=0.05,
+    )
+    running = asyncio.create_task(worker.run())
+    await asyncio.wait_for(started.wait(), timeout=2)
+    worker.stop()
+    await asyncio.wait_for(running, timeout=2)
+
+    assert cancelled.is_set()
+    current = await export_repository.get_job(job.id)
+    assert current is not None
+    assert current.state is ExportJobState.QUEUED
+    assert current.lease_owner is None
