@@ -980,3 +980,8 @@ The optional media archive's `media-manifest.json` has its own top-level integer
 ## Export archive README format and schema guidance — approved
 
 Both ZIP archives use `README.md` (renamed from `README.txt`). Each README documents archive structure and usage, identifies the JSON document(s) included, explains their top-level `schema_version` fields, and states that each document's version is independent of the other export documents and the Chatbrief application release. Incompatible format changes increment the corresponding document's version. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export JSON schema compatibility — approved (Option A)
+
+Apply this policy independently to `export.json`, `export-report.json`, and `media-manifest.json`: adding an optional field is compatible and does not increment that document's `schema_version`; removing or renaming an existing field, changing its type, or changing its meaning/semantics is incompatible and requires incrementing that document's version. Each document remains independently versioned. Additional edge cases remain for detailed schema design. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
