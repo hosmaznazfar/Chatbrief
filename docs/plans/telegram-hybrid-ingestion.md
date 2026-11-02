@@ -1391,3 +1391,11 @@ migrations, or tests.
 - Names that look identical but use different Unicode code-point sequences are distinct member names.
 - Apply this rule at every object level in `export.json`, `export-report.json`, and `media-manifest.json`, alongside the approved case-sensitive comparison rule.
 - Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+### JSON object member-name whitespace handling — approved default (Option A)
+
+- Compare JSON object member names exactly; do not trim leading or trailing whitespace before comparison.
+- Whitespace is part of the member name. For example, `" schema_version"` and `"schema_version "` are not the documented `schema_version` field and cannot satisfy that required field.
+- Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`, alongside case-sensitive and exact Unicode code-point matching.
+- Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
