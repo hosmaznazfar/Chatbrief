@@ -174,3 +174,10 @@ Consumers reject any of `export.json`, `export-report.json`, or `media-manifest.
 - Reject zero, negative numbers, decimal/fractional values (including `1.0`), strings (including `"1"`), booleans, null, and any other non-integer or non-positive value.
 - Do not coerce or normalize values into integers; validate the JSON value's actual type and value.
 - Apply this rule independently to each document. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+### Missing `schema_version` — approved (Option A)
+
+- `export.json`, `export-report.json`, and `media-manifest.json` are invalid if the top-level `schema_version` field is missing.
+- Consumers must not infer a default version, including version `1`.
+- Apply this requirement independently to each document. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
