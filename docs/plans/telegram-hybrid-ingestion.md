@@ -840,6 +840,36 @@ chatbrief-media.zip
   evolve independently from both primary-archive documents.
 - `README.md`: archive structure, usage, and the schema versions of the JSON document(s) in that archive. Explain that each JSON document's top-level `schema_version` is independent of the other export documents and the Chatbrief application release, and that incompatible format changes increment that document's version.
 
+##### Primary export data organization — approved (Option A)
+
+Organize `export.json` as a top-level JSON object with separate sections for the
+independent categories of exported user data, rather than nesting the entire export
+inside one user object. The initial section categories are:
+
+- `preferences`: the requesting user's exportable preferences.
+- `schedules`: the user's schedules.
+- `subscriptions`: the user's source subscriptions and their exportable settings.
+- `delivery_history`: the user's exportable delivery records.
+- `messages`: all currently accessible retained messages within the request cutoff.
+- `sources`: source records needed to describe message origins and resolve relationships
+  within the export, without exposing internal storage identifiers.
+
+The document also carries its required top-level `schema_version` and export snapshot
+metadata. The exact field names, object shapes, required/optional/nullability rules,
+relationship-reference format, and any additional sections remain part of the detailed
+schema design.
+
+Represent relationships explicitly using export-scoped references where needed. Do not
+expose internal database primary keys, filesystem paths, session data, or other internal
+identifiers. Keep message records in their own top-level collection so they can be processed
+independently of subscriptions and preferences. This structure does not imply that every
+section must be populated; empty collections and absent optional sections must follow the
+eventual schema's documented semantics.
+
+This is an approved data-organization direction, not an approved complete field schema and
+not an implemented format. No application code, database schema, migrations, or tests have
+changed or been run.
+
 ##### Versioned JSON schema compatibility — approved (Option A)
 
 Apply this compatibility policy independently to `export.json`, `export-report.json`, and
