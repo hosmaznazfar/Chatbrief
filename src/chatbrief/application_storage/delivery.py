@@ -139,6 +139,59 @@ def _cleanup_from_row(row: aiosqlite.Row) -> ExportCleanupTask:
     )
 
 
+def _validate_delivery_identifiers(
+    outcome: DeliveryAttemptOutcome,
+    telegram_chat_id: int | None,
+    telegram_message_id: int | None,
+    telegram_file_id: str | None,
+) -> None:
+    _validate_positive_identifier(telegram_message_id, "telegram_message_id")
+    if telegram_chat_id is not None and (
+        isinstance(telegram_chat_id, bool)
+        or not isinstance(telegram_chat_id, int)
+        or telegram_chat_id == 0
+    ):
+        raise ValueError("telegram_chat_id must be a non-zero integer")
+    if telegram_file_id is not None and (
+        not isinstance(telegram_file_id, str) or not telegram_file_id
+    ):
+        raise ValueError("telegram_file_id must be a non-empty string")
+    identifiers_present = any(
+        value is not None
+        for value in (telegram_chat_id, telegram_message_id, telegram_file_id)
+    )
+    if outcome is DeliveryAttemptOutcome.SUCCEEDED:
+        if telegram_chat_id is None or telegram_message_id is None:
+            raise ValueError("Confirmed Telegram delivery requires chat and message IDs")
+    elif identifiers_present:
+        raise ValueError("Unconfirmed delivery cannot persist Telegram delivery identifiers")
+
+
+def _validate_retry_metadata(
+    outcome: DeliveryAttemptOutcome,
+    retry_after_at: str | None,
+    error_code: str | None,
+    retry_after_seconds: int | None,
+) -> None:
+    if retry_after_at is not None and (
+        not isinstance(retry_after_at, str) or not retry_after_at
+    ):
+        raise ValueError("retry_after_at must be a non-empty timestamp")
+    _validate_error_code(error_code)
+    if retry_after_seconds is not None and (
+        isinstance(retry_after_seconds, bool)
+        or not isinstance(retry_after_seconds, int)
+        or retry_after_seconds < 0
+    ):
+        raise ValueError("retry_after_seconds must be a non-negative integer")
+    if outcome is DeliveryAttemptOutcome.SUCCEEDED and (
+        retry_after_at is not None
+        or retry_after_seconds is not None
+        or error_code is not None
+    ):
+        raise ValueError("Successful delivery cannot include retry or error metadata")
+
+
 def _validate_finish_metadata(
     outcome: DeliveryAttemptOutcome,
     finished_at: str | None,
@@ -154,37 +207,10 @@ def _validate_finish_metadata(
     timestamp = finished_at or _utc_now()
     if not isinstance(timestamp, str) or not timestamp:
         raise ValueError("Attempt finish timestamp must be non-empty")
-    if retry_after_at is not None and (
-        not isinstance(retry_after_at, str) or not retry_after_at
-    ):
-        raise ValueError("retry_after_at must be a non-empty timestamp")
-    _validate_error_code(error_code)
-    _validate_positive_identifier(telegram_message_id, "telegram_message_id")
-    if telegram_chat_id is not None and (
-        isinstance(telegram_chat_id, bool) or not isinstance(telegram_chat_id, int)
-    ):
-        raise ValueError("telegram_chat_id must be an integer")
-    if telegram_file_id is not None and (
-        not isinstance(telegram_file_id, str) or not telegram_file_id
-    ):
-        raise ValueError("telegram_file_id must be a non-empty string")
-    if retry_after_seconds is not None and (
-        isinstance(retry_after_seconds, bool)
-        or not isinstance(retry_after_seconds, int)
-        or retry_after_seconds < 0
-    ):
-        raise ValueError("retry_after_seconds must be a non-negative integer")
-    if outcome is DeliveryAttemptOutcome.SUCCEEDED:
-        if telegram_chat_id is None or telegram_message_id is None:
-            raise ValueError("Confirmed Telegram delivery requires chat and message IDs")
-        if retry_after_at is not None or retry_after_seconds is not None or error_code is not None:
-            raise ValueError("Successful delivery cannot include retry or error metadata")
-    elif (
-        telegram_chat_id is not None
-        or telegram_message_id is not None
-        or telegram_file_id is not None
-    ):
-        raise ValueError("Unconfirmed delivery cannot persist Telegram delivery identifiers")
+    _validate_retry_metadata(outcome, retry_after_at, error_code, retry_after_seconds)
+    _validate_delivery_identifiers(
+        outcome, telegram_chat_id, telegram_message_id, telegram_file_id
+    )
     return timestamp
 
 
@@ -329,16 +355,6 @@ class ExportDeliveryRepository:
         """Resolve a started attempt once; return None for wrong owner or stale ID."""
         self._validate_owner(owner_telegram_user_id)
         final_outcome = DeliveryAttemptOutcome(outcome)
-        timestamp = _validate_finish_metadata(
-            final_outcome,
-            finished_at,
-            retry_after_at,
-            telegram_chat_id,
-            telegram_message_id,
-            telegram_file_id,
-            error_code,
-            retry_after_seconds,
-        )
 
         async with self._connection() as connection:
             await connection.execute("BEGIN IMMEDIATE")
@@ -356,6 +372,16 @@ class ExportDeliveryRepository:
                     await connection.rollback()
                     return None
 
+                timestamp = _validate_finish_metadata(
+                    final_outcome,
+                    finished_at,
+                    retry_after_at,
+                    telegram_chat_id,
+                    telegram_message_id,
+                    telegram_file_id,
+                    error_code,
+                    retry_after_seconds,
+                )
                 await connection.execute(
                     """
                     UPDATE export_delivery_attempts
@@ -655,4 +681,6 @@ class ExportCleanupRepository:
             except Exception:
                 await connection.rollback()
                 raise
+        if row is None:
+            raise RuntimeError("Updated cleanup task could not be read back")
         return _cleanup_from_row(row)
