@@ -328,7 +328,6 @@ class ExportRepository:
                           OR lease_expires_at <= ?
                       )
                     ORDER BY
-                        (last_claimed_at IS NOT NULL),
                         last_claimed_at,
                         created_at,
                         owner_telegram_user_id,
