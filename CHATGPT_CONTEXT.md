@@ -7,16 +7,15 @@ Python: `>=3.14`; package/dependency manager: `uv`
 
 ## Current project status — 2026-11-02
 
-- Active branch: `refactor/chatbrief-package-layout`; latest developer-reported local sync: `ab53ac1` (remote implementation commits after that point must be fast-forwarded locally).
-- Package-layout/platform refactor is complete.
-- All project packages/dependencies have been upgraded.
-- Tests have passed, confirmed by the developer.
-- Major architecture decisions and proposals are approved, including the Telegram hybrid-ingestion direction and Phase 1 export-persistence migration proposal.
-- The project is now in the implementation stage. Do not treat tests, dependency upgrades, or architecture approvals as pending, and do not reopen approved decisions without a concrete implementation-level contradiction.
-- The required application-state SQLite database foundation and root application startup integration are implemented and developer-validated. The optional legacy message-history database remains independent and unchanged. Step 3a adds an export-job repository with owner-scoped reads/transitions and atomic expected-state progression/failure; focused tests are added but local validation is pending. Delivery-attempt/cleanup APIs and worker leases remain future slices.
-- Approved architecture is not the same as implemented functionality. Implement in small dependency-ordered slices, add focused tests, and update plans/handover as each slice lands.
-- The developer synchronized Graphify and pushed `ab53ac1`; that graph predates Step 3a source changes and must be refreshed/reviewed after local validation.
-
+- Active branch: `refactor/chatbrief-package-layout`; remote implementation has advanced beyond the developer's last local sync, so fast-forward before local validation.
+- Package-layout/platform refactor and dependency upgrades are complete.
+- Major architecture decisions and proposals are approved, including Telegram hybrid ingestion and Phase 1 export persistence. Do not reopen them without a concrete implementation contradiction.
+- Application-state SQLite database foundation, migration runner, export schema, and startup integration are implemented and developer-validated. The optional legacy message-history database remains independent and unchanged.
+- Export persistence Steps 3a–3b are implemented and developer-validated. Step 3b results: focused tests **119 passed**; Ruff lint and format passed; Pyright **0 errors, 0 warnings, 0 informations**; full suite **622 passed, 7 skipped**, coverage **94.07%**.
+- Step 3c worker lease operations are implemented remotely: atomic due-job claims, bounded lease expiry, generation increments, renewal/release, retry scheduling, and generation-fenced state transitions. Local validation is pending.
+- Worker orchestration, user-facing export commands, archive generation, actual Telegram delivery, and broader hybrid-ingestion migration remain future work.
+- Graphify is optional development tooling used to navigate code relationships; generated graph artifacts are not application features or a prerequisite for implementation. Verify source and tests directly.
+- Continue in small dependency-ordered implementation slices, with focused tests and documentation updates.
 ## Read first
 
 At the start of a new session, verify the repository and branch, then read:
