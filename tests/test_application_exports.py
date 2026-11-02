@@ -1,6 +1,7 @@
 """Tests for durable export-job persistence and state transitions."""
 
 import pytest
+import pytest_asyncio
 
 from chatbrief.application_storage import ApplicationDatabase
 from chatbrief.application_storage.exports import (
@@ -11,7 +12,7 @@ from chatbrief.application_storage.exports import (
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def export_repository(tmp_path):
     database = ApplicationDatabase(str(tmp_path / "application.db"))
     await database.initialize()
