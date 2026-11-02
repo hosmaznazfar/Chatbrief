@@ -6,26 +6,35 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest locally reported synchronized HEAD:** `487727f` (`docs: record phase one export persistence proposal`). The developer reported the branch was fast-forwarded to this commit and matched `origin/refactor/chatbrief-package-layout`.
-- **Local worktree:** source files have no reported local modifications. Only generated Graphify artifacts and `.rebuild.lock` were reported modified/untracked after the post-merge background rebuild; inspect the current local status before staging or committing them.
+- **Remote updates:** the application database lifecycle implementation and related documentation were committed directly to this branch after the developer's last reported sync. The developer must fast-forward the local checkout before running the new tests. The latest source/documentation commit before this handover update was `d907633`; verify the branch tip when syncing.
+- **Local worktree:** unknown to the GitHub editing environment. Preserve local changes and inspect `git status --short` before pulling.
 - **Package/layout and platform-abstraction migration:** complete.
-- **Dependency/package upgrades:** complete; all project packages have been upgraded as recorded by the developer and project documentation.
-- **Tests:** passed, as confirmed by the developer. Do not describe the suite as pending or unrun. Preserve the actual test command/output in the local development record if a precise audit trail is needed; this handover records the developer-confirmed result.
-- **Major architecture decisions and proposals:** approved. This includes the approved Telegram hybrid-ingestion/multi-user direction and the Phase 1 export-persistence migration proposal. Do not ask the developer to re-approve decisions already recorded as approved.
-- **Implementation status:** the foundation/refactor and validation are complete. The project is transitioning from architecture/design into implementation of the approved migrations and capabilities. Approval does not mean those future capabilities, schemas, migrations, or workflows have already been implemented.
-- **Next stage:** begin implementation in dependency order, starting with the approved application-state database/migration foundation for export persistence, while keeping the separate Telegram hybrid-ingestion domain migration sequenced and documented. Inspect current source and tests before each slice; update tests and docs with implementation.
+- **Dependency/package upgrades:** complete.
+- **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and the final Ruff format check passed.
+- **Major architecture decisions and proposals:** approved, including Telegram hybrid ingestion/multi-user direction and the Phase 1 export-persistence migration proposal. Do not reopen these decisions without a concrete implementation contradiction.
+- **Implementation status:** application-state database configuration, migration runner, export persistence schema migration, and startup integration are implemented in source. Lifecycle tests have been added but have **not** been run locally yet. Approval does not mean export repositories, workers, commands, archive generation, delivery, or the broader hybrid-ingestion migration are implemented.
+- **Next stage:** sync this branch, run the Step 2 focused/static/full checks, refresh and review Graphify against the new source relationship, then proceed to export persistence repositories and atomic state transitions.
 
-## Implementation update — application-state database foundation
+## Implementation update — application-state database foundation and startup lifecycle
 
-**Step 1 is committed to source; local validation is pending.** The branch now contains:
+**Step 1 — database foundation:** implemented and developer-validated.
 
-- src/chatbrief/application_storage/: required application database boundary and SQLite migration runner.
-- Migration 1: export_jobs, export_delivery_attempts, and export_cleanup_tasks with approved checks, foreign keys, and indexes.
-- application_storage.path configuration, defaulting to data/application.db; the existing optional storage.path / data/messages.db remains independent.
-- Focused tests in tests/test_application_storage.py and configuration path tests.
-- Implementation notes in docs/plans/application-state-database.md.
+- `src/chatbrief/application_storage/`: required application database boundary and SQLite migration runner.
+- Migration 1: `export_jobs`, `export_delivery_attempts`, and `export_cleanup_tasks` with approved checks, foreign keys, and indexes.
+- `application_storage.path` configuration defaults to `data/application.db`; the existing optional `storage.path` / `data/messages.db` remains independent.
+- Focused migration/configuration tests cover schema creation/idempotency, FK activation, partial uniqueness, checksum drift, rollback, and path validation.
 
-The application startup lifecycle is intentionally not wired yet. The remote GitHub editing environment cannot run local uv checks, so these tests and static checks must be run in the developer checkout before the next slice. No legacy message schema or data was modified, and no backfill was attempted.
+**Step 2 — application lifecycle:** implemented in source; local validation pending.
+
+- Root `main.py` constructs and initializes `ApplicationDatabase` after configuration/logging and before platform services, scheduler, command service, bot, or MCP server construction.
+- `ChatbriefApp` retains the initialized database object for future service/repository injection.
+- Initialization failure follows the existing failure path and prevents the rest of the application from starting.
+- `tests/test_application_lifecycle.py` covers startup ordering and fail-closed behavior.
+- The database initializer owns a scoped connection and closes it before returning. It does not hold a persistent connection or pool, so no artificial shutdown close method was introduced. Future repository connections must be scoped and closed by their owners.
+
+The GitHub editing environment cannot run the developer's local `uv` checks. Run the exact Step 2 commands in `docs/plans/application-state-database.md` after syncing. No legacy message schema or data was modified, and no backfill was attempted.
+
+**Graphify:** the developer refreshed and pushed the graph before this latest `main.py` source change. Treat the committed graph as stale for this lifecycle integration until the developer runs `./pj graph refresh` and `./pj graph diff`, reviews the portable artifacts, and commits/pushes any graph changes alongside the source revision.
 
 ## Working rules for the implementation stage
 
