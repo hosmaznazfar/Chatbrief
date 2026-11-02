@@ -105,4 +105,14 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Prefer users never previously served, then rotate by least-recently-claimed order.
 - [x] Keep candidate selection, lease assignment, and fairness-marker update in one short transaction.
 - [x] Add focused multi-user rotation and existing-database migration-upgrade tests.
-- [ ] Run focused tests, Ruff lint/format, Pyright, and full pytest locally.
+- [x] Run focused tests, Ruff lint/format, Pyright, and full pytest locally — developer-confirmed **33 focused passed**, **629 passed, 7 skipped** overall, coverage **93.39%**.
+
+
+## Export persistence — Step 3e: delivery-attempt lease fencing
+
+- [x] Require a live worker lease and generation to start a delivery attempt.
+- [x] Persist the creating worker ID and lease generation on each new attempt.
+- [x] Require both the current job lease and the attempt's original worker/generation to finish an attempt.
+- [x] Add migration 3 without inferring ownership for pre-existing attempts.
+- [x] Test stale-worker rejection after lease release and reclaim.
+- [ ] Run focused delivery/storage tests, Ruff lint/format, Pyright, and full pytest locally.
