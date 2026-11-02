@@ -133,3 +133,26 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Add typed repository operations for user/source/access/authorization/subscription/message/coverage records.
 - [ ] Add an authorization-aware export snapshot query that enforces source access and user grants independently of subscription state.
 - [ ] Implement the collecting phase handler only after the snapshot query exists; use cancellation-safe checkpoints and lease-generation-fenced transitions. Do not backfill legacy message-history rows.
+
+
+## Shared archive — Step 4b-1: schema foundation
+
+- [x] Add migration 4 for identity-only users, sources, technical access, explicit authorizations, subscriptions, messages, and collection coverage.
+- [x] Enforce source/message and per-user relationship uniqueness, access ownership shape, media metadata shape, and foreign-key deletion behavior.
+- [x] Preserve the legacy message-history database and prohibit automatic legacy backfill.
+- [x] Run focused migration tests and the developer's validation checks — developer confirmed all checks passed; seven PostgreSQL integration tests were skipped because `TELEBRIEF_TEST_PG_URL` was not configured.
+
+## Shared archive — Step 4b-2: typed repositories
+
+- [x] Add identity-only user and stable source repositories.
+- [x] Add distinct Bot API and user-owned Telethon access persistence.
+- [x] Add explicit source authorization grant/revocation persistence, separate from subscriptions.
+- [x] Add subscription lifecycle persistence without treating subscriptions as access grants.
+- [x] Add source-scoped message upsert/deduplication, edit metadata preservation, and reliable deletion markers.
+- [x] Add method-specific known-complete coverage interval persistence and coalescing without filling gaps.
+- [x] Add focused repository tests for identity, ownership, authorization/subscription separation, message edits/deletions, media consistency, and coverage.
+- [ ] Run focused archive and migration tests locally.
+- [ ] Run Ruff lint and formatting, Pyright, and full pytest locally; record exact counts and coverage.
+- [ ] Review the final source/test/documentation diff and CI results.
+
+**Next:** implement the authorization-aware export snapshot query. It must fail closed for unknown source visibility, require an active grant for private sources, require an available technical access method (central Bot API or the requesting user's own Telethon access), honor the requested user's subscription/selection scope, exclude deleted and post-cutoff messages, and report uncovered intervals rather than interpreting missing messages as a complete empty result.
