@@ -41,11 +41,17 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [ ] Commit each reviewed implementation step when the task authorizes direct Git commits; ask before pushing, merging, deploying, publishing, or running migrations.
 
 
-## Application-state database foundation — step 1
+## Application-state database foundation — steps 1–2
 
 - [x] Add independent application database configuration with a safe default path.
 - [x] Add versioned transactional SQLite migration runner and checksum validation.
 - [x] Add the approved export persistence schema and constraints as migration 1.
 - [x] Add focused migration and configuration tests.
-- [ ] Run focused tests and static checks in the local project environment; record exact output.
-- [ ] Integrate database initialization and shutdown lifecycle into the application composition root.
+- [x] Run Step 1 focused tests, full suite, Ruff lint/format, and Pyright; results were confirmed by the developer.
+- [x] Initialize the required application database in root `main.py` before constructing platform/application services.
+- [x] Retain the initialized database object on `ChatbriefApp` for future repository/service injection.
+- [x] Add lifecycle tests for startup ordering and fail-closed behavior when database initialization fails.
+- [x] Preserve the independent optional legacy message-history store; no legacy schema/data changes.
+- [ ] Run the new lifecycle tests and relevant static checks locally.
+- [ ] Run the full suite after the lifecycle integration and record exact output.
+- [ ] Refresh/review/commit portable Graphify artifacts after the source relationship change.
