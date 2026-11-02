@@ -1,9 +1,20 @@
 # Chatbrief — persistent project context
 
 Repository: https://github.com/hosmaznazfar/Chatbrief  
-Active modernization branch: `upgrade/full-project-modernization`  
+Active branch: `refactor/chatbrief-package-layout`  
 Primary package: `src/chatbrief/`  
 Python: `>=3.14`; package/dependency manager: `uv`
+
+## Current project status — 2026-11-02
+
+- Active branch: `refactor/chatbrief-package-layout`; latest locally reported synchronized commit: `487727f`.
+- Package-layout/platform refactor is complete.
+- All project packages/dependencies have been upgraded.
+- Tests have passed, confirmed by the developer.
+- Major architecture decisions and proposals are approved, including the Telegram hybrid-ingestion direction and Phase 1 export-persistence migration proposal.
+- The project is now in the implementation stage. Do not treat tests, dependency upgrades, or architecture approvals as pending, and do not reopen approved decisions without a concrete implementation-level contradiction.
+- Approved architecture is not the same as implemented functionality. Implement in small dependency-ordered slices, add focused tests, and update plans/handover as each slice lands.
+- Local Graphify output was reported modified after a post-merge background rebuild; inspect local status and rebuild completion before staging it.
 
 ## Read first
 
