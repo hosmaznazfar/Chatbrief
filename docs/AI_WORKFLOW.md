@@ -7,9 +7,9 @@ This document adapts the reusable workflow defined in [AIWorkFlow](https://githu
 ## Goals
 
 - Keep project context, architecture decisions, plans, checklists, and handovers in Git.
-- Give every AI assistant the same architecture and code-relationship context through the committed Graphify artifacts.
+- Use committed Graphify artifacts as shared code-navigation context when available and useful; verify all implementation decisions against source and tests.
 - Use Graphify as a code-navigation and impact-analysis aid when it materially helps. Keep application implementation, tests, and documentation as the deliverables; generated graph artifacts are development tooling, not product features or a routine completion gate.
-- Follow the developer's graph-first, research-before-decision, stepwise-implementation, and commit-each-step workflow for every feature or bug fix.
+- Follow the developer's code-first, research-before-decision, stepwise-implementation, and commit-each-step workflow for every feature or bug fix.
 - Use `pj` as the single project-local command interface for Python checks and Graphify automation.
 - Preserve safe, reviewable Git operations: no implicit staging, commits, pushes, merges, deployments, or migrations.
 - Avoid dependencies on any one AI vendor, editor, plugin, MCP server, or proprietary agent integration.
@@ -61,7 +61,7 @@ No assistant-specific Graphify plugin, skill, MCP server, editor extension, or C
 
 ### Feature work — required developer workflow
 
-Follow this order. Do not skip the graph review or decision gates.
+Follow this order. Do not skip implementation verification or material decision gates; graph review is conditional on usefulness.
 
 1. **Inspect the current state.** Verify repository, branch, latest commit, worktree state when available, and the current graph revision. Query the graph to locate relevant modules, symbols, callers, dependencies, and likely impact.
 2. **Refresh the graph only when useful.** If the current graph is stale or missing and a fresh relationship map would materially improve the task, ask the developer to refresh it. Otherwise continue with the available graph and direct source inspection. When refreshing is useful, the local commands are:
@@ -83,11 +83,11 @@ If direct Git write access or commit authorization is not available, do not pret
 ### Bug fixing
 
 1. Characterize or reproduce the behavior and verify the branch/revision.
-2. Query the graph and inspect the relevant relationships. Ask the developer to run `./pj graph refresh` and `./pj graph diff`; the developer commits any reviewed graph changes, then inspect the refreshed graph from Git.
+2. Use the existing graph to navigate when helpful. Request a refresh only when the graph is stale and a fresh relationship map would materially improve root-cause analysis; do not make graph maintenance a prerequisite for fixing the issue.
 3. Trace the actual implementation, tests, configuration, and ADRs to establish the root cause.
 4. Present material fix options. Research current external/library facts online where relevant, explain trade-offs, and ask the developer to choose before changing code.
 5. Implement the approved fix in small steps; review each diff, update related docs/tests, and commit each completed step.
-6. Refresh and commit graph artifacts when code relationships change. After the fix is complete, update relevant migration/planning documents, validate as authorized, and record evidence in the handover.
+6. Consider refreshing graph artifacts after major structural changes when doing so will help future navigation. Complete the code, tests, relevant documentation, validation, and handover regardless of whether graph output changes.
 
 ### Review
 
@@ -224,7 +224,7 @@ For a project question or modification:
 4. Read the actual source, tests, configuration, and relevant ADRs.
 5. Verify all important graph claims against source.
 6. If graph artifacts are missing or may be stale, say so and perform source-based tracing instead.
-7. After proposing or implementing source changes, state that the local graph must be refreshed and reviewed before the source+graph update is committed and pushed.
+7. After source changes, request a local graph refresh only when it is useful for future code navigation or explicitly requested. Never block source implementation or validation on generated graph output.
 
 Do not claim to have run local Graphify queries, refreshed the local graph, or inspected uncommitted files unless evidence from that environment was actually provided.
 
@@ -272,7 +272,7 @@ These are optional natural-language shortcuts for conversations; they do not req
 - `/trace <area>` — query graph paths and verify them against source; cite concrete files and symbols.
 - `/review` — inspect the complete diff, architecture, tests, security, and graph freshness.
 - `/test` — run only authorized checks; otherwise provide exact commands and request output.
-- `/sync` — ask the developer to run `./pj graph refresh` and `./pj graph diff` when local execution is unavailable; inspect the committed graph update. Never claim local work was run when it was not.
+- `/sync` — synchronize the implementation branch and inspect relevant source/docs. Use `./pj graph refresh` and `./pj graph diff` only when graph maintenance is useful or requested; never claim local work was run when it was not.
 - `/branch <name>` — verify target and preserve uncommitted work before switching.
 - `/merge <source> -> <target>` — compare branches, inspect conflicts and validation, and require explicit approval before merging.
 - `/handover` — update docs/handover/current.md with verified state, actual checks, graph status, and next steps.
