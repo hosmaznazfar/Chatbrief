@@ -318,7 +318,8 @@ class ExportRepository:
             try:
                 await connection.execute("BEGIN IMMEDIATE")
                 async with connection.execute(
-                    "SELECT * FROM export_jobs WHERE id = ?", (job_id,)
+                    "SELECT * FROM export_jobs WHERE id = ? AND owner_telegram_user_id = ?",
+                    (job_id, owner_telegram_user_id),
                 ) as cursor:
                     current = await cursor.fetchone()
                 if current is None or ExportJobState(current["state"]) not in expected:
