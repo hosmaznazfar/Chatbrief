@@ -133,8 +133,167 @@ DELIVERY_LEASE_FENCING_MIGRATION = Migration(
     ),
 )
 
+
+SHARED_ARCHIVE_MIGRATION = Migration(
+    version=4,
+    statements=(
+        """
+        CREATE TABLE users (
+            telegram_user_id INTEGER PRIMARY KEY CHECK (telegram_user_id > 0),
+            created_at TEXT NOT NULL
+        )
+        """,
+        """
+        CREATE TABLE sources (
+            id TEXT PRIMARY KEY,
+            platform TEXT NOT NULL CHECK (platform IN ('telegram')),
+            platform_chat_id TEXT NOT NULL CHECK (length(platform_chat_id) > 0),
+            display_name TEXT NOT NULL CHECK (length(display_name) > 0),
+            source_type TEXT NOT NULL CHECK (
+                source_type IN ('channel', 'group', 'supergroup')
+            ),
+            visibility TEXT NOT NULL CHECK (
+                visibility IN ('public', 'private', 'unknown')
+            ),
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE (platform, platform_chat_id)
+        )
+        """,
+        """
+        CREATE TABLE source_access (
+            id TEXT PRIMARY KEY,
+            source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+            access_method TEXT NOT NULL CHECK (access_method IN ('bot_api', 'telethon')),
+            owner_telegram_user_id INTEGER REFERENCES users(telegram_user_id)
+                ON DELETE CASCADE,
+            state TEXT NOT NULL CHECK (
+                state IN ('unknown', 'available', 'inaccessible', 'revoked')
+            ),
+            verified_at TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            CHECK (
+                (access_method = 'bot_api' AND owner_telegram_user_id IS NULL)
+                OR
+                (access_method = 'telethon' AND owner_telegram_user_id IS NOT NULL)
+            )
+        )
+        """,
+        """
+        CREATE UNIQUE INDEX uq_source_access_bot_api
+        ON source_access(source_id)
+        WHERE access_method = 'bot_api'
+        """,
+        """
+        CREATE UNIQUE INDEX uq_source_access_telethon_user
+        ON source_access(source_id, owner_telegram_user_id)
+        WHERE access_method = 'telethon'
+        """,
+        """
+        CREATE TABLE source_authorizations (
+            source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+            telegram_user_id INTEGER NOT NULL REFERENCES users(telegram_user_id)
+                ON DELETE CASCADE,
+            granted_by_telegram_user_id INTEGER REFERENCES users(telegram_user_id)
+                ON DELETE SET NULL,
+            state TEXT NOT NULL CHECK (state IN ('active', 'revoked')),
+            granted_at TEXT NOT NULL,
+            revoked_at TEXT,
+            PRIMARY KEY (source_id, telegram_user_id),
+            CHECK (
+                (state = 'active' AND revoked_at IS NULL)
+                OR
+                (state = 'revoked' AND revoked_at IS NOT NULL)
+            )
+        )
+        """,
+        """
+        CREATE TABLE subscriptions (
+            id TEXT PRIMARY KEY,
+            telegram_user_id INTEGER NOT NULL REFERENCES users(telegram_user_id)
+                ON DELETE CASCADE,
+            source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+            state TEXT NOT NULL CHECK (state IN ('active', 'suspended', 'ended')),
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            ended_at TEXT,
+            UNIQUE (telegram_user_id, source_id),
+            CHECK (
+                (state = 'ended' AND ended_at IS NOT NULL)
+                OR
+                (state IN ('active', 'suspended') AND ended_at IS NULL)
+            )
+        )
+        """,
+        """
+        CREATE INDEX idx_subscriptions_source_state
+        ON subscriptions(source_id, state)
+        """,
+        """
+        CREATE INDEX idx_subscriptions_user_state
+        ON subscriptions(telegram_user_id, state)
+        """,
+        """
+        CREATE TABLE messages (
+            id TEXT PRIMARY KEY,
+            source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+            platform_message_id TEXT NOT NULL CHECK (length(platform_message_id) > 0),
+            text TEXT NOT NULL DEFAULT '',
+            sender_label TEXT,
+            source_timestamp TEXT,
+            link TEXT,
+            has_media INTEGER NOT NULL CHECK (has_media IN (0, 1)),
+            media_type TEXT CHECK (
+                media_type IS NULL OR media_type IN (
+                    'image', 'video', 'document', 'audio', 'other', 'unknown'
+                )
+            ),
+            collected_at TEXT NOT NULL,
+            edited_at TEXT,
+            deleted_at TEXT,
+            UNIQUE (source_id, platform_message_id),
+            CHECK (
+                (has_media = 0 AND media_type IS NULL)
+                OR
+                (has_media = 1 AND media_type IS NOT NULL)
+            )
+        )
+        """,
+        """
+        CREATE INDEX idx_messages_source_timestamp
+        ON messages(source_id, source_timestamp)
+        """,
+        """
+        CREATE INDEX idx_messages_retention
+        ON messages(source_timestamp)
+        """,
+        """
+        CREATE TABLE source_collection_coverage (
+            id TEXT PRIMARY KEY,
+            source_id TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+            ingestion_method TEXT NOT NULL CHECK (
+                ingestion_method IN ('bot_api', 'telethon')
+            ),
+            covered_from TEXT NOT NULL,
+            covered_until TEXT NOT NULL,
+            recorded_at TEXT NOT NULL,
+            CHECK (covered_until >= covered_from)
+        )
+        """,
+        """
+        CREATE INDEX idx_source_coverage_lookup
+        ON source_collection_coverage(
+            source_id, ingestion_method, covered_from, covered_until
+        )
+        """,
+    ),
+)
+
+
 MIGRATIONS = (
     INITIAL_EXPORT_MIGRATION,
     FAIR_EXPORT_CLAIM_MIGRATION,
     DELIVERY_LEASE_FENCING_MIGRATION,
+    SHARED_ARCHIVE_MIGRATION,
 )
