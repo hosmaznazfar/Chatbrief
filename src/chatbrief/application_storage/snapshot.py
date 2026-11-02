@@ -44,8 +44,6 @@ class SnapshotMessage:
     text: str
     source_timestamp: str | None
     collected_at: str
-    has_media: bool
-    media_type: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -268,8 +266,7 @@ class ExportSnapshotRepository:
 
                 async with connection.execute(
                     """
-                    SELECT id, source_id, text, source_timestamp, collected_at,
-                           has_media, media_type
+                    SELECT id, source_id, text, source_timestamp, collected_at
                     FROM messages
                     WHERE source_id = ?
                       AND deleted_at IS NULL
@@ -290,8 +287,6 @@ class ExportSnapshotRepository:
                         text=message["text"],
                         source_timestamp=message["source_timestamp"],
                         collected_at=message["collected_at"],
-                        has_media=bool(message["has_media"]),
-                        media_type=message["media_type"],
                     )
                     for message in message_rows
                 )
