@@ -44,7 +44,7 @@ The developer then ran `./pj graph sync`; Graphify reported no code-graph topolo
 - Added `application_storage/exports.py` with typed job/state models and `ExportRepository`.
 - Added job creation with opaque internal/export UUIDs, owner-scoped reads, active-job lookup, and atomic expected-state transitions.
 - The partial unique index enforces one blocking job per user; the repository translates the specific conflict to `ActiveExportExistsError`.
-- Invalid lifecycle edges and mutable-field changes are rejected. Terminal timestamps and JSON metadata are handled in the same short transaction.
+- Invalid lifecycle edges and mutable-field changes are rejected. Terminal timestamps and JSON metadata are handled in the same short transaction. The generic transition API allows forward progress/failure only; cancellation, invalidation, and expiry are reserved for cleanup-aware operations.
 - A `ready` transition requires a persisted successful primary delivery attempt and matching delivery/expiry timestamps. Delivery-attempt write APIs are intentionally not yet implemented, so this guard prevents premature readiness until that next slice lands.
 - Added `tests/test_application_exports.py`; local checks have not yet been run for this slice.
 
