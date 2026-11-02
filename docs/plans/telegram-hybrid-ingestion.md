@@ -1325,3 +1325,10 @@ migrations, or tests.
 - This rule complements the approved per-document compatibility policy: producers may add optional fields without incrementing that document's `schema_version`; consumers must tolerate those additions.
 - Required-field validation, malformed values, and other structural validation remain governed by each document's detailed schema and are not relaxed by this rule.
 
+### Missing required fields in versioned export documents — approved (Option A)
+
+- A consumer must reject a versioned export document when a field required by that document's schema is missing; it must not silently substitute a default.
+- Optional fields may be absent and are handled according to their documented optional semantics.
+- This rule applies independently to `export.json`, `export-report.json`, and `media-manifest.json`.
+- The exact required/optional field sets and validation details remain part of the detailed schema design.
+
