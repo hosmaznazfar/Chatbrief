@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 from .models import Config, Settings
 from .validation import (
+    parse_application_storage_config,
     parse_channels,
     parse_digest_settings,
     parse_filter_specs,
@@ -100,6 +101,7 @@ def load_config(config_path: str = "config.yaml") -> Config:
 
     # Parse storage config
     storage_config = parse_storage_config(yaml_config)
+    application_storage_config = parse_application_storage_config(yaml_config)
 
     # Parse prompts config
     prompts_config = parse_prompts_config(yaml_config)
@@ -158,6 +160,7 @@ def load_config(config_path: str = "config.yaml") -> Config:
         channels=channels,
         settings=settings,
         storage=storage_config,
+        application_storage=application_storage_config,
         prompts=prompts_config,
         mcp=mcp_config,
         **env_vars,
