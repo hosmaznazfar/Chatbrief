@@ -6,20 +6,20 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Remote updates:** the application database lifecycle implementation and related documentation were committed directly to this branch after the developer's last reported sync. The developer must fast-forward the local checkout before running the new tests. The latest source/documentation commit before this handover update was `d907633`; verify the branch tip when syncing.
+- **Remote updates:** the developer confirmed focused and full pytest runs passed after the pytest import-path fix, then synchronized Graphify and pushed commit `ab53ac1`. The export-job repository implementation and tests were subsequently committed to this branch by the GitHub editing workflow; sync the latest branch tip before local validation.
 - **Local worktree:** unknown to the GitHub editing environment. Preserve local changes and inspect `git status --short` before pulling.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
 - **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and the final Ruff format check passed.
 - **Major architecture decisions and proposals:** approved, including Telegram hybrid ingestion/multi-user direction and the Phase 1 export-persistence migration proposal. Do not reopen these decisions without a concrete implementation contradiction.
-- **Implementation status:** application-state database configuration, migration runner, export persistence schema migration, and startup integration are implemented in source. Lifecycle tests have been added but have **not** been run locally yet. Approval does not mean export repositories, workers, commands, archive generation, delivery, or the broader hybrid-ingestion migration are implemented.
-- **Next stage:** sync this branch, run the Step 2 focused/static/full checks, refresh and review Graphify against the new source relationship, then proceed to export persistence repositories and atomic state transitions.
+- **Implementation status:** application-state database configuration, migration runner, schema migration, and startup integration are implemented. Steps 1–2 are developer-validated. Step 3a adds the export-job repository and compare-and-set lifecycle transitions; local validation is pending. Delivery-attempt and cleanup repositories, workers/leases, commands, archive generation, delivery, and broader hybrid ingestion remain unimplemented.
+- **Next stage:** sync the latest branch, run focused export/storage/lifecycle tests plus Ruff, formatting, and Pyright; review the implementation; then add delivery-attempt and cleanup-task persistence before worker leases.
 
 ## Step 2 validation follow-up — 2026-11-02
 
-The developer synced the lifecycle integration and ran the prescribed checks. Ruff lint passed, Ruff format reported all 7 files already formatted, and Pyright reported 0 errors, 0 warnings, and 0 informations. Both focused and full pytest runs failed during collection because `tests/test_application_lifecycle.py` imports the root-level `main.py`, but the pytest configuration did not include the repository root on `sys.path`. No lifecycle test body ran; this is a test import-path failure, not a passed test run.
+The developer confirmed that the focused lifecycle/migration/configuration tests and the full pytest suite passed after adding `pythonpath = .` to `pytest.ini`. Ruff lint, Ruff formatting, and Pyright had also passed in the preceding run. Exact follow-up pytest counts were not provided and are intentionally not inferred.
 
-A correction was committed to `pytest.ini` adding `pythonpath = .`, and the application database plan records the issue and fix. Re-run the focused and full suites after syncing before marking Step 2 validated. Graphify's post-pull background rebuild was also triggered; inspect its completion and generated changes before committing graph artifacts.
+The developer then ran `./pj graph sync`; Graphify reported no code-graph topology changes. The developer reviewed/updated the graph and pushed `ab53ac1`. This graph revision predates the export repository source files added below and is now stale for the current source revision.
 
 ## Implementation update — application-state database foundation and startup lifecycle
 
@@ -30,17 +30,27 @@ A correction was committed to `pytest.ini` adding `pythonpath = .`, and the appl
 - `application_storage.path` configuration defaults to `data/application.db`; the existing optional `storage.path` / `data/messages.db` remains independent.
 - Focused migration/configuration tests cover schema creation/idempotency, FK activation, partial uniqueness, checksum drift, rollback, and path validation.
 
-**Step 2 — application lifecycle:** implemented in source; local validation pending.
+**Step 2 — application lifecycle:** implemented and developer-validated.
 
 - Root `main.py` constructs and initializes `ApplicationDatabase` after configuration/logging and before platform services, scheduler, command service, bot, or MCP server construction.
 - `ChatbriefApp` retains the initialized database object for future service/repository injection.
 - Initialization failure follows the existing failure path and prevents the rest of the application from starting.
 - `tests/test_application_lifecycle.py` covers startup ordering and fail-closed behavior.
-- The database initializer owns a scoped connection and closes it before returning. It does not hold a persistent connection or pool, so no artificial shutdown close method was introduced. Future repository connections must be scoped and closed by their owners.
+- The developer confirmed the focused and full pytest runs passed after the pytest import-path correction. Ruff lint, formatting, and Pyright had passed in the preceding run.
+- The database initializer owns a scoped connection and closes it before returning. It does not hold a persistent connection or pool, so no artificial shutdown close method was introduced.
 
-The GitHub editing environment cannot run the developer's local `uv` checks. Run the exact Step 2 commands in `docs/plans/application-state-database.md` after syncing. No legacy message schema or data was modified, and no backfill was attempted.
+**Step 3a — export-job repository:** implemented in source; local validation pending.
 
-**Graphify:** the developer refreshed and pushed the graph before this latest `main.py` source change. Treat the committed graph as stale for this lifecycle integration until the developer runs `./pj graph refresh` and `./pj graph diff`, reviews the portable artifacts, and commits/pushes any graph changes alongside the source revision.
+- Added `application_storage/exports.py` with typed job/state models and `ExportRepository`.
+- Added job creation with opaque internal/export UUIDs, owner-scoped reads, active-job lookup, and atomic expected-state transitions.
+- The partial unique index enforces one blocking job per user; the repository translates the specific conflict to `ActiveExportExistsError`.
+- Invalid lifecycle edges and mutable-field changes are rejected. Terminal timestamps and JSON metadata are handled in the same short transaction.
+- A `ready` transition requires a persisted successful primary delivery attempt and matching delivery/expiry timestamps. Delivery-attempt write APIs are intentionally not yet implemented, so this guard prevents premature readiness until that next slice lands.
+- Added `tests/test_application_exports.py`; local checks have not yet been run for this slice.
+
+No legacy message schema or data was modified, and no backfill was attempted.
+
+**Graphify:** the developer's graph sync and pushed graph commit `ab53ac1` describe the code before Step 3a. Refresh and review Graphify after the current source slice is validated; do not stage generated artifacts blindly.
 
 ## Working rules for the implementation stage
 
