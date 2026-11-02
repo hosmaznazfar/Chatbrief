@@ -993,3 +993,8 @@ Consumers of `export.json`, `export-report.json`, and `media-manifest.json` igno
 ## Export schema required-field handling — approved (Option A)
 
 Consumers reject `export.json`, `export-report.json`, or `media-manifest.json` when a field required by that document's schema is missing; they do not silently substitute defaults. Optional fields may be absent according to their documented semantics. Exact required/optional field sets remain open for detailed schema design. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export schema null-value handling — approved (Option A)
+
+For `export.json`, `export-report.json`, and `media-manifest.json`, `null` is accepted only for fields explicitly declared nullable in that document's schema; a null in any other field makes the document invalid. An omitted optional field remains distinct from an explicit null. Exact nullable field sets remain open for detailed schema design. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
