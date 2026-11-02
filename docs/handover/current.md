@@ -1105,3 +1105,16 @@ Report defaults:
 - Provider/model choice is included only if Phase 1 establishes it as an explicit user-owned preference rather than operator configuration.
 - Source records contain platform enum and safe display label only; no source usernames/IDs/invite links/private URLs/transport IDs. Missing required source linkage is invalid snapshot data, not a dangling or synthetic source ref.
 - Exact field keys depend on the future user-scoped model and Phase 1 migration proposal. Documentation-only; no application code, tests, or migrations changed/run.
+
+## Phase 1 export persistence migration proposal — pending approval
+
+The existing message store is optional, uses inline `CREATE TABLE IF NOT EXISTS`, and has no versioned migration runner or application-wide user table. Proposed additive migration:
+- Required application-state store independent of optional message history; SQLite first, provisional `data/application.db`; leave `data/messages.db` unchanged.
+- Minimal versioned migration runner using existing DB dependencies, `schema_migrations(version, applied_at, checksum)`, transactional migrations, checksum drift rejection, SQLite foreign keys enabled per connection.
+- `export_jobs`: internal UUID, unique export_id, owner Telegram user ID, constrained job/media states, cutoff/created/updated/delivery/expiry timestamps, lease owner/expiry/generation, next_run_at, opaque staging key, optional validated report/manifest JSON, stable error code.
+- `export_delivery_attempts`: job FK, primary/media kind, unique attempt number per kind/job, outcome, timestamps/retry time, restricted Telegram chat/message/file IDs, sanitized error code. Append-only.
+- `export_cleanup_tasks`: nullable job FK ON DELETE SET NULL, cleanup type/state, target Telegram IDs or opaque staging key, bounded retries/deadline/error. Survives job/account deletion only while actionable.
+- Partial unique index for one blocking job per user (queued/collecting/packaging/ready); indexes for queue, owner, lease, expiry, attempts, cleanup. Short atomic transactions; lease-generation fencing; no transaction across network/archive work.
+- Additive only. No edits to legacy messages/delivery JSON/config/sessions and no automatic backfill: old messages lack reliable owner/source/message identity. Any backfill requires a separate proof-based mapping proposal.
+- First migration creates only export tables and migration metadata. PostgreSQL support, future shared domain tables, workers/commands/archive/delivery implementation, and legacy backfill remain out of scope.
+- This is a pending proposal, not approved schema or implementation. No application code, tests, or migrations changed/run.
