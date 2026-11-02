@@ -1429,3 +1429,45 @@ migrations, or tests.
 - Whitespace is part of the member name. For example, `" schema_version"` and `"schema_version "` are not the documented `schema_version` field and cannot satisfy that required field.
 - Apply at every object level in `export.json`, `export-report.json`, and `media-manifest.json`, alongside case-sensitive and exact Unicode code-point matching.
 - Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+
+## Export schema: shared metadata, references, timestamps, and ordering — recommended defaults
+
+These are the working schema defaults for detailed design. They define representation conventions, not implementation or final field-by-field schemas.
+
+### Shared document metadata
+
+- Each of the three JSON documents has its own required positive-integer `schema_version`, as already specified.
+- Each document also has a required `export_id`: an opaque UUID generated for the export job and shared unchanged across `export.json`, `export-report.json`, and (when present) `media-manifest.json`. It is an export correlation value, not a user, database, or source identifier.
+- Each document has a required `created_at`, representing the common UTC snapshot/export creation instant. Use the same value in all documents belonging to the same export, rather than independently timestamping each file.
+- `export.json` additionally has a required `cutoff_at`, the acceptance cutoff defining the data snapshot. It must not be confused with `created_at`, which may be later because generation is asynchronous.
+- Do not include the Chatbrief user’s Telegram ID, username, database keys, filesystem paths, worker/lease identifiers, delivery chat/message IDs, or session/authentication material in these documents.
+- The three documents are related by `export_id`; consumers must reject an archive whose documents disagree on that value. A media manifest is only included when a media archive is actually produced.
+
+### Timestamp representation
+
+- Encode timestamps as RFC 3339 date-time strings in UTC, with an explicit trailing `Z` (for example, `2026-11-02T08:15:30Z`).
+- Preserve sub-second precision when it exists in the underlying value; do not round timestamps merely for display. Emit a canonical UTC representation and never emit naive/local timestamps or numeric Unix timestamps in the export schema.
+- The export cutoff is an instant. Message/source timestamps retain their meaning as source event times, normalized to UTC; do not replace a source timestamp with export-generation time.
+- A timestamp that is genuinely unknown or unavailable is omitted only when its field is optional. Use `null` only where the eventual field definition explicitly declares it nullable; do not invent placeholder timestamps.
+
+### Export-scoped relationship references
+
+- Use opaque, export-local references only where another exported record needs to point to an entity: source references use the `src-` namespace, message references use `msg-`, and media entries use `media-`.
+- References are unique within one export, stable across all documents in that export, and have no meaning outside it. A new export may assign different references to the same underlying records.
+- Message records refer to their source using `source_ref`; media manifest entries refer to the corresponding exported message using `message_ref`. The exact surrounding object fields remain part of detailed schema design.
+- Assign references deterministically after sorting their records; use zero-padded sequential values (for example, `src-000001`). Do not derive them from or expose Telegram chat/message IDs, database primary keys, usernames, or internal storage identifiers.
+- A reference must resolve within the relevant archive. Reject dangling or duplicate references during consumer validation. Do not include a reference to a message/source that is not included in the same export snapshot.
+- Do not add synthetic IDs to standalone records that are never referenced. Add a record reference only when it supports an actual relationship or stable record-level reporting requirement.
+
+### Deterministic ordering
+
+- Emit arrays in a documented deterministic order so equivalent snapshots produce stable, reviewable archives.
+- Sort source records by their canonical source identity internally, then assign export-local `source_ref` values in that order; the canonical identity itself is not exported.
+- Sort messages by `timestamp` ascending, then by their assigned `source_ref`, then by the source's stable message ordering key internally. Do not expose the internal tie-break key.
+- Sort schedules, subscriptions, delivery-history records, and media-manifest entries by their documented stable semantic keys; where no natural key exists, use a deterministic tuple of their exported field values. Never rely on database row order or filesystem enumeration order.
+- Preserve meaningful user-configured order only for fields whose semantics are explicitly ordered (for example, an ordered digest-group/source list); do not sort such lists and thereby change their meaning.
+- ZIP entry order is deterministic: README first, then JSON documents in the documented order, then media files sorted by archive-relative path. Deterministic ordering must not change the logical meaning of any collection.
+
+These defaults apply across the primary export and optional media archive. Exact field sets, section shapes, source/message identity resolution, and validation rules continue in the detailed schema design. Documentation-only; no application code, schemas, migrations, or tests changed/run.
