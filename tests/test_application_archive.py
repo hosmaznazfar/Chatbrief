@@ -110,6 +110,7 @@ async def test_access_records_keep_bot_api_shared_and_telethon_user_scoped(
     assert user_access.owner_telegram_user_id == 1001
     assert changed.id == user_access.id
     assert changed.state is AccessState.REVOKED
+    assert changed.verified_at == user_access.verified_at
     assert await archive_repository.set_access(
         source.id,
         AccessMethod.TELETHON,
