@@ -1,5 +1,6 @@
 """Tests for shared archive identity and source-relationship repositories."""
 
+import aiosqlite
 import pytest
 import pytest_asyncio
 
@@ -199,7 +200,7 @@ async def test_subscription_does_not_create_or_imply_authorization(archive_repos
 
 @pytest.mark.asyncio
 async def test_foreign_keys_reject_unknown_users_and_sources(archive_repository):
-    with pytest.raises(Exception):
+    with pytest.raises(aiosqlite.IntegrityError):
         await archive_repository.set_access(
             "missing-source",
             AccessMethod.BOT_API,
