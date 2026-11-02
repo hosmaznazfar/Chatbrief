@@ -213,7 +213,8 @@ class ExportRepository:
                     ),
                 )
                 async with connection.execute(
-                    "SELECT * FROM export_jobs WHERE id = ?", (job_id,)
+                    "SELECT * FROM export_jobs WHERE id = ? AND owner_telegram_user_id = ?",
+                    (job_id, owner_telegram_user_id),
                 ) as cursor:
                     row = await cursor.fetchone()
                 await connection.commit()
@@ -271,6 +272,7 @@ class ExportRepository:
     async def transition_job(
         self,
         job_id: str,
+        owner_telegram_user_id: int,
         expected_states: Sequence[ExportJobState],
         new_state: ExportJobState,
         *,
@@ -283,6 +285,7 @@ class ExportRepository:
         compare-and-set operation prevents cancellation and completion from both
         winning a race. Worker lease-generation fencing is a separate later step.
         """
+        self._validate_owner(owner_telegram_user_id)
         expected = tuple(dict.fromkeys(ExportJobState(state) for state in expected_states))
         if not expected:
             raise ValueError("At least one expected state is required")
@@ -362,13 +365,15 @@ class ExportRepository:
                     parameters.append(timestamp)
                 else:
                     assignments.append("terminal_at = NULL")
-                parameters.extend((job_id, *(state.value for state in expected)))
+                parameters.extend(
+                    (job_id, owner_telegram_user_id, *(state.value for state in expected))
+                )
 
                 result = await connection.execute(
                     f"""
                     UPDATE export_jobs
                     SET {", ".join(assignments)}
-                    WHERE id = ? AND state IN ({placeholders})
+                    WHERE id = ? AND owner_telegram_user_id = ? AND state IN ({placeholders})
                     """,
                     parameters,
                 )
