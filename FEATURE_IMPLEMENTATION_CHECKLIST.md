@@ -115,4 +115,16 @@ Use this checklist for non-trivial work. Check an item only when its completion 
 - [x] Require both the current job lease and the attempt's original worker/generation to finish an attempt.
 - [x] Add migration 3 without inferring ownership for pre-existing attempts.
 - [x] Test stale-worker rejection after lease release and reclaim.
-- [ ] Run focused delivery/storage tests, Ruff lint/format, Pyright, and full pytest locally.
+- [x] Run focused delivery/storage tests, Ruff lint/format, Pyright, and full pytest locally — developer-confirmed **19 passed**, **631 passed, 7 skipped** overall, coverage **93.40%**; Ruff lint/format passed and Pyright reported **0 errors, 0 warnings, 0 informations**.
+
+
+## Export worker orchestration — Step 4a: worker service foundation
+
+- [x] Add state-based async phase-handler dispatch around durable job claims.
+- [x] Bound worker concurrency to a validated maximum of 32 active jobs.
+- [x] Renew active leases while handlers run; cancel a handler when its lease is lost.
+- [x] Release leases after phase completion and schedule backoff for no-op, missing, or failed handlers.
+- [x] Stop new claims on shutdown, wait for a configurable grace period, then cancel remaining handlers.
+- [x] Add focused tests for dispatch, bounded concurrency, lease renewal/loss, cooperative shutdown, and retry scheduling.
+- [ ] Run focused worker/storage tests, Ruff lint/format, Pyright, and full pytest locally.
+- [ ] Keep startup wiring deferred until at least one real phase handler is implemented.
