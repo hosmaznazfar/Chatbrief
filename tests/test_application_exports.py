@@ -105,6 +105,7 @@ async def test_transition_rejects_skipping_required_lifecycle_states(export_repo
     with pytest.raises(InvalidExportTransitionError):
         await export_repository.transition_job(
             job.id,
+             12345,
             [ExportJobState.QUEUED],
             ExportJobState.READY,
         )
@@ -123,6 +124,7 @@ async def test_ready_transition_requires_confirmed_primary_attempt(export_reposi
     with pytest.raises(ValueError, match="confirmed primary delivery attempt"):
         await export_repository.transition_job(
             job.id,
+             12345,
             [ExportJobState.PACKAGING],
             ExportJobState.READY,
             updates={
@@ -143,6 +145,7 @@ async def test_transition_rejects_unknown_fields_and_invalid_json(export_reposit
     with pytest.raises(ValueError, match="Unsupported export-job fields"):
         await export_repository.transition_job(
             job.id,
+             12345,
             [ExportJobState.QUEUED],
             ExportJobState.COLLECTING,
             updates={"owner_telegram_user_id": "999"},
@@ -151,6 +154,7 @@ async def test_transition_rejects_unknown_fields_and_invalid_json(export_reposit
     with pytest.raises(ValueError, match="valid JSON"):
         await export_repository.transition_job(
             job.id,
+             12345,
             [ExportJobState.QUEUED],
             ExportJobState.COLLECTING,
             updates={"report_json": "{invalid"},
