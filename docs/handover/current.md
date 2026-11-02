@@ -1008,3 +1008,8 @@ Consumers must reject `export.json`, `export-report.json`, or `media-manifest.js
 ## Export JSON root shape — approved (Option A)
 
 `export.json`, `export-report.json`, and `media-manifest.json` must each have a top-level JSON object containing that document's `schema_version` and document-specific fields. Top-level arrays and scalar JSON values (strings, numbers, booleans, or null) are invalid. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
+
+
+## Export JSON duplicate-key handling — approved (Option A)
+
+Reject `export.json`, `export-report.json`, or `media-manifest.json` if any JSON object contains duplicate member names, at any nesting level. Do not rely on parser-specific first/last-key behavior. This prevents ambiguous interpretation across parsers. Approved target behavior, not implemented; documentation-only; no application code, schema, migrations, or tests changed/run.
