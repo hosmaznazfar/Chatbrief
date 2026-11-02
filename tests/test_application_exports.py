@@ -51,6 +51,7 @@ async def test_only_one_blocking_export_per_user(export_repository):
 
     failed = await export_repository.transition_job(
         first.id,
+        12345,
         [ExportJobState.QUEUED],
         ExportJobState.FAILED,
         updated_at="2026-11-02T01:00:00Z",
@@ -68,6 +69,7 @@ async def test_transition_is_compare_and_set_and_updates_metadata(export_reposit
 
     collecting = await export_repository.transition_job(
         job.id,
+        12345,
         [ExportJobState.QUEUED],
         ExportJobState.COLLECTING,
         updated_at="2026-11-02T01:00:00Z",
@@ -77,6 +79,7 @@ async def test_transition_is_compare_and_set_and_updates_metadata(export_reposit
 
     stale_transition = await export_repository.transition_job(
         job.id,
+        12345,
         [ExportJobState.QUEUED],
         ExportJobState.CANCELLED,
         updated_at="2026-11-02T01:01:00Z",
@@ -86,6 +89,7 @@ async def test_transition_is_compare_and_set_and_updates_metadata(export_reposit
 
     packaging = await export_repository.transition_job(
         job.id,
+        12345,
         [ExportJobState.COLLECTING],
         ExportJobState.PACKAGING,
         updates={"staging_key": "opaque-stage-key"},
@@ -110,10 +114,10 @@ async def test_transition_rejects_skipping_required_lifecycle_states(export_repo
 async def test_ready_transition_requires_confirmed_primary_attempt(export_repository):
     job = await export_repository.create_job(12345, "2026-11-02T00:00:00Z")
     await export_repository.transition_job(
-        job.id, [ExportJobState.QUEUED], ExportJobState.COLLECTING
+        job.id, 12345, [ExportJobState.QUEUED], ExportJobState.COLLECTING
     )
     await export_repository.transition_job(
-        job.id, [ExportJobState.COLLECTING], ExportJobState.PACKAGING
+        job.id, 12345, [ExportJobState.COLLECTING], ExportJobState.PACKAGING
     )
 
     with pytest.raises(ValueError, match="confirmed primary delivery attempt"):
@@ -161,6 +165,7 @@ async def test_terminal_states_release_active_export_constraint(export_repositor
 
     cancelled = await export_repository.transition_job(
         job.id,
+        12345,
         [ExportJobState.QUEUED],
         ExportJobState.CANCELLED,
     )
