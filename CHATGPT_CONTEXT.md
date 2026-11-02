@@ -7,13 +7,14 @@ Python: `>=3.14`; package/dependency manager: `uv`
 
 ## Current project status — 2026-11-02
 
-- Active branch: `refactor/chatbrief-package-layout`; remote implementation has advanced beyond the developer's last local sync, so fast-forward before local validation.
+- Active branch: `refactor/chatbrief-package-layout`; remote fair-scheduling implementation is ahead of the developer's last reported local sync, so fast-forward before local validation.
 - Package-layout/platform refactor and dependency upgrades are complete.
 - Major architecture decisions and proposals are approved, including Telegram hybrid ingestion and Phase 1 export persistence. Do not reopen them without a concrete implementation contradiction.
 - Application-state SQLite database foundation, migration runner, export schema, and startup integration are implemented and developer-validated. The optional legacy message-history database remains independent and unchanged.
 - Export persistence Steps 3a–3b are implemented and developer-validated. Step 3b results: focused tests **119 passed**; Ruff lint and format passed; Pyright **0 errors, 0 warnings, 0 informations**; full suite **622 passed, 7 skipped**, coverage **94.07%**.
-- Step 3c worker lease operations are implemented remotely: atomic due-job claims, bounded lease expiry, generation increments, renewal/release, retry scheduling, and generation-fenced state transitions. Local validation is pending.
-- Worker orchestration, user-facing export commands, archive generation, actual Telegram delivery, and broader hybrid-ingestion migration remain future work.
+- Step 3c worker lease operations are implemented and developer-validated: atomic due-job claims, bounded lease expiry, generation increments, renewal/release, retry scheduling, and generation-fenced state transitions. Latest full suite: **627 passed, 7 skipped**, coverage **93.38%**; Ruff lint/format and Pyright passed.
+- Step 3d fair per-user claim scheduling is implemented remotely with migration 2 and a persisted `last_claimed_at` marker. Local validation is pending.
+- Worker orchestration, bounded concurrency configuration, graceful shutdown, user-facing export commands, archive generation, actual Telegram delivery, cleanup execution, and broader hybrid-ingestion migration remain future work.
 - Graphify is optional development tooling used to navigate code relationships; generated graph artifacts are not application features or a prerequisite for implementation. Verify source and tests directly.
 - Continue in small dependency-ordered implementation slices, with focused tests and documentation updates.
 ## Read first
