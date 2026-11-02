@@ -25,9 +25,9 @@ Do not add dependencies or change package managers just to fit the workflow. Gra
 
 ## Required feature/fix workflow
 
-For every feature request, bug fix, or codebase investigation, follow the ordered workflow in [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md): inspect the current branch and code relationships; request a local graph refresh at the start of each non-trivial task; inspect the committed graph update (or confirm there was no graph diff); research material decision options and ask the developer to choose; then implement approved work in small reviewed commits. Update related documentation alongside each step. After implementation is complete, finalize the migration and planning Markdown files and update the handover.
+For every feature request, bug fix, or codebase investigation, follow [docs/AI_WORKFLOW.md](docs/AI_WORKFLOW.md): inspect the current branch and code relationships; request/review a local graph refresh when useful; then implement already-approved work in small reviewed steps. Research and ask for a decision only when a genuinely unresolved material choice or implementation contradiction appears. Do not repeat approval rounds for decisions already approved. Update related documentation alongside each step. After implementation is complete, finalize the migration and planning Markdown files and update the handover.
 
-For each non-trivial feature, fix, or code review, ask the developer to run these commands after the initial source inspection. The developer commits any reviewed graph changes before the assistant proceeds to decisions:
+For non-trivial changes, request these commands when the graph needs refreshing; do not block implementation on an unchanged or machine-local graph rebuild. The developer reviews any generated changes before staging:
 
 ```bash
 ./pj graph refresh
@@ -118,7 +118,7 @@ make check
 
 Do not claim any command ran unless its output is available. The existing CI workflow is authoritative for CI commands; check it before changing this list.
 
-**Current refactor state (2026-10-30):** the package-layout and platform-abstraction implementation migration is ready for validation on `refactor/chatbrief-package-layout`. The full test suite and quality checks have not been run. Do not run them until the developer explicitly authorizes validation. The historical baseline of 471 passed / 7 skipped and 80.28% coverage belongs to the pre-refactor state; it is not evidence that this branch currently passes.
+**Current project state (2026-11-02):** the package-layout and platform-abstraction migration is complete on `refactor/chatbrief-package-layout`; all project packages/dependencies have been upgraded; and tests have passed, as confirmed by the developer. Major architecture decisions and proposals are approved, including the Telegram hybrid-ingestion direction and Phase 1 export-persistence migration proposal. The project is now in the implementation stage. Do not describe validation, package upgrades, or architecture approval as pending, and do not reopen approved decisions without a concrete implementation-level contradiction. Approved target behavior is not yet implemented functionality: proceed in small dependency-ordered code/test/documentation slices. The developer reported the branch synchronized at `487727f`; verify the current HEAD before relying on it. Local Graphify artifacts were reported modified after a background post-merge rebuild; inspect before staging.
 
 ## Project workflow helper
 
