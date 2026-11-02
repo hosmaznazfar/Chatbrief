@@ -6,17 +6,18 @@
 
 - **Repository:** `hosmaznazfar/Chatbrief`
 - **Active branch:** `refactor/chatbrief-package-layout`
-- **Latest implementation commits:** `e7779e1` (fair-scheduling migration), `30c17cd` (fair claim selection), `1fddf80` (multi-user rotation test), `ef6dbcf` and `8265796` (migration-upgrade coverage), and `d266b0e` / `efbfb97` (deterministic tie-breaking and explicit migration ordering), and `0d0b430`, `a6bf17b`, `9c790a1`, `79f3aef` (index, test, and plan refinements).
-- **Local worktree:** not visible from the GitHub editing environment. The developer should fast-forward the branch and preserve any local uncommitted work/stashes.
+- **Latest implementation commits:** `982f82f` (migration 3), `e455ccf` (fenced delivery repository), `0cd3686` / `c279805` (lease-aware delivery tests), `b887b24` (migration tests), `e8cc771` (plan), `6abb408` (checklist), and `342d3c1` (replacement-worker fencing assertion).
+- **Local worktree:** not visible from the GitHub editing environment. Preserve local Graphify output and other uncommitted work when pulling.
 - **Package/layout and platform-abstraction migration:** complete.
 - **Dependency/package upgrades:** complete.
 - **Step 1 validation:** developer-confirmed — focused tests **99 passed**, full suite **602 passed, 7 skipped**, coverage **94.73%**, Ruff lint passed, Pyright reported 0 errors/warnings/information, and Ruff format passed.
 - **Step 3a validation:** developer-confirmed — focused tests **109 passed**, Ruff lint/format passed, Pyright **0 errors/warnings/information**, full suite **612 passed, 7 skipped**, coverage **94.42%**.
 - **Step 3b validation:** developer-confirmed — focused tests **119 passed**, Ruff lint/format passed, Pyright **0 errors/warnings/information**, full suite **622 passed, 7 skipped**, coverage **94.07%**.
 - **Step 3c validation:** developer-confirmed — Ruff lint/format and Pyright passed; full suite **627 passed, 7 skipped**, coverage **93.38%**.
-- **Step 3d implementation:** migration-backed per-user last-claimed ordering and atomic fair claim updates are implemented remotely; local validation is pending.
+- **Step 3d validation:** developer-confirmed — focused tests **33 passed**, Ruff lint/format and Pyright passed, full suite **629 passed, 7 skipped**, coverage **93.39%**.
+- **Step 3e implementation:** delivery attempts now persist their creating worker ID and lease generation; starting and finishing attempts require the current live lease and exact attempt-generation match. Migration 3 and stale-worker tests are implemented remotely; local validation is pending.
 - **Graphify:** optional development tooling for code navigation and impact analysis, not a runtime feature or implementation deliverable.
-- **Next stage:** pull and validate Step 3d. Then implement the export worker orchestration in dependency order, including bounded concurrency and cooperative lifecycle integration without bypassing lease-generation fencing.
+- **Next stage:** validate Step 3e. Then implement export worker orchestration with bounded concurrency, phase dispatch, and cooperative lifecycle shutdown; preserve lease fencing on all worker-owned mutations.
 
 ## Step 3b implementation update — delivery attempts and cleanup tasks
 
