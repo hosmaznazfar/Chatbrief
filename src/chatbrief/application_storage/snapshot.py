@@ -186,7 +186,7 @@ class ExportSnapshotRepository:
             async with connection.execute(
                 """
                 SELECT
-                    s.id, s.platform, s.display_name, s.source_type, s.visibility,
+                    s.id, s.platform, s.display_name, s.visibility,
                     s.updated_at AS source_updated_at,
                     sub.created_at AS subscription_created_at,
                     sub.updated_at AS subscription_updated_at,
