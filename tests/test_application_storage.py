@@ -96,7 +96,7 @@ async def test_delivery_fencing_migration_upgrades_version_two_database(tmp_path
         async with connection.execute(
             "SELECT version FROM schema_migrations ORDER BY version"
         ) as cursor:
-            assert [row[0] for row in await cursor.fetchall()] == [1, 2, 3]
+            assert [row[0] for row in await cursor.fetchall()] == [1, 2, 3, 4]
         async with connection.execute("PRAGMA table_info(export_delivery_attempts)") as cursor:
             columns = {row[1] for row in await cursor.fetchall()}
         assert {"worker_id", "lease_generation"} <= columns
