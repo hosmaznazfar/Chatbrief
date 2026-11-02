@@ -13,6 +13,7 @@ Python: `>=3.14`; package/dependency manager: `uv`
 - Tests have passed, confirmed by the developer.
 - Major architecture decisions and proposals are approved, including the Telegram hybrid-ingestion direction and Phase 1 export-persistence migration proposal.
 - The project is now in the implementation stage. Do not treat tests, dependency upgrades, or architecture approvals as pending, and do not reopen approved decisions without a concrete implementation-level contradiction.
+- The required application-state SQLite database foundation and root application startup integration are now implemented. The database initializes before platform/application services; local validation of the lifecycle integration is the current gate. The optional legacy message-history database remains independent and unchanged.
 - Approved architecture is not the same as implemented functionality. Implement in small dependency-ordered slices, add focused tests, and update plans/handover as each slice lands.
 - Local Graphify output was reported modified after a post-merge background rebuild; inspect local status and rebuild completion before staging it.
 
