@@ -1,11 +1,11 @@
 # Application-state database and export persistence foundation
 
-**Status:** Steps 1–2 implemented and developer-validated; Step 3a export-job repository implemented, local validation pending  
+**Status:** Steps 1–2 implemented and developer-validated; Steps 3a–3b repository APIs implemented, local validation pending  
 **Approved design:** Phase 1 export-persistence migration proposal in telegram-hybrid-ingestion.md
 
 ## Scope
 
-Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job persistence is now being implemented separately from delivery attempts, workers, commands, archive generation, and Telegram delivery.
+Establish a required application-state SQLite database independently from the optional legacy message-history store. The initial slices add the database configuration, versioned migration runner, initial export-persistence schema, and application startup integration. Export-job, delivery-attempt, and cleanup-task persistence are implemented as separate repository slices. Worker leases, commands, archive generation, and Telegram delivery remain out of scope.
 
 ## Step 1 — database foundation
 
@@ -37,11 +37,11 @@ Establish a required application-state SQLite database independently from the op
 
 The developer confirmed that the focused lifecycle/migration/configuration tests and the full pytest suite passed after the `pytest.ini` repository-root import-path correction. Ruff lint, Ruff formatting, and Pyright had also passed. Exact pytest counts for this follow-up were not included in the confirmation, so no counts are recorded here.
 
-The developer ran `./pj graph sync`; Graphify reported that no code-graph topology changes were detected. The developer reviewed/updated the graph and pushed commit `ab53ac1`. That graph revision describes the source before the Step 3a changes below and must be refreshed after those changes are complete.
+The developer subsequently reported updating Git with the refreshed graph after Step 3a. A further Graphify refresh is required after Step 3b source changes; the assistant cannot run or verify the local graph CLI.
 
 ## Step 3a — export-job repository and atomic state transitions
 
-Implemented in source; local validation is pending.
+Implemented in source. Developer-reported checks after syncing this slice: focused export/storage/config/lifecycle tests **109 passed**; Ruff lint passed; Pyright **0 errors, 0 warnings, 0 informations**; full suite **612 passed, 7 skipped**, coverage **94.42%**. The Ruff format check still reported two files requiring formatting (`exports.py` and `test_application_exports.py`); rerun it after formatting before marking Step 3a fully validated.
 
 - `ExportRepository.create_job()` creates an opaque internal job UUID and a separate opaque export UUID, assigns the authenticated Telegram user as owner, and starts the job in `queued`.
 - The database partial unique index remains the final concurrency guard enforcing one blocking export per user. The repository translates that specific uniqueness conflict into `ActiveExportExistsError`.
@@ -49,12 +49,25 @@ Implemented in source; local validation is pending.
 - `transition_job()` requires the owner ID and uses a short `BEGIN IMMEDIATE` transaction with expected-state compare-and-set. Invalid lifecycle edges are rejected; a stale or wrong-owner transition returns `None`. The generic method permits forward progress/failure only; cancellation, invalidation, and expiry must use cleanup-aware operations in a later slice.
 - Mutable fields are allowlisted, JSON metadata is checked before persistence, and terminal timestamps are assigned atomically.
 - A job cannot become `ready` unless a successful primary delivery attempt is already recorded, and the persisted primary-delivery timestamp must match that attempt. The delivery-attempt repository is a subsequent slice; this guard intentionally prevents premature `ready` transitions in the meantime.
-- Worker claims, lease renewal/generation fencing, delivery-attempt APIs, cleanup-task APIs, cancellation cleanup orchestration, and workers remain out of scope for this slice.
+- Worker claims, lease renewal/generation fencing, cancellation cleanup orchestration, and workers remain out of scope for this slice.
 
-Focused tests were added for owner scoping, per-user uniqueness, terminal-state release, allowed/forbidden transitions, stale compare-and-set behavior, metadata validation, and the confirmed-primary-delivery guard.
+Focused tests cover owner scoping, per-user uniqueness, terminal-state release, allowed/forbidden transitions, stale compare-and-set behavior, metadata validation, and the confirmed-primary-delivery guard.
+
+## Step 3b — delivery-attempt and cleanup-task repositories
+
+Implemented in source; local validation is pending. No migration or schema change was required because migration 1 already defines both tables.
+
+- Added typed delivery-attempt/document-kind models and `ExportDeliveryRepository`.
+- `start_attempt()` appends a per-job/per-document attempt number in a short `BEGIN IMMEDIATE` transaction, requires an owner-owned job in `packaging`, and prevents concurrent unresolved attempts. Media attempts require a confirmed successful primary attempt.
+- Failed attempts may be retried with a new attempt number. `started`, `succeeded`, and `delivery_unknown` block automatic retries; ambiguous delivery is not retried automatically because it could duplicate a Telegram document.
+- `finish_attempt()` resolves a started attempt once, stores only restricted Telegram delivery identifiers, retry metadata, and stable error codes, and updates the job's media outcome for media attempts. The existing `ready` transition now has the persisted successful-primary record it requires.
+- Added `ExportCleanupRepository` for owner-checked creation of Telegram-message and opaque-staging deletion tasks, due-task listing for an internal worker, task lookup, and compare-and-set attempt/result updates.
+- Cleanup tasks retain their target data when the parent job is deleted (`ON DELETE SET NULL`); they can still be read and completed afterward. Deadline-expired pending tasks remain visible to the cleanup worker so it can mark them abandoned instead of silently losing them.
+- Added focused tests for primary/media delivery, owner checks, retries and attempt numbering, unknown outcomes, terminal resolution, cleanup scheduling/retries, and parent-job deletion.
+- No worker leases, external Telegram calls, archive/staging filesystem operations, or user-facing commands were added.
 
 ## Next steps
 
-1. Run focused export repository, application storage, configuration, and lifecycle tests plus Ruff, formatting, and Pyright locally.
-2. Review the repository implementation and add delivery-attempt/cleanup-task persistence APIs.
-3. Add worker claims and lease-generation fencing after the job and attempt repository operations are established.
+1. Run the focused export/storage/lifecycle tests, Ruff lint/format, and Pyright locally; fix any issues and run the full suite at the integration milestone.
+2. Review and refresh Graphify for the Step 3b source changes, then commit only reviewed portable graph artifacts.
+3. Add worker claims and lease-generation fencing after the job, delivery-attempt, and cleanup-task repository operations are validated.
