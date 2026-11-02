@@ -46,7 +46,7 @@ Implemented in source; local validation is pending.
 - `ExportRepository.create_job()` creates an opaque internal job UUID and a separate opaque export UUID, assigns the authenticated Telegram user as owner, and starts the job in `queued`.
 - The database partial unique index remains the final concurrency guard enforcing one blocking export per user. The repository translates that specific uniqueness conflict into `ActiveExportExistsError`.
 - `get_job()` supports owner-scoped reads; `get_active_job()` returns the user's blocking job, including a `ready` job within its availability period.
-- `transition_job()` uses a short `BEGIN IMMEDIATE` transaction and expected-state compare-and-set. Invalid lifecycle edges are rejected; a stale competing transition returns `None`.
+- `transition_job()` requires the owner ID and uses a short `BEGIN IMMEDIATE` transaction with expected-state compare-and-set. Invalid lifecycle edges are rejected; a stale or wrong-owner transition returns `None`. The generic method permits forward progress/failure only; cancellation, invalidation, and expiry must use cleanup-aware operations in a later slice.
 - Mutable fields are allowlisted, JSON metadata is checked before persistence, and terminal timestamps are assigned atomically.
 - A job cannot become `ready` unless a successful primary delivery attempt is already recorded, and the persisted primary-delivery timestamp must match that attempt. The delivery-attempt repository is a subsequent slice; this guard intentionally prevents premature `ready` transitions in the meantime.
 - Worker claims, lease renewal/generation fencing, delivery-attempt APIs, cleanup-task APIs, cancellation cleanup orchestration, and workers remain out of scope for this slice.
