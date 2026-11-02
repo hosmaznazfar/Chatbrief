@@ -150,3 +150,7 @@ Consumers reject `export.json`, `export-report.json`, or `media-manifest.json` w
 ## Export schema null-value handling — approved (Option A)
 
 For `export.json`, `export-report.json`, and `media-manifest.json`, `null` is valid only for fields explicitly declared nullable by that document's schema; otherwise the document is invalid. An omitted optional field is distinct from an explicit `null`. Exact nullable field sets remain open for detailed schema design. Approved target behavior, not implemented; documentation-only.
+
+## Unsupported export schema versions — approved (Option A)
+
+Consumers reject any of `export.json`, `export-report.json`, or `media-manifest.json` whose `schema_version` they do not support, and report the unsupported version; they do not attempt best-effort parsing. Unknown fields are ignored only within a supported schema version. Approved target behavior, not implemented; documentation-only.
